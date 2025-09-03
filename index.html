@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ร้านเรือนชมพูเนื้อย่างเกาหลี สาขานาเชือก - ออกบิล</title>
+  <style>
+    :root{
+      --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --muted:#475569; --brand:#ef5da8;
+      --accent:#10b981; --line:#e2e8f0; --danger:#ef4444;
+    }
+    html,body{height:100%;}
+    body{margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans Thai", Tahoma, sans-serif; background:var(--bg); color:var(--ink);}    
+    .container{max-width:1000px; margin:24px auto; padding:16px;}
+    .app{background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:0 10px 30px rgba(2,8,23,.05);}    
+    header{padding:20px 24px; border-bottom:1px solid var(--line); display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
+    header h1{margin:0; font-size:clamp(18px, 2.6vw, 24px);}    
+    header small{color:var(--muted);}   
+    .brand{display:flex; flex-direction:column}
+    .brand .shop{font-weight:800; color:#111827}
+    .brand .branch{color:var(--muted); font-size:.95em}
+    .controls{display:flex; gap:8px; flex-wrap:wrap}
+    button, .btn{appearance:none; border:none; padding:10px 14px; border-radius:12px; cursor:pointer; background:var(--ink); color:white; font-weight:600;}
+    button.secondary{background:#334155}
+    button.accent{background:var(--accent)}
+    button.warn{background:var(--danger)}
+    button.ghost{background:transparent; color:var(--ink); border:1px solid var(--line)}
+    main{display:grid; grid-template-columns: 1.2fr .8fr; gap:0;}
+    @media (max-width: 860px){ main{grid-template-columns: 1fr;}}
+
+    .panel{padding:20px 24px;}
+    .panel + .panel{border-left:1px solid var(--line);} 
+    @media (max-width: 860px){ .panel + .panel{border-left:none; border-top:1px solid var(--line);} }
+
+    .grid{display:grid; grid-template-columns: 1fr 110px 130px; gap:10px; align-items:center}
+    .grid.header{font-weight:700; color:#111827; border-bottom:1px solid var(--line); padding-bottom:6px; margin-bottom:8px}
+    .row{padding:6px 0; border-bottom:1px dashed var(--line)}
+    .muted{color:var(--muted)}
+    .right{text-align:right}
+    .num{width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:16px}
+    .num[readonly]{background:#f5f7fb}
+    .title-row{display:flex; align-items:center; justify-content:space-between; gap:8px}
+
+    /* Summary */
+    .summary{display:grid; gap:10px}
+    .summary .line{display:flex; justify-content:space-between; align-items:center}
+    .big{font-size:28px; font-weight:800}
+    .note{width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px}
+
+    /* Print styles */
+    @media print{
+      body{background:white}
+      .container{margin:0; padding:0}
+      .app{border:none; box-shadow:none; border-radius:0}
+      header .controls, .noprint{display:none !important}
+      main{grid-template-columns: 1fr}
+      .panel + .panel{border:none}
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="shop">ร้านเรือนชมพูเนื้อย่างเกาหลี</div>
+        <div class="branch">สาขานาเชือก • <small id="today"></small></div>
+      </div>
+      <div class="controls noprint">
+        <button class="accent" id="btnPrint">พิมพ์บิล</button>
+        <button class="secondary" id="btnNew">เริ่มบิลใหม่</button>
+        <button class="ghost" id="btnSave">บันทึกฉบับร่าง</button>
+        <button class="warn" id="btnClear">ล้างทั้งหมด</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- ซ้าย: รายการ -->
+      <section class="panel" id="left">
+        <div class="title-row">
+          <h2 style="margin:0">รายการขาย</h2>
+          <small class="muted">ราคาคงที่ตามเมนู</small>
+        </div>
+
+        <div class="grid header">
+          <div>สินค้า</div>
+          <div class="right">ราคา</div>
+          <div class="right">จำนวน</div>
+        </div>
+
+        <div class="row grid">
+          <label>เนื้อ (กิโลกรัม)</label>
+          <div class="right muted">฿220 / กก.</div>
+          <input class="num" type="number" id="kg" min="0" step="0.1" placeholder="เช่น 1.2">
+        </div>
+        <div class="row grid">
+          <label>เนื้อ (ขีด)</label>
+          <div class="right muted">฿22 / ขีด</div>
+          <input class="num" type="number" id="heed" min="0" step="1" placeholder="เช่น 3">
+        </div>
+
+        <div class="row grid"><label>ผักเพิ่ม</label><div class="right muted">฿35</div><input class="num" type="number" id="veg" min="0" step="1" value="0"></div>
+        <div class="row grid"><label>วุ้นเส้นร้าน</label><div class="right muted">฿20</div><input class="num" type="number" id="noodle" min="0" step="1" value="0"></div>
+        <div class="row grid"><label>เห็ด</label><div class="right muted">฿20</div><input class="num" type="number" id="mush" min="0" step="1" value="0"></div>
+        <div class="row grid"><label>ข้าวโพด</label><div class="right muted">฿10</div><input class="num" type="number" id="corn" min="0" step="1" value="0"></div>
+        <div class="row grid"><label>สิงห์</label><div class="right muted">฿90</div><input class="num" type="number" id="singha" min="0" step="1" value="0"></div>
+        <div class="row grid"><label>ลีโอ</label><div class="right muted">฿80</div><input class="num" type="number" id="leo" min="0" step="1" value="0"></div>
+        <div class="row grid"><label>ช้าง</label><div class="right muted">฿80</div><input class="num" type="number" id="chang" min="0" step="1" value="0"></div>
+        <div class="row grid"><label>เป๊ปซี่</label><div class="right muted">฿35</div><input class="num" type="number" id="pepsi" min="0" step="1" value="0"></div>
+        <div class="row grid"><label>น้ำแข็ง</label><div class="right muted">฿10</div><input class="num" type="number" id="ice" min="0" step="1" value="0"></div>
+
+        <div style="margin-top:14px; display:flex; gap:8px" class="noprint">
+          <button id="btnQuick1" class="ghost">+ 1 กก.</button>
+          <button id="btnQuick2" class="ghost">+ 1 ขีด</button>
+          <button id="btnQuick3" class="ghost">+ ผัก 1</button>
+        </div>
+      </section>
+
+      <!-- ขวา: สรุป/ลูกค้า -->
+      <section class="panel" id="right">
+        <h2 style="margin:0 0 10px 0">สรุปบิล</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px">
+          <div>
+            <label class="muted">ชื่อลูกค้า/โต๊ะ</label>
+            <input class="num" id="customer" placeholder="โต๊ะ 3 หรือ ชื่อลูกค้า">
+          </div>
+          <div>
+            <label class="muted">เลขที่บิล</label>
+            <input class="num" id="billno" readonly>
+          </div>
+        </div>
+
+        <div class="summary">
+          <div class="line"><span>ยอดเนื้อ (กก. + ขีด)</span><strong id="meatSum">฿0.00</strong></div>
+          <div class="line"><span>ยอดของเพิ่มเติม</span><strong id="addSum">฿0.00</strong></div>
+          <div class="line" style="border-top:1px dashed var(--line); padding-top:8px"><span>รวมทั้งสิ้น</span><span class="big" id="grand">฿0.00</span></div>
+        </div>
+
+        <div style="margin-top:18px; display:grid; grid-template-columns: 1fr 1fr; gap:10px">
+          <div>
+            <label class="muted">รับเงินมา</label>
+            <input class="num" type="number" id="cash" min="0" step="1" placeholder="เช่น 1000">
+          </div>
+          <div>
+            <label class="muted">เงินทอน</label>
+            <input class="num" id="change" readonly>
+          </div>
+        </div>
+
+        <div style="margin-top:10px">
+          <label class="muted">หมายเหตุ</label>
+          <textarea class="note" id="note" rows="3" placeholder="เช่น ไม่ใส่พริก, เพิ่มเตา"></textarea>
+        </div>
+
+        <div style="margin-top:14px; font-size:12px; color:var(--muted)">
+          * ราคาคงที่: กก.ละ 220, ขีดละ 22, ผัก 35, วุ้นเส้น 20, เห็ด 20, ข้าวโพด 10, สิงห์ 90, ลีโอ 80, ช้าง 80, เป๊ปซี่ 35, น้ำแข็ง 10
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+const PRICES = {
+  kg: 220,
+  heed: 22,
+  veg: 35,
+  noodle: 20,
+  mush: 20,
+  corn: 10,
+  singha: 90,
+  leo: 80,
+  chang: 80,
+  pepsi: 35,
+  ice: 10,
+};
+
+const fmt = n => new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(n || 0);
+const el = id => document.getElementById(id);
+
+function todayText(){
+  const d = new Date();
+  return d.toLocaleString('th-TH', { dateStyle:'medium', timeStyle:'short' });
+}
+
+function nextBillNo(){
+  const key='pink-grill-last-bill';
+  let n = parseInt(localStorage.getItem(key) || '0', 10) + 1;
+  localStorage.setItem(key, String(n));
+  return String(n).padStart(5,'0');
+}
+
+function calc(){
+  const kg = parseFloat(el('kg').value) || 0;
+  const heed = parseInt(el('heed').value) || 0;
+  let meat = kg * PRICES.kg + heed * PRICES.heed;
+
+  const addKeys = ['veg','noodle','mush','corn','singha','leo','chang','pepsi','ice'];
+  let addSum = 0;
+  addKeys.forEach(k=>{ addSum += (parseInt(el(k).value) || 0) * PRICES[k]; });
+
+  const grand = meat + addSum;
+  el('meatSum').textContent = fmt(meat);
+  el('addSum').textContent = fmt(addSum);
+  el('grand').textContent = fmt(grand);
+
+  const cash = parseFloat(el('cash').value) || 0;
+  el('change').value = cash > 0 ? fmt(Math.max(0, cash - grand)) : '';
+}
+
+function saveDraft(){
+  const data = {
+    ts: Date.now(),
+    billno: el('billno').value,
+    customer: el('customer').value,
+    kg: el('kg').value, heed: el('heed').value,
+    veg: el('veg').value, noodle: el('noodle').value, mush: el('mush').value,
+    corn: el('corn').value, singha: el('singha').value, leo: el('leo').value,
+    chang: el('chang').value, pepsi: el('pepsi').value, ice: el('ice').value,
+    cash: el('cash').value, note: el('note').value
+  };
+  localStorage.setItem('pink-grill-draft', JSON.stringify(data));
+  alert('บันทึกฉบับร่างแล้ว');
+}
+
+function loadDraft(){
+  const raw = localStorage.getItem('pink-grill-draft');
+  if(!raw) return false;
+  try{
+    const d = JSON.parse(raw);
+    ['billno','customer','kg','heed','veg','noodle','mush','corn','singha','leo','chang','pepsi','ice','cash','note']
+      .forEach(id=>{ if(d[id] !== undefined) el(id).value = d[id]; });
+    calc();
+    return true;
+  }catch(e){ return false; }
+}
+
+function clearAll(){
+  ['kg','heed','veg','noodle','mush','corn','singha','leo','chang','pepsi','ice','cash','note','customer']
+    .forEach(id=> el(id).value = '');
+  calc();
+}
+
+// Init
+window.addEventListener('DOMContentLoaded', () => {
+  el('today').textContent = todayText();
+  if(!loadDraft()){
+    el('billno').value = nextBillNo();
+  }
+  document.querySelectorAll('input').forEach(i=> i.addEventListener('input', calc));
+  el('btnPrint').addEventListener('click', () => window.print());
+  el('btnNew').addEventListener('click', () => { el('billno').value = nextBillNo(); clearAll(); });
+  el('btnSave').addEventListener('click', saveDraft);
+  el('btnClear').addEventListener('click', () => { if(confirm('ล้างข้อมูลทั้งหมด?')) { clearAll(); }});
+
+  // Quick buttons
+  el('btnQuick1').addEventListener('click', () => { el('kg').value = ((parseFloat(el('kg').value)||0) + 1).toFixed(1); calc(); });
+  el('btnQuick2').addEventListener('click', () => { el('heed').value = (parseInt(el('heed').value)||0) + 1; calc(); });
+  el('btnQuick3').addEventListener('click', () => { el('veg').value = (parseInt(el('veg').value)||0) + 1; calc(); });
+
+  calc();
+});
+</script>
+</body>
+</html>
