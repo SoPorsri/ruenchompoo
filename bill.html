@@ -218,6 +218,9 @@ function calc(){
 }
 
 function buildPrintView() {
+  const now = new Date();
+  const dateText = now.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+
   let html = `
   <html>
   <head>
@@ -245,6 +248,7 @@ function buildPrintView() {
       <p>โทร: 099-9999999</p>
       <p>บิลเลขที่: ${el('billno').value}</p>
       <p>โต๊ะ/ลูกค้า: ${el('customer').value}</p>
+      <p>วันที่: ${dateText}</p>
     </div>
     <table>
       <thead>
@@ -292,6 +296,7 @@ function buildPrintView() {
   `;
   return html;
 }
+
 
 async function saveDraft() {
   const billno = el('billno').value || nextBillNo();
