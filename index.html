@@ -10,10 +10,10 @@ header { background: #ef5da8; color: white; padding: 12px; text-align: center; f
 
 .layout {
   display: grid;
-  grid-template-columns: 80px 150px 80px;
-  grid-auto-rows: 60px;
-  gap: 8px;
-  padding: 15px;
+  grid-template-columns: 80px 180px 80px;
+  grid-template-rows: repeat(12, 60px);
+  gap: 12px;
+  padding: 20px;
   justify-content: center;
 }
 
@@ -29,33 +29,33 @@ header { background: #ef5da8; color: white; padding: 12px; text-align: center; f
 .free { background: #34d399; color: #065f46; }
 .busy { background: #f87171; color: #991b1b; }
 
-/* ซุ้ม1-10 แนวตั้งฝั่งซ้าย (จากล่างขึ้นบน) */
-#table-ซุ้ม1  { grid-column:1; grid-row:10; }
-#table-ซุ้ม2  { grid-column:1; grid-row:9; }
-#table-ซุ้ม3  { grid-column:1; grid-row:8; }
-#table-ซุ้ม4  { grid-column:1; grid-row:7; }
-#table-ซุ้ม5  { grid-column:1; grid-row:6; }
-#table-ซุ้ม6  { grid-column:1; grid-row:5; }
-#table-ซุ้ม7  { grid-column:1; grid-row:4; }
-#table-ซุ้ม8  { grid-column:1; grid-row:3; }
-#table-ซุ้ม9  { grid-column:1; grid-row:2; }
-#table-ซุ้ม10 { grid-column:1; grid-row:1; }
+/* ซุ้ม 1–10 (แนวซ้าย, ล่างขึ้นบน) */
+#table-ซุ้ม1  { grid-column:1; grid-row:12; }
+#table-ซุ้ม2  { grid-column:1; grid-row:11; }
+#table-ซุ้ม3  { grid-column:1; grid-row:10; }
+#table-ซุ้ม4  { grid-column:1; grid-row:9; }
+#table-ซุ้ม5  { grid-column:1; grid-row:8; }
+#table-ซุ้ม6  { grid-column:1; grid-row:7; }
+#table-ซุ้ม7  { grid-column:1; grid-row:6; }
+#table-ซุ้ม8  { grid-column:1; grid-row:5; }
+#table-ซุ้ม9  { grid-column:1; grid-row:4; }
+#table-ซุ้ม10 { grid-column:1; grid-row:3; }
 
-/* A1–A8 ตรงกลาง (จากล่างขึ้นบน) */
-#table-A1 { grid-column:2; grid-row:10; }
-#table-A2 { grid-column:2; grid-row:9; }
+/* A1–A8 ตรงกลาง */
+#table-A1 { grid-column:2; grid-row:11 / span 2; }  /* โต๊ะใหญ่ */
+#table-A2 { grid-column:2; grid-row:9 / span 2; }   /* โต๊ะใหญ่ */
 #table-A3 { grid-column:2; grid-row:8; }
 #table-A4 { grid-column:2; grid-row:7; }
-#table-A5 { grid-column:2; grid-row:6; }
-#table-A6 { grid-column:2; grid-row:5; }
-#table-A7 { grid-column:2; grid-row:4; }
-#table-A8 { grid-column:2; grid-row:3; }
+#table-A5 { grid-column:2; grid-row:6; }  /* จะมีระยะห่างก่อน A6 */
+#table-A6 { grid-column:2; grid-row:4; }  /* เลื่อนห่างลงมา */
+#table-A7 { grid-column:2; grid-row:3; }
+#table-A8 { grid-column:2; grid-row:2; }
 
-/* B1–B4 ฝั่งขวา (จากล่างขึ้นบน) */
-#table-B1 { grid-column:3; grid-row:10; }
-#table-B2 { grid-column:3; grid-row:9; }
-#table-B3 { grid-column:3; grid-row:8; }
-#table-B4 { grid-column:3; grid-row:7; }
+/* B1–B4 ขวา */
+#table-B1 { grid-column:3; grid-row:8; }
+#table-B2 { grid-column:3; grid-row:7; }
+#table-B3 { grid-column:3; grid-row:6; }
+#table-B4 { grid-column:3; grid-row:4; }
 </style>
 </head>
 <body>
