@@ -1,116 +1,146 @@
 <!doctype html>
 <html lang="th">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ร้านเรือนชมพูเนื้อย่างเกาหลี - จัดการโต๊ะ</title>
-<style>
-body { font-family: system-ui, "Noto Sans Thai", sans-serif; background: #f8fafc; margin: 0; }
-header { background: #ef5da8; color: white; padding: 12px; text-align: center; font-size: 18px; font-weight: bold; }
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ร้านเรือนชมพูเนื้อย่างเกาหลี - จัดการโต๊ะ</title>
+    <style>
+        body {
+            font-family: system-ui, "Noto Sans Thai", sans-serif;
+            background: #f8fafc;
+            margin: 0;
+        }
 
-.layout {
-  display: grid;
-  grid-template-columns: 80px 180px 80px;
-  /* กำหนดแถวใหม่ ให้มีขนาดพอดีกับจำนวนช่องที่ใช้ */
-  /* 1fr สำหรับแถวมาตรฐาน และ 2fr สำหรับ A1, A2 ที่สูงเป็นสองเท่า */
-  /* จำนวนแถวและขนาดจะปรับตามเนื้อหาและ span ที่กำหนด */
-  grid-template-rows: repeat(15, 60px); /* เพิ่มจำนวนแถวรองรับทั้งหมด และใช้ขนาด 60px ต่อ 1 แถวมาตรฐาน */
-  gap: 12px;
-  padding: 20px;
-  justify-content: center;
-  align-content: start; /* จัดเนื้อหาชิดด้านบน */
-}
+        header {
+            background: #ef5da8;
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
 
-.table-card {
-  display:flex; align-items:center; justify-content:center;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: bold;
-  cursor: pointer;
-  transition:0.2s;
-}
-.table-card:hover { transform:scale(1.05); }
-.free { background: #34d399; color: #065f46; }
-.busy { background: #f87171; color: #991b1b; }
+        .layout {
+            display: grid;
+            grid-template-columns: 80px 180px 80px;
+            grid-template-rows: repeat(12, 60px);
+            gap: 12px;
+            padding: 20px;
+            justify-content: center;
+        }
 
-/* ซุ้ม 1–10 (แนวซ้าย, ล่างขึ้นบน) */
-/* ปรับ grid-row ให้ไล่จากบนลงล่าง เพื่อให้เข้าใจง่ายขึ้น */
-#table-ซุ้ม10 { grid-column:1; grid-row:1; } /* ซุ้ม10 อยู่บนสุด */
-#table-ซุ้ม9  { grid-column:1; grid-row:2; }
-#table-ซุ้ม8  { grid-column:1; grid-row:3; }
-#table-ซุ้ม7  { grid-column:1; grid-row:4; }
-#table-ซุ้ม6  { grid-column:1; grid-row:5; }
-#table-ซุ้ม5  { grid-column:1; grid-row:6; }
-#table-ซุ้ม4  { grid-column:1; grid-row:7; }
-#table-ซุ้ม3  { grid-column:1; grid-row:8; }
-#table-ซุ้ม2  { grid-column:1; grid-row:9; }
-#table-ซุ้ม1  { grid-column:1; grid-row:10; } /* ซุ้ม1 อยู่ล่างสุดของกลุ่มซุ้ม */
+        .table-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
 
+        .table-card:hover {
+            transform: scale(1.05);
+        }
 
-/* A1–A8 ตรงกลาง */
-#table-A1 {
-  grid-column: 2;
-  grid-row: 1 / span 2; /* เริ่มแถว 1, กินพื้นที่ 2 แถว (120px) */
-}
-#table-A2 {
-  grid-column: 2;
-  grid-row: 3 / span 2; /* เริ่มแถว 3, กินพื้นที่ 2 แถว (120px) */
-}
-#table-A3 { grid-column:2; grid-row:5; } /* A3 อยู่ใต้ A2 ทันที */
-#table-A4 { grid-column:2; grid-row:6; }
-#table-A5 { grid-column:2; grid-row:7; }
-#table-A6 { grid-column:2; grid-row:8; }
-#table-A7 { grid-column:2; grid-row:9; }
-#table-A8 { grid-column:2; grid-row:10; }
+        .free {
+            background: #34d399;
+            color: #065f46;
+        }
 
-/* B1–B4 ขวา */
-#table-B1 { grid-column:3; grid-row:1; } /* B1 อยู่บนสุดของกลุ่ม B */
-#table-B2 { grid-column:3; grid-row:2; }
-#table-B3 { grid-column:3; grid-row:3; }
-#table-B4 { grid-column:3; grid-row:4; }
-</style>
+        .busy {
+            background: #f87171;
+            color: #991b1b;
+        }
+
+        /* ซุ้ม 1–10 (แนวซ้าย, ล่างขึ้นบน) */
+        #table-ซุ้ม1 { grid-column: 1; grid-row: 12; }
+        #table-ซุ้ม2 { grid-column: 1; grid-row: 11; }
+        #table-ซุ้ม3 { grid-column: 1; grid-row: 10; }
+        #table-ซุ้ม4 { grid-column: 1; grid-row: 9; }
+        #table-ซุ้ม5 { grid-column: 1; grid-row: 8; }
+        #table-ซุ้ม6 { grid-column: 1; grid-row: 7; }
+        #table-ซุ้ม7 { grid-column: 1; grid-row: 6; }
+        #table-ซุ้ม8 { grid-column: 1; grid-row: 5; }
+        #table-ซุ้ม9 { grid-column: 1; grid-row: 4; }
+        #table-ซุ้ม10 { grid-column: 1; grid-row: 3; }
+
+        /* A1–A8 ตรงกลาง */
+        #table-A1 {
+            grid-column: 2;
+            grid-row: 11; /* อยู่ล่าง */
+            height: 120px; /* สูงกว่าปกติ = แนวตั้ง */
+        }
+
+        #table-A2 {
+            grid-column: 2;
+            grid-row: 9; /* อยู่เหนือ A1 */
+            height: 120px; /* สูงกว่าปกติ */
+        }
+
+        #table-A3 { grid-column: 2; grid-row: 8; height: 60px; }
+        #table-A4 { grid-column: 2; grid-row: 7; height: 60px; }
+        #table-A5 { grid-column: 2; grid-row: 6; height: 60px; }
+        #table-A6 { grid-column: 2; grid-row: 5; height: 60px; }
+        #table-A7 { grid-column: 2; grid-row: 4; height: 60px; }
+        #table-A8 { grid-column: 2; grid-row: 3; height: 60px; }
+
+        /* B1–B4 ขวา */
+        #table-B1 { grid-column: 3; grid-row: 8; }
+        #table-B2 { grid-column: 3; grid-row: 7; }
+        #table-B3 { grid-column: 3; grid-row: 6; }
+        #table-B4 { grid-column: 3; grid-row: 5; }
+    </style>
 </head>
 <body>
-<header>ร้านเรือนชมพูเนื้อย่างเกาหลี • จัดการโต๊ะ</header>
-<div class="layout" id="tables"></div>
+    <header>ร้านเรือนชมพูเนื้อย่างเกาหลี • จัดการโต๊ะ</header>
+    <div class="layout" id="tables"></div>
 
-<script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    <script type="module">
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
-const client = createClient(SUPABASE_URL, SUPABASE_KEY);
+        const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
+        const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const tablesDiv = document.getElementById("tables");
+        const tablesDiv = document.getElementById("tables");
 
-async function loadTables() {
-  const { data, error } = await client.from('tables').select('*').order('id');
-  if (error) { console.error(error); return; }
-  tablesDiv.innerHTML = '';
-  data.forEach(t => {
-    const div = document.createElement('div');
-    div.id = "table-" + t.name;
-    div.className = 'table-card ' + (t.status==='ว่าง'?'free':'busy');
-    div.textContent = `${t.name} (${t.status})`;
-    div.addEventListener('click', async () => {
-      if(t.status==='ว่าง'){
-        const { error:updateError } = await client.from('tables').update({status:'ไม่ว่าง'}).eq('id',t.id);
-        if(updateError){console.error(updateError); alert('อัปเดตสถานะโต๊ะผิดพลาด'); return;}
-      }
-      window.location.href = `bill.html?table_id=${t.id}`;
-    });
-    tablesDiv.appendChild(div);
-  });
-}
+        async function loadTables() {
+            const { data, error } = await client.from('tables').select('*').order('id');
+            if (error) {
+                console.error(error);
+                return;
+            }
+            tablesDiv.innerHTML = '';
+            data.forEach(t => {
+                const div = document.createElement('div');
+                div.id = "table-" + t.name;
+                div.className = 'table-card ' + (t.status === 'ว่าง' ? 'free' : 'busy');
+                div.textContent = `${t.name} (${t.status})`;
+                div.addEventListener('click', async () => {
+                    if (t.status === 'ว่าง') {
+                        const { error: updateError } = await client.from('tables').update({ status: 'ไม่ว่าง' }).eq('id', t.id);
+                        if (updateError) {
+                            console.error(updateError);
+                            alert('อัปเดตสถานะโต๊ะผิดพลาด');
+                            return;
+                        }
+                    }
+                    window.location.href = `bill.html?table_id=${t.id}`;
+                });
+                tablesDiv.appendChild(div);
+            });
+        }
 
-loadTables();
+        loadTables();
 
-// realtime update
-const channel = client.channel('tables-changes')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, () => {
-    loadTables();
-  });
-channel.subscribe();
-</script>
+        // realtime update
+        const channel = client.channel('tables-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, () => {
+                loadTables();
+            });
+        channel.subscribe();
+    </script>
 </body>
 </html>
