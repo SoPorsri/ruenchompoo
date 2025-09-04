@@ -174,23 +174,32 @@ async function loadMenu(){
 
 // โหลด draft ล่าสุดของโต๊ะ
 async function loadDraft() {
-  if (!table_id) return; // ไม่มีโต๊ะก็ไม่ต้องโหลด
-  const { data, error } = await client.from('drafts').select('*').eq('table_id', table_id).single();
-  if (error) { console.log('โหลด draft ผิดพลาด', error); return; }
-  if (data) {
-    el('billno').value = data.billno || nextBillNo();
-    el('customer').value = data.customer || '';
-    el('cash').value = data.cash || '';
-    el('note').value = data.note || '';
+  if (!table_id) return; 
 
-    // ใส่จำนวนสินค้าใน menu
-    data.items?.forEach(item=>{
-      const input = document.querySelector(`#menuItems input[data-id="${item.menu_id}"]`);
-      if(input) input.value = item.qty;
-    });
+  // 1️⃣ ดึง draft ล่าสุดของโต๊ะ
+  const { data: draftData, error: draftError } = await client.from('drafts')
+    .select('*').eq('table_id', table_id).single();
 
-    calc();
-  }
+  if(draftError){ console.log('โหลด draft ผิดพลาด', draftError); return; }
+  if(!draftData) return;
+
+  el('billno').value = draftData.billno || nextBillNo();
+  el('customer').value = draftData.customer || '';
+  el('cash').value = draftData.cash || '';
+  el('note').value = draftData.note || '';
+
+  // 2️⃣ ดึงรายการสินค้า
+  const { data: items, error: itemsError } = await client.from('draft_items')
+    .select('*').eq('draft_id', draftData.id);
+
+  if(itemsError){ console.log('โหลด draft_items ผิดพลาด', itemsError); return; }
+
+  items.forEach(item=>{
+    const input = document.querySelector(`#menuItems input[data-id="${item.menu_id}"]`);
+    if(input) input.value = item.qty;
+  });
+
+  calc();
 }
 
 function calc(){
@@ -238,25 +247,68 @@ async function saveDraft(){
   const change = safeEval(el('change').value);
   const note = el('note').value;
 
-  // เก็บรายการเมนู
+  // ✅ กำหนด user_id สำหรับ RLS
+  const user_id = client.auth.session()?.user?.id || null;
+
+  if(!user_id){
+    alert('กรุณาเข้าสู่ระบบก่อนบันทึก');
+    return;
+  }
+
+  // 1️⃣ เช็คว่ามี draft ของโต๊ะนี้อยู่แล้วหรือไม่
+  const { data: existingDraft, error: fetchError } = await client
+    .from('drafts')
+    .select('*')
+    .eq('table_id', table_id)
+    .single();
+
+  if(fetchError && fetchError.code !== 'PGRST116'){ // ไม่เจอ draft = ไม่มี error
+    console.log('โหลด draft ผิดพลาด', fetchError);
+  }
+
+  let draftId;
+
+  if(existingDraft){
+    // อัปเดต draft เดิม
+    const { data:updateDraft, error:updateError } = await client.from('drafts').update({
+      billno, customer, total, cash, change, note, updated_at: new Date().toISOString()
+    }).eq('id', existingDraft.id).select().single();
+
+    if(updateError){ alert('อัปเดต draft ผิดพลาด'); console.log(updateError); return; }
+    draftId = updateDraft.id;
+
+  } else {
+    // สร้าง draft ใหม่
+    const { data:newDraft, error: insertError } = await client.from('drafts').insert([{
+      billno, customer, table_id, total, cash, change, note, user_id
+    }]).select().single();
+
+    if(insertError){ alert('สร้าง draft ผิดพลาด'); console.log(insertError); return; }
+    draftId = newDraft.id;
+  }
+
+  // 2️⃣ เก็บรายการสินค้า
   const items = [];
   document.querySelectorAll('#menuItems input').forEach(inp=>{
     const qty = safeEval(inp.value);
-    if(qty>0) items.push({ menu_id: parseInt(inp.dataset.id), qty });
+    if(qty>0) items.push({ draft_id: draftId, menu_id: parseInt(inp.dataset.id), qty });
   });
 
-  const { error } = await client.from('drafts').upsert([{
-    billno, customer, table_id, total, cash, change, note, items, updated_at: new Date().toISOString()
-  }], { onConflict: ['billno'] });
+  // ลบรายการเดิมก่อน insert ใหม่
+  await client.from('draft_items').delete().eq('draft_id', draftId);
 
-  if(error){ alert('บันทึกฉบับร่างผิดพลาด'); console.log(error);}
-  else{
-    if(table_id){
-      const { error:updateError } = await client.from('tables').update({ status: 'ไม่ว่าง' }).eq('id', table_id);
-      if(updateError) console.log('อัปเดตโต๊ะไม่ว่างผิดพลาด', updateError);
-    }
-    alert('บันทึกฉบับร่างเรียบร้อย');
+  if(items.length>0){
+    const { error:itemError } = await client.from('draft_items').insert(items);
+    if(itemError) console.log('บันทึกรายการ draft_items ผิดพลาด', itemError);
   }
+
+  // 3️⃣ อัปเดตโต๊ะเป็นไม่ว่าง
+  if(table_id){
+    const { error:updateTableError } = await client.from('tables').update({ status:'ไม่ว่าง' }).eq('id', table_id);
+    if(updateTableError) console.log('อัปเดตโต๊ะผิดพลาด', updateTableError);
+  }
+
+  alert('บันทึกฉบับร่างเรียบร้อย');
 }
 
 async function saveBill(){
@@ -267,35 +319,44 @@ async function saveBill(){
   const change = safeEval(el('change').value);
   const note = el('note').value;
 
-  const { data: bill, error } = await client.from('bills').insert([{
+  // 1️⃣ บันทึกบิลหลัก
+  const { data: bill, error: billError } = await client.from('bills').insert([{
     billno, customer, table_id, total, cash, change, note, status:'closed'
   }]).select().single();
-  if(error){ alert('บันทึกบิลผิดพลาด'); console.log(error); return; }
 
-  // บันทึก bill_items
+  if(billError){ alert('บันทึกบิลผิดพลาด'); console.log(billError); return; }
+
+  // 2️⃣ บันทึกรายการ bill_items
   const items = [];
   document.querySelectorAll('#menuItems input').forEach(inp=>{
-    const qty=safeEval(inp.value);
+    const qty = safeEval(inp.value);
     if(qty<=0) return;
     const menu_id = parseInt(inp.dataset.id);
     const menuItem = menuData.find(m=>m.id===menu_id);
     if(menuItem) items.push({ bill_id: bill.id, menu_id, qty, price: menuItem.price });
   });
+
   if(items.length>0){
-    const { error:itemError } = await client.from('bill_items').insert(items);
-    if(itemError) console.log('บันทึกรายการผิดพลาด', itemError);
+    const { error: itemError } = await client.from('bill_items').insert(items);
+    if(itemError) console.log('บันทึกรายการ bill_items ผิดพลาด', itemError);
   }
 
-  // อัปเดตโต๊ะเป็นว่าง
+  // 3️⃣ อัปเดตโต๊ะเป็นว่าง
   if(table_id){
     const { error:updateError } = await client.from('tables').update({ status:'ว่าง' }).eq('id', table_id);
     if(updateError) console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
   }
 
-  // ลบ draft ของบิลนี้
-  await client.from('drafts').delete().eq('billno', billno);
+  // 4️⃣ ลบ draft + draft_items
+  const { data: draftData, error: draftError } = await client.from('drafts')
+    .select('id').eq('billno', billno).single();
 
-  // พิมพ์บิล
+  if(draftData){
+    await client.from('draft_items').delete().eq('draft_id', draftData.id);
+    await client.from('drafts').delete().eq('id', draftData.id);
+  }
+
+  // 5️⃣ พิมพ์บิล
   const w = window.open('', 'PRINT', 'height=600,width=800');
   w.document.write('<html><head><title>พิมพ์บิล</title></head><body>');
   w.document.write(buildPrintView());
@@ -305,10 +366,14 @@ async function saveBill(){
   w.print();
   w.close();
 
-  // ล้างหน้าบิล
+  // 6️⃣ ล้างหน้าบิล
   el('billno').value = nextBillNo();
-  document.querySelectorAll('#menuItems input').forEach(i=>i.value=''); el('cash').value=''; el('note').value=''; calc();
+  document.querySelectorAll('#menuItems input').forEach(i=>i.value=''); 
+  el('cash').value=''; 
+  el('note').value=''; 
+  calc();
 }
+
 
 window.addEventListener('DOMContentLoaded',()=>{
   el('today').textContent = todayText();
