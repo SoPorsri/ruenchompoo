@@ -97,7 +97,9 @@ async function saveBill() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  el('today').textContent = new Date().toLocaleString('th-TH', { dateStyle:'medium', timeStyle:'short' });
+  const todayEl = el('today');
+  if(todayEl) todayEl.textContent = new Date().toLocaleString('th-TH', { dateStyle:'medium', timeStyle:'short' });
+
   el('billno').value = nextBillNo();
 
   // input change
