@@ -41,11 +41,13 @@
     .num[readonly]{background:#f5f7fb}
     .title-row{display:flex; align-items:center; justify-content:space-between; gap:8px}
 
+    /* Summary */
     .summary{display:grid; gap:10px}
     .summary .line{display:flex; justify-content:space-between; align-items:center}
     .big{font-size:28px; font-weight:800}
     .note{width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px}
 
+    /* Print styles */
     @media print{
       body{background:white}
       .container{margin:0; padding:0}
@@ -73,10 +75,11 @@
     </header>
 
     <main>
+      <!-- ซ้าย: รายการ -->
       <section class="panel" id="left">
         <div class="title-row">
           <h2 style="margin:0">รายการขาย</h2>
-          <small class="muted">กรอกจำนวน หรือสูตร เช่น 1+2+3</small>
+          <small class="muted">ราคาคงที่ตามเมนู</small>
         </div>
 
         <div class="grid header">
@@ -85,8 +88,8 @@
           <div class="right">จำนวน</div>
         </div>
 
-        <div class="row grid"><label>เนื้อหมู (กิโลกรัม)</label><div class="right muted">฿220 / กก.</div><input class="num" type="text" id="kg" placeholder="1+2"></div>
-        <div class="row grid"><label>เนื้อหมู (ขีด)</label><div class="right muted">฿22 / ขีด</div><input class="num" type="text" id="heed" placeholder="2+3"></div>
+        <div class="row grid"><label>เนื้อหมู (กิโลกรัม)</label><div class="right muted">฿220 / กก.</div><input class="num" type="text" id="kg" placeholder="เช่น 1+2+3"></div>
+        <div class="row grid"><label>เนื้อหมู (ขีด)</label><div class="right muted">฿22 / ขีด</div><input class="num" type="text" id="heed" placeholder="เช่น 1+2+3"></div>
         <div class="row grid"><label>ผักเพิ่ม</label><div class="right muted">฿35</div><input class="num" type="text" id="veg" value="0"></div>
         <div class="row grid"><label>วุ้นเส้นร้าน</label><div class="right muted">฿20</div><input class="num" type="text" id="noodle" value="0"></div>
         <div class="row grid"><label>เห็ด</label><div class="right muted">฿20</div><input class="num" type="text" id="mush" value="0"></div>
@@ -96,19 +99,48 @@
         <div class="row grid"><label>เบียร์ช้าง</label><div class="right muted">฿80</div><input class="num" type="text" id="chang" value="0"></div>
         <div class="row grid"><label>เป๊ปซี่</label><div class="right muted">฿35</div><input class="num" type="text" id="pepsi" value="0"></div>
         <div class="row grid"><label>น้ำแข็ง</label><div class="right muted">฿10</div><input class="num" type="text" id="ice" value="0"></div>
+
+        <div style="margin-top:14px; display:flex; gap:8px" class="noprint">
+          <button id="btnQuick1" class="ghost">+ 1 กก.</button>
+          <button id="btnQuick2" class="ghost">+ 1 ขีด</button>
+          <button id="btnQuick3" class="ghost">+ ผัก 1</button>
+        </div>
       </section>
 
+      <!-- ขวา: สรุป/ลูกค้า -->
       <section class="panel" id="right">
         <h2 style="margin:0 0 10px 0">สรุปบิล</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px">
+          <div>
+            <label class="muted">ชื่อลูกค้า/โต๊ะ</label>
+            <input class="num" id="customer" placeholder="โต๊ะ 3 หรือ ชื่อลูกค้า">
+          </div>
+          <div>
+            <label class="muted">เลขที่บิล</label>
+            <input class="num" id="billno" readonly>
+          </div>
+        </div>
+
         <div class="summary">
-          <div class="line"><span>ยอดเนื้อ</span><strong id="meatSum">฿0.00</strong></div>
+          <div class="line"><span>ยอดเนื้อ (กก. + ขีด)</span><strong id="meatSum">฿0.00</strong></div>
           <div class="line"><span>ยอดของเพิ่มเติม</span><strong id="addSum">฿0.00</strong></div>
           <div class="line" style="border-top:1px dashed var(--line); padding-top:8px"><span>รวมทั้งสิ้น</span><span class="big" id="grand">฿0.00</span></div>
         </div>
 
         <div style="margin-top:18px; display:grid; grid-template-columns: 1fr 1fr; gap:10px">
-          <div><label class="muted">รับเงินมา</label><input class="num" type="text" id="cash" placeholder="1000+500"></div>
-          <div><label class="muted">เงินทอน</label><input class="num" id="change" readonly></div>
+          <div>
+            <label class="muted">รับเงินมา</label>
+            <input class="num" type="text" id="cash" placeholder="เช่น 500+500">
+          </div>
+          <div>
+            <label class="muted">เงินทอน</label>
+            <input class="num" id="change" readonly>
+          </div>
+        </div>
+
+        <div style="margin-top:10px">
+          <label class="muted">หมายเหตุ</label>
+          <textarea class="note" id="note" rows="3" placeholder="เช่น ไม่ใส่พริก, เพิ่มเตา"></textarea>
         </div>
       </section>
     </main>
@@ -116,26 +148,42 @@
 </div>
 
 <script>
-const PRICES = { kg:220, heed:22, veg:35, noodle:20, mush:20, corn:10, singha:90, leo:80, chang:80, pepsi:35, ice:10 };
+const PRICES = {
+  kg: 220, heed: 22, veg: 35, noodle: 20, mush: 20, corn: 10,
+  singha: 90, leo: 80, chang: 80, pepsi: 35, ice: 10,
+};
+
 const fmt = n => new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(n || 0);
 const el = id => document.getElementById(id);
 
-// แปลงสูตรเป็นผลลัพธ์ เช่น "1+2+3" → 6
-function safeEval(expr){
-  expr = (expr||"").toString().replace(/\s+/g,"");
-  if(expr==="") return 0;
-  if(!/^[0-9+\-*/.]+$/.test(expr)) return NaN;
-  try{ return Function('"use strict";return('+expr+')')(); }catch{ return NaN; }
+function safeEval(expr) {
+  if (!expr) return 0;
+  expr = expr.replace(/\s+/g, "");
+  if (!/^[0-9+\-*/.]+$/.test(expr)) return 0;
+  try { return Function('"use strict";return (' + expr + ')')(); }
+  catch { return 0; }
+}
+
+function todayText(){
+  const d = new Date();
+  return d.toLocaleString('th-TH', { dateStyle:'medium', timeStyle:'short' });
+}
+
+function nextBillNo(){
+  const key='pink-grill-last-bill';
+  let n = parseInt(localStorage.getItem(key) || '0', 10) + 1;
+  localStorage.setItem(key, String(n));
+  return String(n).padStart(5,'0');
 }
 
 function calc(){
   const kg = safeEval(el('kg').value);
   const heed = safeEval(el('heed').value);
-  let meat = (kg||0)*PRICES.kg + (heed||0)*PRICES.heed;
+  let meat = kg * PRICES.kg + heed * PRICES.heed;
 
   const addKeys = ['veg','noodle','mush','corn','singha','leo','chang','pepsi','ice'];
   let addSum = 0;
-  addKeys.forEach(k=> addSum += (safeEval(el(k).value)||0)*PRICES[k]);
+  addKeys.forEach(k=>{ addSum += safeEval(el(k).value) * PRICES[k]; });
 
   const grand = meat + addSum;
   el('meatSum').textContent = fmt(meat);
@@ -143,11 +191,82 @@ function calc(){
   el('grand').textContent = fmt(grand);
 
   const cash = safeEval(el('cash').value);
-  el('change').value = cash>0 ? fmt(Math.max(0, cash-grand)) : '';
+  el('change').value = cash > 0 ? fmt(Math.max(0, cash - grand)) : '';
 }
 
-document.querySelectorAll('input').forEach(i=> i.addEventListener('input', calc));
-calc();
+function buildPrintView(){
+  let html = `
+    <h2 style="text-align:center">ร้านเรือนชมพูเนื้อย่างเกาหลี<br>สาขานาเชือก</h2>
+    <p>วันที่: ${todayText()}<br>
+    เลขที่บิล: ${el('billno').value}<br>
+    ลูกค้า/โต๊ะ: ${el('customer').value}</p>
+    <table border="1" cellspacing="0" cellpadding="6" style="width:100%;border-collapse:collapse">
+      <tr><th>สินค้า</th><th>จำนวน</th><th>ราคา</th></tr>
+  `;
+
+  const items = [
+    {id:'kg', label:'เนื้อ (กิโลกรัม)', price:220},
+    {id:'heed', label:'เนื้อ (ขีด)', price:22},
+    {id:'veg', label:'ผักเพิ่ม', price:35},
+    {id:'noodle', label:'วุ้นเส้นร้าน', price:20},
+    {id:'mush', label:'เห็ด', price:20},
+    {id:'corn', label:'ข้าวโพด', price:10},
+    {id:'singha', label:'เบียร์สิงห์', price:90},
+    {id:'leo', label:'เบียร์ลีโอ', price:80},
+    {id:'chang', label:'เบียร์ช้าง', price:80},
+    {id:'pepsi', label:'เป๊ปซี่', price:35},
+    {id:'ice', label:'น้ำแข็ง', price:10}
+  ];
+
+  let total = 0;
+  items.forEach(it=>{
+    const qty = safeEval(el(it.id).value);
+    if(qty > 0){
+      const line = qty * it.price;
+      total += line;
+      html += `<tr>
+        <td>${it.label}</td>
+        <td style="text-align:right">${qty}</td>
+        <td style="text-align:right">${fmt(line)}</td>
+      </tr>`;
+    }
+  });
+
+  html += `<tr>
+    <td colspan="2" style="text-align:right"><b>รวมทั้งหมด</b></td>
+    <td style="text-align:right"><b>${fmt(total)}</b></td>
+  </tr></table>`;
+
+  if(el('note').value){
+    html += `<p><b>หมายเหตุ:</b> ${el('note').value}</p>`;
+  }
+
+  return html;
+}
+
+// Init
+window.addEventListener('DOMContentLoaded', () => {
+  el('today').textContent = todayText();
+  el('billno').value = nextBillNo();
+  document.querySelectorAll('input, textarea').forEach(i=> i.addEventListener('input', calc));
+  el('btnPrint').addEventListener('click', () => {
+    const w = window.open('', 'PRINT', 'height=600,width=800');
+    w.document.write('<html><head><title>พิมพ์บิล</title></head><body>');
+    w.document.write(buildPrintView());
+    w.document.write('</body></html>');
+    w.document.close();
+    w.focus();
+    w.print();
+    w.close();
+  });
+  el('btnNew').addEventListener('click', () => { el('billno').value = nextBillNo(); ['kg','heed','veg','noodle','mush','corn','singha','leo','chang','pepsi','ice','cash','note','customer'].forEach(id=>el(id).value=''); calc(); });
+  el('btnSave').addEventListener('click', () => alert('ฟังก์ชันบันทึกยังไม่เปิดใช้งานในตัวอย่างนี้'));
+  el('btnClear').addEventListener('click', () => { if(confirm('ล้างทั้งหมด?')) {['kg','heed','veg','noodle','mush','corn','singha','leo','chang','pepsi','ice','cash','note','customer'].forEach(id=>el(id).value=''); calc();} });
+  el('btnQuick1').addEventListener('click', ()=>{el('kg').value = (safeEval(el('kg').value)||0)+1; calc();});
+  el('btnQuick2').addEventListener('click', ()=>{el('heed').value = (safeEval(el('heed').value)||0)+1; calc();});
+  el('btnQuick3').addEventListener('click', ()=>{el('veg').value = (safeEval(el('veg').value)||0)+1; calc();});
+  calc();
+});
 </script>
 </body>
 </html>
