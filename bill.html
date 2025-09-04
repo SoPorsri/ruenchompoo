@@ -60,6 +60,7 @@ main{display:grid; grid-template-columns: 1.2fr .8fr; gap:0;}
         <div class="branch">สาขานาเชือก • <small id="today"></small></div>
       </div>
       <div class="controls noprint">
+        <button class="secondary" id="btnHome">กลับหน้าแรก</button>
         <button class="accent" id="btnPrint">พิมพ์บิล</button>
         <button class="secondary" id="btnNew">เริ่มบิลใหม่</button>
         <button class="ghost" id="btnSave">บันทึกบิล</button>
@@ -191,6 +192,10 @@ window.addEventListener('DOMContentLoaded',()=>{
   el('btnSave').addEventListener('click', saveBill);
   el('btnClear').addEventListener('click',()=>{ if(confirm('ล้างทั้งหมด?')){['kg','heed','veg','noodle','mush','corn','singha','leo','chang','pepsi','ice','cash','note','customer'].forEach(id=>el(id).value=''); calc(); } });
   calc();
+});
+
+el('btnHome').addEventListener('click', () => {
+  window.location.href = 'index.html';
 });
 </script>
 </body>
