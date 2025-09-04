@@ -6,29 +6,24 @@
 <title>ร้านเรือนชมพูเนื้อย่างเกาหลี - ออกบิล</title>
 <script type="module" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"></script>
 <style>
-:root{
-  --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --muted:#475569; --accent:#10b981; --line:#e2e8f0; --danger:#ef4444;
-}
-body{margin:0;font-family:system-ui, "Noto Sans Thai", sans-serif;background:var(--bg);color:var(--ink);}
+:root{--bg:#f8fafc;--card:#fff;--ink:#0f172a;--muted:#475569;--accent:#10b981;--line:#e2e8f0;--danger:#ef4444;}
+body{margin:0;font-family:system-ui,"Noto Sans Thai",sans-serif;background:var(--bg);color:var(--ink);}
 .container{max-width:1000px;margin:24px auto;padding:16px;}
 .app{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(2,8,23,.05);}
 header{padding:20px 24px;border-bottom:1px solid var(--line);display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;}
-header h1{margin:0;font-size:clamp(18px, 2.6vw, 24px);}
-.brand{display:flex;flex-direction:column}
-.brand .shop{font-weight:800;color:#111827}
-.brand .branch{color:var(--muted);font-size:.95em}
-.controls{display:flex;gap:8px;flex-wrap:wrap}
+header h1{margin:0;font-size:clamp(18px,2.6vw,24px);}
+.controls{display:flex;gap:8px;flex-wrap:wrap;}
 button{appearance:none;border:none;padding:10px 14px;border-radius:12px;cursor:pointer;background:var(--ink);color:white;font-weight:600;display:flex;align-items:center;gap:4px;}
-button.accent{background:var(--accent)}
-button.secondary{background:#334155}
-button.warn{background:var(--danger)}
-button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.accent{background:var(--accent);}
+button.secondary{background:#334155;}
+button.warn{background:var(--danger);}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);}
 .icon{width:16px;height:16px;display:inline-block;vertical-align:middle;}
 main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
-@media (max-width:860px){main{grid-template-columns:1fr;}}
+@media(max-width:860px){main{grid-template-columns:1fr;}}
 .panel{padding:20px 24px;}
-.panel + .panel{border-left:1px solid var(--line);} 
-@media (max-width:860px){.panel + .panel{border-left:none;border-top:1px solid var(--line);}}
+.panel + .panel{border-left:1px solid var(--line);}
+@media(max-width:860px){.panel + .panel{border-left:none;border-top:1px solid var(--line);}}
 .grid{display:grid;grid-template-columns:1fr 110px 130px;gap:10px;align-items:center}
 .grid.header{font-weight:700;border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:8px}
 .row{padding:6px 0;border-bottom:1px dashed var(--line)}
@@ -36,36 +31,23 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
 .right{text-align:right}
 .num{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:16px}
 .num[readonly]{background:#f5f7fb}
-.title-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .summary{display:grid;gap:10px}
 .summary .line{display:flex;justify-content:space-between;align-items:center}
 .big{font-size:28px;font-weight:800}
 .note{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
 .danger-text{color:var(--danger);font-weight:600;margin-top:4px;font-size:.9em}
-
-/* popup เพิ่มเมนู */
-#popup { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
-#popup .content { background:white; padding:20px; border-radius:12px; width:300px; }
-#popup input { width:100%; margin-bottom:10px; padding:8px; border:1px solid var(--line); border-radius:8px; }
-#popup button { width:100%; margin-top:6px; }
-@media print{
-  body{background:white}
-  .container{margin:0;padding:0}
-  .app{border:none;box-shadow:none;border-radius:0}
-  header .controls,.noprint{display:none !important}
-  main{grid-template-columns:1fr}
-  .panel + .panel{border:none}
-}
+#popup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;}
+#popup .content{background:white;padding:20px;border-radius:12px;width:300px;}
+#popup input{width:100%;margin-bottom:10px;padding:8px;border:1px solid var(--line);border-radius:8px;}
+#popup button{width:100%;margin-top:6px;}
+@media print{body{background:white}.container{margin:0;padding:0}.app{border:none;box-shadow:none;border-radius:0}header .controls,.noprint{display:none !important}main{grid-template-columns:1fr}.panel + .panel{border:none}}
 </style>
 </head>
 <body>
 <div class="container">
   <div class="app">
     <header>
-      <div class="brand">
-        <div class="shop">ร้านเรือนชมพูเนื้อย่างเกาหลี</div>
-        <div class="branch">สาขานาเชือก • <small id="today"></small></div>
-      </div>
+      <div class="brand"><div class="shop">ร้านเรือนชมพูเนื้อย่างเกาหลี</div><div class="branch">สาขานาเชือก • <small id="today"></small></div></div>
       <div class="controls noprint">
         <button class="accent" id="btnAddMenu"><span class="icon">➕</span> เพิ่มเมนู</button>
         <button class="secondary" id="btnNew"><span class="icon">🆕</span> เริ่มบิลใหม่</button>
@@ -75,50 +57,27 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
         <button class="accent" id="btnPrint"><span class="icon">🖨️</span> พิมพ์บิล</button>
       </div>
     </header>
-
     <main>
       <section class="panel" id="left">
-        <div class="title-row"><h2 style="margin:0">รายการขาย</h2><small class="muted">ราคาตามเมนู</small></div>
         <div class="grid header"><div>สินค้า</div><div class="right">ราคา</div><div class="right">จำนวน</div></div>
         <div id="menuItems"></div>
       </section>
-
       <section class="panel" id="right">
-        <h2 style="margin:0 0 10px 0">สรุปบิล</h2>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-          <div>
-            <label class="muted">ชื่อลูกค้า/โต๊ะ</label>
-            <input class="num" id="customer" placeholder="โต๊ะ 3 หรือ ชื่อลูกค้า">
-          </div>
-          <div>
-            <label class="muted">เลขที่บิล</label>
-            <input class="num" id="billno" readonly>
-          </div>
+          <div><label class="muted">ชื่อลูกค้า/โต๊ะ</label><input class="num" id="customer"></div>
+          <div><label class="muted">เลขที่บิล</label><input class="num" id="billno" readonly></div>
         </div>
-        <div class="summary">
-          <div class="line"><span>ยอดรวม</span><span class="big" id="grand">฿0.00</span></div>
-        </div>
+        <div class="summary"><div class="line"><span>ยอดรวม</span><span class="big" id="grand">฿0.00</span></div></div>
         <div style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div>
-            <label class="muted">รับเงินมา</label>
-            <input class="num" id="cash" placeholder="เช่น 500+500">
-            <div id="cashWarn" class="danger-text" style="display:none">⚠️ รับเงินมาไม่พอ</div>
-          </div>
-          <div>
-            <label class="muted">เงินทอน</label>
-            <input class="num" id="change" readonly>
-          </div>
+          <div><label class="muted">รับเงินมา</label><input class="num" id="cash"><div id="cashWarn" class="danger-text" style="display:none">⚠️ รับเงินมาไม่พอ</div></div>
+          <div><label class="muted">เงินทอน</label><input class="num" id="change" readonly></div>
         </div>
-        <div style="margin-top:10px">
-          <label class="muted">หมายเหตุ</label>
-          <textarea class="note" id="note" rows="3" placeholder="เช่น ไม่ใส่พริก, เพิ่มเตา"></textarea>
-        </div>
+        <div style="margin-top:10px"><label class="muted">หมายเหตุ</label><textarea class="note" id="note" rows="3"></textarea></div>
       </section>
     </main>
   </div>
 </div>
 
-<!-- popup เพิ่มเมนู -->
 <div id="popup">
   <div class="content">
     <h3>เพิ่มเมนูใหม่</h3>
@@ -131,7 +90,6 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
 
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
 const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
 const client = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -139,31 +97,26 @@ const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 const el=id=>document.getElementById(id);
 const fmt=n=>new Intl.NumberFormat('th-TH',{style:'currency',currency:'THB'}).format(n||0);
 function safeEval(expr){if(!expr)return 0;expr=expr.replace(/\s+/g,'');if(!/^[0-9+\-*/.]+$/.test(expr))return 0;try{return Function('"use strict";return('+expr+')')();}catch{return 0;}}
-function todayText(){const d=new Date();return d.toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'});}
-function nextBillNo(){const key='pink-grill-last-bill';let n=parseInt(localStorage.getItem(key)||'0',10)+1;localStorage.setItem(key,String(n));return String(n).padStart(5,'0');}
 
-let menuData = [];
+function todayText(){return new Date().toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'});}
+function nextBillNo(){let key='pink-grill-last-bill';let n=parseInt(localStorage.getItem(key)||'0')+1;localStorage.setItem(key,String(n));return String(n).padStart(5,'0');}
+
+let menuData=[];
 const params = new URLSearchParams(window.location.search);
 const table_id = params.get('table_id');
 
-async function loadTableName() {
-  if (!table_id) return;
-  const { data, error } = await client.from('tables').select('*').eq('id', table_id).single();
-  if (error) { console.log(error); return; }
-  if (data) {
-    el('customer').value = data.name;
-    await client.from('tables').update({ status:'ไม่ว่าง' }).eq('id', table_id);
-  }
+async function loadTableName(){
+  if(!table_id) return;
+  const { data, error } = await client.from('tables').select('*').eq('id',table_id).single();
+  if(data){ el('customer').value = data.name; await client.from('tables').update({status:'ไม่ว่าง'}).eq('id',table_id); }
 }
 
 async function loadMenu(){
   const { data, error } = await client.from('menu').select('*').order('id');
-  if(error){alert('โหลดเมนูผิดพลาด');console.log(error);return;}
-  menuData = data;
-  const container = el('menuItems'); container.innerHTML='';
+  if(error){console.log(error); return;}
+  menuData=data; const container=el('menuItems'); container.innerHTML='';
   data.forEach(item=>{
-    const row=document.createElement('div');
-    row.className='row grid';
+    const row=document.createElement('div'); row.className='row grid';
     row.innerHTML=`<label>${item.name}</label><div class="right muted">฿${item.price}</div><input class="num" type="text" data-id="${item.id}" placeholder="เช่น 1+2+3">`;
     container.appendChild(row);
   });
@@ -178,39 +131,22 @@ function calc(){
     const menuItem=menuData.find(m=>m.id===id);
     if(menuItem && qty>0) total+=qty*menuItem.price;
   });
-  const cash=safeEval(el('cash').value);
-  const change=cash-total;
+  const cash=safeEval(el('cash').value); const change=cash-total;
   el('grand').textContent=fmt(total);
-  if(cash>0 && change<0){el('cash').style.borderColor='var(--danger)';el('cashWarn').style.display='block';el('change').value='';}
-  else{el('cash').style.borderColor='var(--line)';el('cashWarn').style.display='none';el('change').value = fmt(change>0?change:0);}
+  if(cash>0 && change<0){el('cash').style.borderColor='var(--danger)';el('cashWarn').style.display='block'; el('change').value='';}
+  else{el('cash').style.borderColor='var(--line)'; el('cashWarn').style.display='none'; el('change').value=fmt(change>0?change:0);}
 }
 
 function buildPrintView(){
-  let html = `<h2 style="text-align:center">ร้านเรือนชมพูเนื้อย่างเกาหลี<br>สาขานาเชือก</h2>
-  <p>วันที่: ${todayText()}<br>เลขที่บิล: ${el('billno').value}<br>ลูกค้า/โต๊ะ: ${el('customer').value}</p>
-  <table border="1" cellspacing="0" cellpadding="6" style="width:100%;border-collapse:collapse">
-  <tr><th>สินค้า</th><th>จำนวน</th><th>ราคา</th></tr>`;
-  
+  let html=`<h2>ร้านเรือนชมพูเนื้อย่างเกาหลี</h2><table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%"><tr><th>สินค้า</th><th>จำนวน</th><th>ราคา</th></tr>`;
   document.querySelectorAll('#menuItems .row').forEach(r=>{
-    const label = r.querySelector('label').textContent;
-    const qty = safeEval(r.querySelector('input').value);
-    const id = parseInt(r.querySelector('input').dataset.id);
-    const menuItem = menuData.find(m=>m.id===id);
-    if(menuItem && qty>0){
-      html += `<tr>
-        <td>${label}</td>
-        <td style="text-align:right">${qty}</td>
-        <td style="text-align:right">${fmt(qty*menuItem.price)}</td>
-      </tr>`;
+    const qty=safeEval(r.querySelector('input').value); if(qty>0){
+      const name=r.querySelector('label').textContent;
+      const price=parseFloat(r.querySelector('.muted').textContent.replace(/[^\d.-]/g,''))*qty;
+      html+=`<tr><td>${name}</td><td>${qty}</td><td>${price.toLocaleString('th-TH',{style:'currency',currency:'THB'})}</td></tr>`;
     }
   });
-
-  html += `<tr>
-    <td colspan="2" style="text-align:right"><b>รวมทั้งหมด</b></td>
-    <td style="text-align:right"><b>${el('grand').textContent}</b></td>
-  </tr></table>`;
-
-  if(el('note').value) html += `<p><b>หมายเหตุ:</b> ${el('note').value}</p>`;
+  html+=`</table><h3>รวม ${el('grand').textContent}</h3><p>ชื่อลูกค้า/โต๊ะ: ${el('customer').value}</p><p>หมายเหตุ: ${el('note').value}</p>`;
   return html;
 }
 
@@ -220,44 +156,39 @@ window.addEventListener('DOMContentLoaded',()=>{
   loadTableName();
   loadMenu();
 
-  el('btnHome').addEventListener('click',()=>{window.location.href='index.html';});
-  el('btnAddMenu').addEventListener('click',()=>{el('popup').style.display='flex';});
+  el('btnHome').addEventListener('click',()=>window.location.href='index.html');
+  el('btnAddMenu').addEventListener('click',()=>el('popup').style.display='flex');
   el('btnAddMenuCancel').addEventListener('click',()=>{el('popup').style.display='none'; el('newMenuName').value=''; el('newMenuPrice').value='';});
-  el('btnAddMenuConfirm').addEventListener('click',async()=>{
-    const name = el('newMenuName').value.trim();
-    const price = parseFloat(el('newMenuPrice').value);
-    if(!name || !price){alert('กรุณากรอกชื่อและราคา'); return;}
-    const { error } = await client.from('menu').insert([{ name, price }]);
-    if(error){alert('บันทึกผิดพลาด'); console.log(error);} 
-    else { el('popup').style.display='none'; el('newMenuName').value=''; el('newMenuPrice').value=''; loadMenu(); }
+  el('btnAddMenuConfirm').addEventListener('click', async ()=>{
+    const name=el('newMenuName').value.trim(); const price=parseFloat(el('newMenuPrice').value);
+    if(!name||!price){alert('กรุณากรอกชื่อและราคา'); return;}
+    const { error }=await client.from('menu').insert([{name,price}]);
+    if(error){console.log(error);alert('บันทึกผิดพลาด');} else { el('popup').style.display='none'; el('newMenuName').value=''; el('newMenuPrice').value=''; loadMenu();}
   });
 
-  el('btnPrint').addEventListener('click', async () => {
-    const w = window.open('', 'PRINT', 'height=600,width=800');
-    w.document.write('<html><head><title>พิมพ์บิล</title></head><body>');
-    w.document.write(buildPrintView());
-    w.document.write('</body></html>');
-    w.document.close();
-    w.focus();
-    w.print();
-    w.close();
+  el('btnPrint').addEventListener('click', async ()=>{
+    const w=window.open('','PRINT','height=600,width=800'); w.document.write(buildPrintView()); w.document.close(); w.focus(); w.print(); w.close();
 
-    if(table_id){
-      await client.from('tables').update({ status: 'ว่าง' }).eq('id', table_id);
-    }
+    // บันทึกบิลลง Supabase
+    const billData={ table_id, bill_no:el('billno').value, customer:el('customer').value, total:parseFloat(el('grand').textContent.replace(/[^\d.-]/g,'')), note:el('note').value, created_at:new Date().toISOString()};
+    const { data:newBill, error:billError } = await client.from('bills').insert([billData]).select().single();
+    if(billError){console.log('บันทึกบิลผิดพลาด',billError); return;}
+    
+    const items=[];
+    document.querySelectorAll('#menuItems .row').forEach(r=>{
+      const qty=safeEval(r.querySelector('input').value);
+      const id=parseInt(r.querySelector('input').dataset.id);
+      if(qty>0) items.push({bill_id:newBill.id, menu_id:id, quantity:qty});
+    });
+    if(items.length>0){const { error:itemError }=await client.from('bill_items').insert(items); if(itemError) console.log('บันทึกรายการผิดพลาด',itemError);}
+    
+    if(table_id) await client.from('tables').update({status:'ว่าง'}).eq('id',table_id);
+    alert('พิมพ์บิลและบันทึกเรียบร้อย');
+    location.href='index.html';
   });
 
-  el('btnNew').addEventListener('click',()=>{
-    el('billno').value=nextBillNo();
-    document.querySelectorAll('#menuItems input').forEach(i=>i.value=''); el('cash').value=''; el('note').value=''; calc();
-  });
-
-  el('btnClear').addEventListener('click',()=>{
-    if(confirm('ล้างทั้งหมด?')){
-      document.querySelectorAll('#menuItems input').forEach(i=>i.value=''); el('cash').value=''; el('note').value=''; calc();
-    }
-  });
-
+  el('btnNew').addEventListener('click',()=>{el('billno').value=nextBillNo(); document.querySelectorAll('#menuItems input').forEach(i=>i.value=''); el('cash').value=''; el('note').value=''; calc();});
+  el('btnClear').addEventListener('click',()=>{if(confirm('ล้างทั้งหมด?')){document.querySelectorAll('#menuItems input').forEach(i=>i.value=''); el('cash').value=''; el('note').value=''; calc();}});
   el('btnSave').addEventListener('click',()=>{alert('ฟังก์ชันบันทึกยังไม่เปิดใช้');});
   el('cash').addEventListener('input',calc);
 });
