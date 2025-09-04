@@ -1,59 +1,52 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8">
-  <title>ร้านเรือนชมพูเนื้อย่างเกาหลี - จัดการโต๊ะ</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { font-family: system-ui, "Noto Sans Thai", sans-serif; background: #f8fafc; margin: 0; }
-    header { background: #ef5da8; color: white; padding: 16px; text-align: center; font-size: 20px; font-weight: bold; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; padding: 20px; }
-    .table-card { padding: 20px; border-radius: 12px; text-align: center; font-weight: bold; cursor: pointer; }
-    .free { background: #d1fae5; color: #065f46; }
-    .busy { background: #fee2e2; color: #991b1b; }
-  </style>
+<meta charset="utf-8">
+<title>ร้านเรือนชมพูเนื้อย่างเกาหลี - จัดการโต๊ะ</title>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"></script>
+<style>
+body { font-family: system-ui, "Noto Sans Thai", sans-serif; background: #f8fafc; margin:0; }
+header { background: #ef5da8; color: white; padding: 16px; text-align:center; font-weight:bold;}
+.grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap:12px; padding:20px; }
+.table-card { padding:20px; border-radius:12px; text-align:center; font-weight:bold; cursor:pointer; transition:0.2s; }
+.table-card:hover { transform: scale(1.05); }
+.free { background:#d1fae5; color:#065f46; }
+.busy { background:#fee2e2; color:#991b1b; }
+</style>
 </head>
 <body>
-  <header>ร้านเรือนชมพูเนื้อย่างเกาหลี • จัดการโต๊ะ</header>
-  <div class="grid" id="tables"></div>
+<header>ร้านเรือนชมพูเนื้อย่างเกาหลี • จัดการโต๊ะ</header>
+<div class="grid" id="tables"></div>
 
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    // TODO: เปลี่ยนเป็น URL และ KEY ของโปรเจกต์คุณ
-    const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
-    const client = createClient(SUPABASE_URL, SUPABASE_KEY);
+// เปลี่ยนเป็นของคุณ
+const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
+const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const tablesDiv = document.getElementById("tables");
+const tablesDiv = document.getElementById("tables");
 
-    async function loadTables() {
-      const { data, error } = await client.from("tables").select("*").order("id");
-      if (error) {
-        console.error(error);
-        return;
-      }
-      tablesDiv.innerHTML = "";
-      data.forEach(t => {
-        const div = document.createElement("div");
-        div.className = "table-card " + (t.status === "ว่าง" ? "free" : "busy");
-        div.textContent = t.name + " (" + t.status + ")";
-        div.onclick = () => {
-          // 👉 เมื่อกด จะไปหน้า bill.html พร้อมส่ง table_id
-          window.location.href = `bill.html?table_id=${t.id}`;
-        };
-        tablesDiv.appendChild(div);
-      });
-    }
+async function loadTables() {
+  const { data, error } = await client.from("tables").select("*").order("id");
+  if(error){console.log(error); return;}
+  tablesDiv.innerHTML = "";
+  data.forEach(t=>{
+    const div = document.createElement("div");
+    div.className = "table-card " + (t.status==="ว่าง"?"free":"busy");
+    div.textContent = t.name + " (" + t.status + ")";
+    div.onclick = ()=>{ window.location.href = `bill.html?table_id=${t.id}`; };
+    tablesDiv.appendChild(div);
+  });
+}
 
-    loadTables();
+loadTables();
 
-    // ✅ Realtime subscribe
-    client.channel('tables-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, payload => {
-        loadTables();
-      })
-      .subscribe();
-  </script>
+// Realtime subscribe
+client.channel('tables-changes')
+  .on('postgres_changes', { event:'*', schema:'public', table:'tables' }, payload=>loadTables())
+  .subscribe();
+</script>
 </body>
 </html>
