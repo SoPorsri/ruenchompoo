@@ -15,7 +15,6 @@
     .app{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(2,8,23,.05);}
     header{padding:20px 24px;border-bottom:1px solid var(--line);display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;}
     header h1{margin:0;font-size:clamp(18px,2.6vw,24px);}
-    header small{color:var(--muted);}
     .brand{display:flex;flex-direction:column}
     .brand .shop{font-weight:800;color:#111827}
     .brand .branch{color:var(--muted);font-size:.95em}
@@ -37,6 +36,7 @@
     .big{font-size:28px;font-weight:800}
     .note{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
     .num[readonly]{background:#f5f7fb}
+    .danger-text{color:var(--danger);font-weight:600;margin-top:4px}
     @media print{
       body{background:white}
       .container{margin:0;padding:0}
@@ -104,6 +104,7 @@
           <div>
             <label class="muted">รับเงินมา</label>
             <input type="number" id="cash" class="num" min="0" step="1" placeholder="เช่น 1000">
+            <div id="cashWarn" class="danger-text" style="display:none">❌ เงินรับมาน้อยกว่ายอดรวม</div>
           </div>
           <div>
             <label class="muted">เงินทอน</label>
@@ -125,26 +126,11 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 // TODO: เปลี่ยนเป็น URL และ KEY ของโปรเจกต์คุณ
 const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
-
-// ✅ ตั้งชื่อ client ไม่ให้ซ้ำ
+const SUPABASE_KEY = 'YOUR_PUBLIC_ANON_KEY';
 const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const el = id => document.getElementById(id);
 const fmt = n => new Intl.NumberFormat("th-TH",{style:"currency",currency:"THB"}).format(n||0);
-
-// อ่านค่า table_id จาก query string
-const urlParams = new URLSearchParams(window.location.search);
-const tableId = urlParams.get("table_id");
-
-if(tableId){
-  const { data: table, error } = await supabase.from("tables").select("*").eq("id", tableId).single();
-  if(!error && table){
-    document.getElementById("tableName").textContent = table.name;
-    // เติมค่า default ลงใน input customer ด้วย
-    document.getElementById("customer").value = table.name;
-  }
-}
 
 // ===== โหลดเมนู =====
 async function loadMenu(){
@@ -186,8 +172,11 @@ async function calc(){
     total += qty * m.price;
   });
   el("grand").textContent = fmt(total);
+
   const cash = parseFloat(el("cash").value)||0;
-  el("change").value = cash>0 ? fmt(Math.max(0,cash-total)) : "";
+  const change = cash - total;
+  el("change").value = cash>0 ? fmt(Math.max(0,change)) : "";
+  el("cashWarn").style.display = (cash>0 && change<0) ? "block" : "none";
 }
 
 // ===== บันทึกบิล =====
@@ -230,9 +219,7 @@ window.addEventListener("DOMContentLoaded",()=>{
   el("btnClear").addEventListener("click",()=>{ if(confirm("ล้างทั้งหมด?")) loadMenu(); });
   el("btnNew").addEventListener("click",()=>{ el("billno").value=nextBillNo(); loadMenu(); });
   el("cash").addEventListener("input",calc);
-  el("btnPrint").addEventListener("click",()=>{
-    window.print();
-  });
+  el("btnPrint").addEventListener("click",()=>{ window.print(); });
   loadMenu();
 });
 </script>
