@@ -133,6 +133,19 @@ const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 const el = id => document.getElementById(id);
 const fmt = n => new Intl.NumberFormat("th-TH",{style:"currency",currency:"THB"}).format(n||0);
 
+// อ่านค่า table_id จาก query string
+const urlParams = new URLSearchParams(window.location.search);
+const tableId = urlParams.get("table_id");
+
+if(tableId){
+  const { data: table, error } = await supabase.from("tables").select("*").eq("id", tableId).single();
+  if(!error && table){
+    document.getElementById("tableName").textContent = "โต๊ะ: " + table.name;
+    // เติมค่า default ลงใน input customer ด้วย
+    document.getElementById("customer").value = table.name;
+  }
+}
+
 // ===== โหลดเมนู =====
 async function loadMenu(){
   const { data, error } = await client.from("menu").select("*").order("id");
