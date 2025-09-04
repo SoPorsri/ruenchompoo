@@ -239,8 +239,8 @@ function buildPrintView(){
   return html;
 }
 
-async function saveDraft(){
-  const billno = el('billno').value;
+async function saveDraft() {
+  const billno = el('billno').value || nextBillNo();
   const customer = el('customer').value;
   const total = safeEval(el('grand').textContent.replace(/[^\d.]/g,''));
   const cash = safeEval(el('cash').value);
@@ -248,44 +248,60 @@ async function saveDraft(){
   const note = el('note').value;
 
   try {
-    // 1️⃣ upsert draft
-    const { data: draft, error: draftError } = await client.from('drafts').upsert([{
-      billno, customer, table_id, total, cash, change, note, updated_at: new Date().toISOString()
-    }], { onConflict: ['billno'], returning: 'representation' }).single();
+    // 1️⃣ แทรกหรืออัปเดต draft และดึง id กลับ
+    const { data: draft, error: draftError } = await client
+      .from('drafts')
+      .upsert([{
+        billno,
+        customer,
+        table_id,
+        total,
+        cash,
+        change,
+        note,
+        updated_at: new Date().toISOString()
+      }], { onConflict: ['billno'], returning: 'representation' })
+      .single();
 
-    if(draftError) throw draftError;
+    if (draftError) throw draftError;
 
-    // 2️⃣ เก็บรายการสินค้าใน draft_items (ตัด user_id ออก)
+    const draftId = draft.id; // ✅ id ของ draft ที่ใช้ใน draft_items
+
+    // 2️⃣ ลบรายการเก่าใน draft_items
+    await client.from('draft_items').delete().eq('draft_id', draftId);
+
+    // 3️⃣ สร้าง array ของรายการใหม่
     const items = [];
     document.querySelectorAll('#menuItems input').forEach(inp => {
       const qty = safeEval(inp.value);
-      if(qty > 0) items.push({
-        draft_id: draft.id,
+      if (qty > 0) items.push({
+        draft_id: draftId,
         menu_id: parseInt(inp.dataset.id),
         qty
       });
     });
 
-    // ลบรายการเดิมก่อน insert ใหม่
-    await client.from('draft_items').delete().eq('draft_id', draft.id);
-
-    if(items.length > 0){
+    // 4️⃣ insert รายการใหม่
+    if (items.length > 0) {
       const { error: itemError } = await client.from('draft_items').insert(items);
-      if(itemError) console.log('บันทึกรายการ draft_items ผิดพลาด', itemError);
+      if (itemError) console.log('บันทึกรายการ draft_items ผิดพลาด', itemError);
     }
 
-    // 3️⃣ อัปเดตโต๊ะเป็นไม่ว่าง
-    if(table_id){
-      const { error:updateError } = await client.from('tables').update({ status: 'ไม่ว่าง' }).eq('id', table_id);
+    // 5️⃣ อัปเดตสถานะโต๊ะเป็นไม่ว่าง
+    if (table_id) {
+      const { error:updateError } = await client.from('tables')
+        .update({ status: 'ไม่ว่าง' })
+        .eq('id', table_id);
       if(updateError) console.log('อัปเดตโต๊ะไม่ว่างผิดพลาด', updateError);
     }
 
     alert('บันทึกฉบับร่างเรียบร้อย');
-  } catch(err) {
+  } catch (err) {
     console.log('saveDraft error:', err);
     alert('บันทึกฉบับร่างผิดพลาด');
   }
 }
+
 
 
 
