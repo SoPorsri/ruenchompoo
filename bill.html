@@ -216,27 +216,26 @@ window.addEventListener('DOMContentLoaded',()=>{
     else { el('popup').style.display='none'; el('newMenuName').value=''; el('newMenuPrice').value=''; loadMenu(); }
   });
 
-  el('btnPrint').addEventListener('click',()=>{
-    const w=window.open('','PRINT','height=600,width=800');
-    w.document.write('<html><head><title>พิมพ์บิล</title></head><body>');
-    w.document.write(`<h2 style="text-align:center">ร้านเรือนชมพูเนื้อย่างเกาหลี<br>สาขานาเชือก</h2>
-      <p>วันที่: ${todayText()}<br>เลขที่บิล: ${el('billno').value}<br>ลูกค้า/โต๊ะ: ${el('customer').value}</p>
-      <table border="1" cellspacing="0" cellpadding="6" style="width:100%;border-collapse:collapse">
-      <tr><th>สินค้า</th><th>จำนวน</th><th>ราคา</th></tr>`);
-    let total=0;
-    document.querySelectorAll('#menuItems input').forEach(inp=>{
-      const qty=safeEval(inp.value);
-      const id=parseInt(inp.dataset.id);
-      const menuItem=menuData.find(m=>m.id===id);
-      if(menuItem && qty>0){
-        const line=qty*menuItem.price; total+=line;
-        w.document.write(`<tr><td>${menuItem.name}</td><td style="text-align:right">${qty}</td><td style="text-align:right">${fmt(line)}</td></tr>`);
-      }
-    });
-    w.document.write(`<tr><td colspan="2" style="text-align:right"><b>รวมทั้งหมด</b></td><td style="text-align:right"><b>${fmt(total)}</b></td></tr></table>`);
-    if(el('note').value) w.document.write(`<p><b>หมายเหตุ:</b> ${el('note').value}</p>`);
-    w.document.write('</body></html>'); w.document.close(); w.focus(); w.print(); w.close();
-  });
+  el('btnPrint').addEventListener('click', async () => {
+  const w = window.open('', 'PRINT', 'height=600,width=800');
+  // สร้างเนื้อหาพิมพ์
+  w.document.write('<html><head><title>พิมพ์บิล</title></head><body>');
+  w.document.write(buildPrintView());
+  w.document.write('</body></html>');
+  w.document.close();
+  w.focus();
+  w.print();
+  w.close();
+
+  // อัปเดตโต๊ะกลับเป็น "ว่าง"
+  if(table_id){
+    const { error } = await supabase
+      .from('tables')
+      .update({ status: 'ว่าง' })
+      .eq('id', table_id);
+    if (error) console.log('อัปเดตโต๊ะว่างผิดพลาด', error);
+  }
+});
 
   el('btnNew').addEventListener('click',()=>{
     el('billno').value=nextBillNo();
