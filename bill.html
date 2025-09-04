@@ -149,10 +149,24 @@ let menuData = [];
 const params = new URLSearchParams(window.location.search);
 const table_id = params.get('table_id');
 async function loadTableName() {
-  if(!table_id) return;
-  const { data } = await client.from('tables').select('*').eq('id',table_id).single();
-  if(data) el('customer').value = data.name;
+  if (!table_id) return;
+  const { data, error } = await supabase
+    .from('tables')
+    .select('*')
+    .eq('id', table_id)
+    .single();
+  if (error) { console.log(error); return; }
+  if (data) {
+    el('customer').value = data.name;
+    // อัปเดต status เป็น "ไม่ว่าง"
+    const { error:updateError } = await supabase
+      .from('tables')
+      .update({ status: 'ไม่ว่าง' })
+      .eq('id', table_id);
+    if (updateError) console.log('อัปเดตโต๊ะไม่ว่างผิดพลาด', updateError);
+  }
 }
+
 
 async function loadMenu(){
   const { data, error } = await client.from('menu').select('*').order('id');
