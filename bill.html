@@ -220,11 +220,21 @@ async function saveDraft(){
   const change = safeEval(el('change').value);
   const note = el('note').value;
 
-  const { data: draftData, error } = await client.from('drafts').upsert([{
+  const { error } = await client.from('drafts').upsert([{
     billno, customer, table_id, total, cash, change, note, updated_at: new Date().toISOString()
   }], { onConflict: ['billno'] });
-  if(error){ alert('บันทึกฉบับร่างผิดพลาด'); console.log(error);}
-  else alert('บันทึกฉบับร่างเรียบร้อย');
+
+  if(error){
+    alert('บันทึกฉบับร่างผิดพลาด'); 
+    console.log(error);
+  } else {
+    // ✅ อัปเดตสถานะโต๊ะเป็น "ไม่ว่าง"
+    if(table_id){
+      const { error:updateError } = await client.from('tables').update({ status: 'ไม่ว่าง' }).eq('id', table_id);
+      if(updateError) console.log('อัปเดตโต๊ะไม่ว่างผิดพลาด', updateError);
+    }
+    alert('บันทึกฉบับร่างเรียบร้อย');
+  }
 }
 
 async function saveBill(){
