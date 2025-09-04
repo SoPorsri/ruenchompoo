@@ -237,6 +237,56 @@ function clearAll(){
   calc();
 }
 
+function buildPrintView(){
+  let html = `
+    <h2 style="text-align:center">ร้านเรือนชมพูเนื้อย่างเกาหลี<br>สาขานาเชือก</h2>
+    <p>วันที่: ${todayText()}<br>
+    เลขที่บิล: ${el('billno').value}<br>
+    ลูกค้า/โต๊ะ: ${el('customer').value}</p>
+    <table border="1" cellspacing="0" cellpadding="6" style="width:100%;border-collapse:collapse">
+      <tr><th>สินค้า</th><th>จำนวน</th><th>ราคา</th></tr>
+  `;
+
+  const items = [
+    {id:'kg', label:'เนื้อ (กิโลกรัม)', price:220},
+    {id:'heed', label:'เนื้อ (ขีด)', price:22},
+    {id:'veg', label:'ผักเพิ่ม', price:35},
+    {id:'noodle', label:'วุ้นเส้นร้าน', price:20},
+    {id:'mush', label:'เห็ด', price:20},
+    {id:'corn', label:'ข้าวโพด', price:10},
+    {id:'singha', label:'สิงห์', price:90},
+    {id:'leo', label:'ลีโอ', price:80},
+    {id:'chang', label:'ช้าง', price:80},
+    {id:'pepsi', label:'เป๊ปซี่', price:35},
+    {id:'ice', label:'น้ำแข็ง', price:10}
+  ];
+
+  let total = 0;
+  items.forEach(it=>{
+    const qty = parseFloat(el(it.id).value) || 0;
+    if(qty>0){
+      const line = qty * it.price;
+      total += line;
+      html += `<tr>
+        <td>${it.label}</td>
+        <td style="text-align:right">${qty}</td>
+        <td style="text-align:right">${fmt(line)}</td>
+      </tr>`;
+    }
+  });
+
+  html += `<tr>
+    <td colspan="2" style="text-align:right"><b>รวมทั้งหมด</b></td>
+    <td style="text-align:right"><b>${fmt(total)}</b></td>
+  </tr></table>`;
+
+  if(el('note').value){
+    html += `<p><b>หมายเหตุ:</b> ${el('note').value}</p>`;
+  }
+
+  return html;
+}
+
 // Init
 window.addEventListener('DOMContentLoaded', () => {
   el('today').textContent = todayText();
@@ -244,16 +294,22 @@ window.addEventListener('DOMContentLoaded', () => {
     el('billno').value = nextBillNo();
   }
   document.querySelectorAll('input').forEach(i=> i.addEventListener('input', calc));
-  el('btnPrint').addEventListener('click', () => window.print());
+  el('btnPrint').addEventListener('click', () => {
+    const w = window.open('', 'PRINT', 'height=600,width=800');
+    w.document.write('<html><head><title>พิมพ์บิล</title></head><body>');
+    w.document.write(buildPrintView());
+    w.document.write('</body></html>');
+    w.document.close();
+    w.focus();
+    w.print();
+    w.close();
+  });
   el('btnNew').addEventListener('click', () => { el('billno').value = nextBillNo(); clearAll(); });
   el('btnSave').addEventListener('click', saveDraft);
-  el('btnClear').addEventListener('click', () => { if(confirm('ล้างข้อมูลทั้งหมด?')) { clearAll(); }});
-
-  // Quick buttons
-  el('btnQuick1').addEventListener('click', () => { el('kg').value = ((parseFloat(el('kg').value)||0) + 1).toFixed(1); calc(); });
-  el('btnQuick2').addEventListener('click', () => { el('heed').value = (parseInt(el('heed').value)||0) + 1; calc(); });
-  el('btnQuick3').addEventListener('click', () => { el('veg').value = (parseInt(el('veg').value)||0) + 1; calc(); });
-
+  el('btnClear').addEventListener('click', () => { if(confirm('ล้างทั้งหมด?')) clearAll(); });
+  el('btnQuick1').addEventListener('click', ()=>{el('kg').value = (parseFloat(el('kg').value)||0)+1; calc();});
+  el('btnQuick2').addEventListener('click', ()=>{el('heed').value = (parseInt(el('heed').value)||0)+1; calc();});
+  el('btnQuick3').addEventListener('click', ()=>{el('veg').value = (parseInt(el('veg').value)||0)+1; calc();});
   calc();
 });
 </script>
