@@ -248,29 +248,36 @@ async function saveDraft() {
   const note = el('note').value;
 
   try {
-    // 1️⃣ แทรกหรืออัปเดต draft และดึง id กลับ
-    const { data: draft, error: draftError } = await client
-      .from('drafts')
-      .upsert([{
-        billno,
-        customer,
-        table_id,
-        total,
-        cash,
-        change,
-        note,
-        updated_at: new Date().toISOString()
-      }], { onConflict: ['billno'], returning: 'representation' })
+    // 1️⃣ ตรวจสอบว่ามี draft เดิมหรือยัง
+    let { data: existingDraft } = await client.from('drafts')
+      .select('*')
+      .eq('billno', billno)
       .single();
 
-    if (draftError) throw draftError;
-
-    const draftId = draft.id; // ✅ id ของ draft ที่ใช้ใน draft_items
+    let draftId;
+    if (existingDraft) {
+      // update draft
+      const { data: updatedDraft, error: updateError } = await client.from('drafts')
+        .update({ customer, table_id, total, cash, change, note, updated_at: new Date().toISOString() })
+        .eq('id', existingDraft.id)
+        .select()
+        .single();
+      if(updateError) throw updateError;
+      draftId = updatedDraft.id;
+    } else {
+      // insert draft ใหม่
+      const { data: newDraft, error: insertError } = await client.from('drafts')
+        .insert([{ billno, customer, table_id, total, cash, change, note }])
+        .select()
+        .single();
+      if(insertError) throw insertError;
+      draftId = newDraft.id;
+    }
 
     // 2️⃣ ลบรายการเก่าใน draft_items
     await client.from('draft_items').delete().eq('draft_id', draftId);
 
-    // 3️⃣ สร้าง array ของรายการใหม่
+    // 3️⃣ เตรียมรายการใหม่
     const items = [];
     document.querySelectorAll('#menuItems input').forEach(inp => {
       const qty = safeEval(inp.value);
@@ -284,26 +291,21 @@ async function saveDraft() {
     // 4️⃣ insert รายการใหม่
     if (items.length > 0) {
       const { error: itemError } = await client.from('draft_items').insert(items);
-      if (itemError) console.log('บันทึกรายการ draft_items ผิดพลาด', itemError);
+      if(itemError) throw itemError;
     }
 
-    // 5️⃣ อัปเดตสถานะโต๊ะเป็นไม่ว่าง
+    // 5️⃣ อัปเดตโต๊ะ
     if (table_id) {
-      const { error:updateError } = await client.from('tables')
-        .update({ status: 'ไม่ว่าง' })
-        .eq('id', table_id);
-      if(updateError) console.log('อัปเดตโต๊ะไม่ว่างผิดพลาด', updateError);
+      await client.from('tables').update({ status: 'ไม่ว่าง' }).eq('id', table_id);
     }
 
     alert('บันทึกฉบับร่างเรียบร้อย');
-  } catch (err) {
+
+  } catch(err) {
     console.log('saveDraft error:', err);
     alert('บันทึกฉบับร่างผิดพลาด');
   }
 }
-
-
-
 
 async function saveBill(){
   const billno = el('billno').value;
