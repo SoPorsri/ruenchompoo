@@ -174,20 +174,21 @@ async function loadMenu(){
 
 // โหลด draft ล่าสุดของโต๊ะ
 async function loadDraft() {
-  if (!table_id) return;
-  const { data, error } = await client.from('drafts').select('*').eq('table_id', table_id).order('updated_at', { ascending: false }).limit(1).single();
-  if(error){console.log('โหลด draft ผิดพลาด', error); return;}
-  if(data){
-    el('billno').value = data.billno;
-    el('customer').value = data.customer;
+  if (!table_id) return; // ไม่มีโต๊ะก็ไม่ต้องโหลด
+  const { data, error } = await client.from('drafts').select('*').eq('table_id', table_id).single();
+  if (error) { console.log('โหลด draft ผิดพลาด', error); return; }
+  if (data) {
+    el('billno').value = data.billno || nextBillNo();
+    el('customer').value = data.customer || '';
     el('cash').value = data.cash || '';
     el('note').value = data.note || '';
-    if(data.items){
-      document.querySelectorAll('#menuItems input').forEach(inp=>{
-        const menuItem = data.items.find(i=>i.menu_id===parseInt(inp.dataset.id));
-        if(menuItem) inp.value = menuItem.qty;
-      });
-    }
+
+    // ใส่จำนวนสินค้าใน menu
+    data.items?.forEach(item=>{
+      const input = document.querySelector(`#menuItems input[data-id="${item.menu_id}"]`);
+      if(input) input.value = item.qty;
+    });
+
     calc();
   }
 }
