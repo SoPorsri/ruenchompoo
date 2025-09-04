@@ -1,77 +1,118 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>ออกบิลร้านเรือนชมพูเนื้อย่างเกาหลี</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ร้านเรือนชมพูเนื้อย่างเกาหลี - ออกบิล</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body{margin:0;font-family:sans-serif;background:#f8fafc;color:#111827}
-    .container{max-width:1000px;margin:24px auto;padding:16px}
-    .app{background:#fff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.05)}
-    header{padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;flex-wrap:wrap}
-    header h1{margin:0;font-size:20px}
-    header small{color:#64748b}
-    button{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
-    button.accent{background:#10b981;color:#fff}
-    button.warn{background:#ef4444;color:#fff}
-    button.secondary{background:#334155;color:#fff}
-    main{display:grid;grid-template-columns:1.2fr .8fr}
+    :root{
+      --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --muted:#475569; --brand:#ef5da8;
+      --accent:#10b981; --line:#e2e8f0; --danger:#ef4444;
+    }
+    body{margin:0;font-family:system-ui,"Noto Sans Thai",sans-serif;background:var(--bg);color:var(--ink);}
+    .container{max-width:1000px;margin:24px auto;padding:16px;}
+    .app{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(2,8,23,.05);}
+    header{padding:20px 24px;border-bottom:1px solid var(--line);display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;}
+    header h1{margin:0;font-size:clamp(18px,2.6vw,24px);}
+    header small{color:var(--muted);}
+    .brand{display:flex;flex-direction:column}
+    .brand .shop{font-weight:800;color:#111827}
+    .brand .branch{color:var(--muted);font-size:.95em}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    button{appearance:none;border:none;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:600}
+    button.accent{background:var(--accent);color:white}
+    button.secondary{background:#334155;color:white}
+    button.warn{background:var(--danger);color:white}
+    button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+    main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
     @media(max-width:860px){main{grid-template-columns:1fr}}
-    .panel{padding:20px}
-    .panel+.panel{border-left:1px solid #e2e8f0}
-    .grid{display:grid;grid-template-columns:1fr 100px 100px;gap:10px;align-items:center}
-    .grid.header{font-weight:700;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin-bottom:8px}
-    input.num{width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px;text-align:right}
-    .summary{margin-top:16px}
-    .line{display:flex;justify-content:space-between;margin:6px 0}
-    .big{font-size:22px;font-weight:700}
+    .panel{padding:20px 24px;}
+    .panel+.panel{border-left:1px solid var(--line);}
+    @media(max-width:860px){.panel+.panel{border-left:none;border-top:1px solid var(--line);}}
+    .menu-row{display:grid;grid-template-columns:1fr 90px 90px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line)}
+    .menu-row input{padding:6px 8px;border:1px solid var(--line);border-radius:8px;width:100%}
+    .summary{display:grid;gap:10px}
+    .summary .line{display:flex;justify-content:space-between;align-items:center}
+    .big{font-size:28px;font-weight:800}
+    .note{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
+    .num[readonly]{background:#f5f7fb}
+    @media print{
+      body{background:white}
+      .container{margin:0;padding:0}
+      .app{border:none;box-shadow:none;border-radius:0}
+      header .controls,.noprint{display:none !important}
+      main{grid-template-columns:1fr}
+      .panel+.panel{border:none}
+    }
   </style>
 </head>
 <body>
 <div class="container">
   <div class="app">
     <header>
-      <div>
-        <h1>ร้านเรือนชมพูเนื้อย่างเกาหลี</h1>
-        <small id="today"></small>
+      <div class="brand">
+        <div class="shop">ร้านเรือนชมพูเนื้อย่างเกาหลี</div>
+        <div class="branch">สาขานาเชือก • <small id="today"></small></div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="accent" id="btnSave">บันทึกบิล</button>
+      <div class="controls noprint">
+        <button class="accent" id="btnPrint">พิมพ์บิล</button>
         <button class="secondary" id="btnNew">เริ่มบิลใหม่</button>
+        <button class="ghost" id="btnSave">บันทึกบิล</button>
         <button class="warn" id="btnClear">ล้างทั้งหมด</button>
       </div>
     </header>
+
     <main>
-      <!-- ซ้าย -->
+      <!-- ซ้าย: เลือกเมนู -->
       <section class="panel">
-        <h2>เมนู</h2>
-        <div class="grid header"><div>สินค้า</div><div>ราคา</div><div>จำนวน</div></div>
+        <h2 style="margin:0 0 12px 0">เลือกเมนู</h2>
+
+        <!-- ฟอร์มเพิ่มเมนูใหม่ -->
+        <h3 style="margin-top:0">เพิ่มเมนูใหม่</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <input id="newName" placeholder="ชื่อเมนู" style="flex:1;padding:8px;border:1px solid #cbd5e1;border-radius:8px">
+          <input id="newCategory" placeholder="หมวดหมู่" style="width:120px;padding:8px;border:1px solid #cbd5e1;border-radius:8px">
+          <input id="newPrice" type="number" placeholder="ราคา" style="width:100px;padding:8px;border:1px solid #cbd5e1;border-radius:8px">
+          <button id="btnAddMenu" class="accent">➕ เพิ่มเมนู</button>
+        </div>
+
+        <!-- รายการเมนู -->
         <div id="menuList"></div>
       </section>
 
-      <!-- ขวา -->
+      <!-- ขวา: สรุปบิล -->
       <section class="panel">
-        <h2>สรุปบิล</h2>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <h2 style="margin:0 0 10px 0">สรุปบิล</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
           <div>
-            <label>ลูกค้า/โต๊ะ</label>
-            <input id="customer" class="num" placeholder="โต๊ะ 1">
+            <label class="muted">ลูกค้า/โต๊ะ</label>
+            <input id="customer" class="num" placeholder="โต๊ะ 1 หรือ ชื่อลูกค้า">
           </div>
           <div>
-            <label>เลขที่บิล</label>
+            <label class="muted">เลขที่บิล</label>
             <input id="billno" class="num" readonly>
           </div>
         </div>
+
         <div class="summary">
           <div class="line"><span>รวมทั้งหมด</span><span class="big" id="grand">฿0.00</span></div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-          <div><label>รับเงิน</label><input id="cash" type="number" class="num"></div>
-          <div><label>เงินทอน</label><input id="change" class="num" readonly></div>
+
+        <div style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label class="muted">รับเงินมา</label>
+            <input type="number" id="cash" class="num" min="0" step="1" placeholder="เช่น 1000">
+          </div>
+          <div>
+            <label class="muted">เงินทอน</label>
+            <input id="change" class="num" readonly>
+          </div>
         </div>
+
         <div style="margin-top:10px">
-          <label>หมายเหตุ</label>
-          <textarea id="note" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px"></textarea>
+          <label class="muted">หมายเหตุ</label>
+          <textarea id="note" class="note" rows="3"></textarea>
         </div>
       </section>
     </main>
@@ -79,7 +120,7 @@
 </div>
 
 <script type="module">
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 // TODO: เปลี่ยนเป็น URL และ KEY ของโปรเจกต์คุณ
 const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
@@ -89,93 +130,95 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const el = id => document.getElementById(id);
-const fmt = n => new Intl.NumberFormat('th-TH',{style:'currency',currency:'THB'}).format(n||0);
+const fmt = n => new Intl.NumberFormat("th-TH",{style:"currency",currency:"THB"}).format(n||0);
 
-let menuItems = [];
-
-function todayText(){
-  const d = new Date();
-  return d.toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'});
-}
-
-function nextBillNo(){
-  const key='pink-grill-last-bill';
-  let n = parseInt(localStorage.getItem(key)||'0',10)+1;
-  localStorage.setItem(key,String(n));
-  return String(n).padStart(5,'0');
-}
-
+// ===== โหลดเมนู =====
 async function loadMenu(){
   const { data, error } = await client.from("menu").select("*").order("id");
-  if(error){ alert("โหลดเมนูผิดพลาด"); return; }
-  menuItems = data;
-  const box = el("menuList");
-  box.innerHTML = "";
+  if(error){ console.error(error); return; }
+  const list = el("menuList");
+  list.innerHTML = "";
   data.forEach(m=>{
     const row = document.createElement("div");
-    row.className="grid";
-    row.innerHTML=`
-      <div>${m.name}</div>
-      <div style="text-align:right">฿${m.price}</div>
-      <input class="num" type="number" id="menu-${m.id}" min="0" step="1" value="0">
+    row.className = "menu-row";
+    row.innerHTML = `
+      <div>${m.name}<br><small class="muted">${m.category||""}</small></div>
+      <div class="right muted">฿${m.price}</div>
+      <input type="number" id="menu-${m.id}" min="0" step="1" value="0">
     `;
-    box.appendChild(row);
+    list.appendChild(row);
   });
-  document.querySelectorAll("#menuList input").forEach(i=> i.addEventListener("input",calc));
-}
-
-function calc(){
-  let total=0;
-  menuItems.forEach(m=>{
-    const qty=parseFloat(el("menu-"+m.id).value)||0;
-    total+=qty*m.price;
-  });
-  el("grand").textContent=fmt(total);
-  const cash=parseFloat(el("cash").value)||0;
-  el("change").value = cash>0 ? fmt(Math.max(0,cash-total)):"";
-}
-
-async function saveBill(){
-  const billData={
-    billno: el("billno").value,
-    customer: el("customer").value,
-    total: parseFloat(el("grand").textContent.replace(/[^\d.]/g,""))||0,
-    cash: parseFloat(el("cash").value)||0,
-    change: parseFloat(el("change").value.replace(/[^\d.]/g,""))||0,
-    note: el("note").value,
-    status:"paid"
-  };
-  const { data: bill, error } = await client.from("bills").insert(billData).select().single();
-  if(error){ alert("บันทึกบิลล้มเหลว"); return; }
-
-  // save bill_items
-  const items=[];
-  menuItems.forEach(m=>{
-    const qty=parseFloat(el("menu-"+m.id).value)||0;
-    if(qty>0){ items.push({ bill_id: bill.id, menu_id:m.id, qty, price:m.price }); }
-  });
-  if(items.length>0){
-    const { error: e2 } = await client.from("bill_items").insert(items);
-    if(e2){ alert("บันทึกรายการไม่สำเร็จ"); return; }
-  }
-  alert("บันทึกบิลเรียบร้อย");
-}
-
-function clearAll(){
-  document.querySelectorAll("input").forEach(i=>i.value="");
-  document.querySelectorAll("textarea").forEach(t=>t.value="");
-  document.querySelectorAll("#menuList input").forEach(i=>i.value=0);
   calc();
 }
 
-// init
+// ===== เพิ่มเมนูใหม่ =====
+async function addMenu(){
+  const name = el("newName").value.trim();
+  const category = el("newCategory").value.trim() || "อาหาร";
+  const price = parseFloat(el("newPrice").value)||0;
+  if(!name || price<=0){ alert("กรอกชื่อเมนูและราคา"); return; }
+  const { error } = await client.from("menu").insert([{name,category,price}]);
+  if(error){ alert("เพิ่มเมนูล้มเหลว: "+error.message); return; }
+  el("newName").value=""; el("newCategory").value=""; el("newPrice").value="";
+  loadMenu();
+}
+
+// ===== คำนวณ =====
+async function calc(){
+  const { data: menus } = await client.from("menu").select("*");
+  let total=0;
+  menus.forEach(m=>{
+    const qty = parseFloat(el("menu-"+m.id)?.value)||0;
+    total += qty * m.price;
+  });
+  el("grand").textContent = fmt(total);
+  const cash = parseFloat(el("cash").value)||0;
+  el("change").value = cash>0 ? fmt(Math.max(0,cash-total)) : "";
+}
+
+// ===== บันทึกบิล =====
+async function saveBill(){
+  const { data: menus } = await client.from("menu").select("*");
+  let items=[];
+  let total=0;
+  menus.forEach(m=>{
+    const qty = parseFloat(el("menu-"+m.id)?.value)||0;
+    if(qty>0){
+      items.push({menu_id:m.id,qty,price:m.price});
+      total += qty*m.price;
+    }
+  });
+  const bill = {
+    billno: el("billno").value,
+    customer: el("customer").value,
+    total,
+    cash: parseFloat(el("cash").value)||0,
+    change: parseFloat((el("cash").value||0)-total)||0,
+    note: el("note").value,
+  };
+  const { data: billData, error } = await client.from("bills").insert([bill]).select().single();
+  if(error){ alert("❌ บันทึกบิลล้มเหลว: "+error.message); return; }
+  items = items.map(it=>({...it,bill_id:billData.id}));
+  if(items.length>0) await client.from("bill_items").insert(items);
+  alert("✅ บันทึกบิลแล้ว");
+}
+
+// ===== Helper =====
+function todayText(){ return new Date().toLocaleString("th-TH",{dateStyle:"medium",timeStyle:"short"}); }
+function nextBillNo(){ const k="last-bill-no"; let n=parseInt(localStorage.getItem(k)||"0",10)+1; localStorage.setItem(k,n); return String(n).padStart(5,"0"); }
+
+// ===== Init =====
 window.addEventListener("DOMContentLoaded",()=>{
-  el("today").textContent=todayText();
-  el("billno").value=nextBillNo();
-  el("cash").addEventListener("input",calc);
+  el("today").textContent = todayText();
+  el("billno").value = nextBillNo();
+  el("btnAddMenu").addEventListener("click",addMenu);
   el("btnSave").addEventListener("click",saveBill);
-  el("btnNew").addEventListener("click",()=>{el("billno").value=nextBillNo();clearAll();});
-  el("btnClear").addEventListener("click",()=>{if(confirm("ล้างทั้งหมด?"))clearAll();});
+  el("btnClear").addEventListener("click",()=>{ if(confirm("ล้างทั้งหมด?")) loadMenu(); });
+  el("btnNew").addEventListener("click",()=>{ el("billno").value=nextBillNo(); loadMenu(); });
+  el("cash").addEventListener("input",calc);
+  el("btnPrint").addEventListener("click",()=>{
+    window.print();
+  });
   loadMenu();
 });
 </script>
