@@ -140,7 +140,7 @@ const tableId = urlParams.get("table_id");
 if(tableId){
   const { data: table, error } = await supabase.from("tables").select("*").eq("id", tableId).single();
   if(!error && table){
-    document.getElementById("tableName").textContent = "โต๊ะ: " + table.name;
+    document.getElementById("tableName").textContent = table.name;
     // เติมค่า default ลงใน input customer ด้วย
     document.getElementById("customer").value = table.name;
   }
