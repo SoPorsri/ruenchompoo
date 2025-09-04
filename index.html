@@ -17,14 +17,13 @@
   <header>ร้านเรือนชมพูเนื้อย่างเกาหลี • จัดการโต๊ะ</header>
   <div class="grid" id="tables"></div>
 
-  <script>
-    // ✅ โหลด createClient จาก supabase SDK
-    const { createClient } = supabase;
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
     // TODO: เปลี่ยนเป็น URL และ KEY ของโปรเจกต์คุณ
     const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
-
+    
     // ✅ ตั้งชื่อ client ไม่ให้ซ้ำ
     const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -41,27 +40,19 @@
         const div = document.createElement("div");
         div.className = "table-card " + (t.status === "ว่าง" ? "free" : "busy");
         div.textContent = t.name + " (" + t.status + ")";
-        div.onclick = () => toggleTable(t);
+        div.onclick = () => {
+          // 👉 เมื่อกด จะไปหน้า bill.html พร้อมส่ง table_id
+          window.location.href = `bill.html?table_id=${t.id}`;
+        };
         tablesDiv.appendChild(div);
       });
     }
 
-    async function toggleTable(table) {
-      const newStatus = table.status === "ว่าง" ? "ไม่ว่าง" : "ว่าง";
-      const { error } = await client.from("tables").update({ status: newStatus }).eq("id", table.id);
-      if (error) {
-        alert("Error: " + error.message);
-      }
-      loadTables();
-    }
-
-    // โหลดข้อมูลตอนเปิดหน้า
     loadTables();
 
-    // ✅ subscribe realtime
+    // ✅ Realtime subscribe
     client.channel('tables-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, payload => {
-        console.log("Realtime update:", payload);
         loadTables();
       })
       .subscribe();
