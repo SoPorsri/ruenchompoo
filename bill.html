@@ -81,9 +81,12 @@
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";  // 🔑 แก้เป็นของคุณ
-const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// TODO: เปลี่ยนเป็น URL และ KEY ของโปรเจกต์คุณ
+const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
+
+// ✅ ตั้งชื่อ client ไม่ให้ซ้ำ
+const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const el = id => document.getElementById(id);
 const fmt = n => new Intl.NumberFormat('th-TH',{style:'currency',currency:'THB'}).format(n||0);
@@ -103,7 +106,7 @@ function nextBillNo(){
 }
 
 async function loadMenu(){
-  const { data, error } = await supabase.from("menu").select("*").order("id");
+  const { data, error } = await client.from("menu").select("*").order("id");
   if(error){ alert("โหลดเมนูผิดพลาด"); return; }
   menuItems = data;
   const box = el("menuList");
@@ -142,7 +145,7 @@ async function saveBill(){
     note: el("note").value,
     status:"paid"
   };
-  const { data: bill, error } = await supabase.from("bills").insert(billData).select().single();
+  const { data: bill, error } = await client.from("bills").insert(billData).select().single();
   if(error){ alert("บันทึกบิลล้มเหลว"); return; }
 
   // save bill_items
@@ -152,7 +155,7 @@ async function saveBill(){
     if(qty>0){ items.push({ bill_id: bill.id, menu_id:m.id, qty, price:m.price }); }
   });
   if(items.length>0){
-    const { error: e2 } = await supabase.from("bill_items").insert(items);
+    const { error: e2 } = await client.from("bill_items").insert(items);
     if(e2){ alert("บันทึกรายการไม่สำเร็จ"); return; }
   }
   alert("บันทึกบิลเรียบร้อย");
