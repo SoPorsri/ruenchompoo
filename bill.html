@@ -217,25 +217,79 @@ function calc(){
   else{el('cash').style.borderColor='var(--line)';el('cashWarn').style.display='none';el('change').value = fmt(change>0?change:0);}
 }
 
-function buildPrintView(){
-  let html=`<h2>ร้านเรือนชมพูเนื้อย่างเกาหลี</h2>`;
-  html+=`<p>บิลเลขที่: ${el('billno').value}</p>`;
-  html+=`<p>โต๊ะ/ลูกค้า: ${el('customer').value}</p>`;
-  html+=`<table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse;width:100%"><tr><th>สินค้า</th><th>ราคา</th><th>จำนวน</th><th>รวม</th></tr>`;
-  document.querySelectorAll('#menuItems input').forEach(inp=>{
-    const qty=safeEval(inp.value);
-    if(qty<=0) return;
-    const id=parseInt(inp.dataset.id);
-    const menuItem=menuData.find(m=>m.id===id);
-    if(menuItem){
-      html+=`<tr><td>${menuItem.name}</td><td>${menuItem.price}</td><td>${qty}</td><td>${qty*menuItem.price}</td></tr>`;
+function buildPrintView() {
+  let html = `
+  <html>
+  <head>
+    <title>บิลร้านเรือนชมพูเนื้อย่างเกาหลี</title>
+    <style>
+      body { font-family: "Noto Sans Thai", sans-serif; margin:20px; color:#111; }
+      h1,h2,h3 { margin:0; padding:0; }
+      .header { text-align:center; margin-bottom:12px; }
+      .header h1 { font-size:24px; }
+      .header p { font-size:14px; margin:2px 0; }
+      table { width:100%; border-collapse: collapse; margin-top:10px; }
+      table, th, td { border:1px solid #000; }
+      th, td { padding:6px 8px; text-align:left; }
+      th.right, td.right { text-align:right; }
+      .summary { margin-top:12px; width:100%; display:grid; grid-template-columns:1fr auto; }
+      .summary div { padding:4px 0; }
+      .big { font-weight:800; font-size:20px; }
+      .note { margin-top:8px; font-size:14px; }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>ร้านเรือนชมพูเนื้อย่างเกาหลี</h1>
+      <p>สาขานาเชือก</p>
+      <p>โทร: 099-9999999</p>
+      <p>บิลเลขที่: ${el('billno').value}</p>
+      <p>โต๊ะ/ลูกค้า: ${el('customer').value}</p>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>สินค้า</th>
+          <th class="right">ราคา/หน่วย</th>
+          <th class="right">จำนวน</th>
+          <th class="right">รวม</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  document.querySelectorAll('#menuItems input').forEach(inp => {
+    const qty = safeEval(inp.value);
+    if (qty <= 0) return;
+    const menu_id = parseInt(inp.dataset.id);
+    const menuItem = menuData.find(m => m.id === menu_id);
+    if (menuItem) {
+      html += `<tr>
+        <td>${menuItem.name}</td>
+        <td class="right">${menuItem.price.toFixed(2)}</td>
+        <td class="right">${qty}</td>
+        <td class="right">${(qty * menuItem.price).toFixed(2)}</td>
+      </tr>`;
     }
   });
-  html+=`</table>`;
-  html+=`<p>ยอดรวม: ${el('grand').textContent}</p>`;
-  html+=`<p>รับเงินมา: ${el('cash').value || 0}</p>`;
-  html+=`<p>เงินทอน: ${el('change').value || 0}</p>`;
-  html+=`<p>หมายเหตุ: ${el('note').value}</p>`;
+
+  const total = safeEval(el('grand').textContent.replace(/[^\d.]/g,''));
+  const cash = safeEval(el('cash').value);
+  const change = safeEval(el('change').value);
+
+  html += `</tbody></table>
+    <div class="summary">
+      <div>ยอดรวม</div><div class="right big">${total.toFixed(2)}</div>
+      <div>รับเงินมา</div><div class="right">${cash.toFixed(2)}</div>
+      <div>เงินทอน</div><div class="right">${change.toFixed(2)}</div>
+    </div>
+    <div class="note">
+      หมายเหตุ: ${el('note').value || '-'}
+    </div>
+    <p style="text-align:center; margin-top:20px; font-size:12px;">ขอบคุณที่อุดหนุนร้านเรือนชมพูเนื้อย่างเกาหลี</p>
+  </body>
+  </html>
+  `;
   return html;
 }
 
