@@ -179,10 +179,12 @@
 
         // realtime update
         const channel = client.channel('tables-changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, () => {
-                loadTables();
-            });
-        channel.subscribe();
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, payload => {
+              console.log('change detected', payload);
+              loadTables();
+          });
+        
+        await channel.subscribe(); // ✅ ใช้ await
     </script>
 </body>
 </html>
