@@ -3,7 +3,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ร้านเรือนชมพูเนื้อย่างเกาหลี - จัดการโต๊ะ</title>
+    <title>ร้านเรือนชมพูเนื้อย่างเกาหลี - สาขานาเชือก</title>
+    <!-- โหลด Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
     <style>
         body {
             font-family: system-ui, "Noto Sans Thai", sans-serif;
@@ -65,11 +68,17 @@
 
         /* ไอคอน */
         .status-icon {
-            font-size: 16px;
+            font-size: 18px;
             margin-right: 6px;
         }
+        .status-icon.free {
+            color: #bbf7d0; /* เขียวอ่อน */
+        }
+        .status-icon.busy {
+            color: #fecaca; /* แดงอ่อน */
+        }
 
-        /* ซุ้ม 1–10 (แนวซ้าย, ล่างขึ้นบน) */
+        /* ซุ้ม 1–10 */
         #table-ซุ้ม1 { grid-column: 1; grid-row: 10; }
         #table-ซุ้ม2 { grid-column: 1; grid-row: 9; }
         #table-ซุ้ม3 { grid-column: 1; grid-row: 8; }
@@ -81,7 +90,7 @@
         #table-ซุ้ม9 { grid-column: 1; grid-row: 2; }
         #table-ซุ้ม10 { grid-column: 1; grid-row: 1; }
 
-        /* A1–A8 ตรงกลาง */
+        /* A1–A8 */
         #table-A1 {
           grid-column: 2;
           grid-row: 8 / span 2;
@@ -104,7 +113,7 @@
         #table-A7 { grid-column:2 / span 2; grid-row:3; height:50px; }
         #table-A8 { grid-column:2 / span 2; grid-row:2; height:50px; }
 
-        /* B1–B4 ขวา */
+        /* B1–B4 */
         #table-B1 { grid-column: 4; grid-row: 8; }
         #table-B2 { grid-column: 4; grid-row: 7; }
         #table-B3 { grid-column: 4; grid-row: 6; }
@@ -136,10 +145,13 @@
                 div.id = "table-" + t.name;
                 div.className = 'table-card ' + (t.status === 'ว่าง' ? 'free' : 'busy');
 
-                // เพิ่มไอคอนสถานะ
-                const icon = document.createElement('span');
-                icon.className = 'status-icon';
-                icon.textContent = t.status === 'ว่าง' ? "✔️" : "✖️";
+                // ไอคอน Font Awesome
+                const icon = document.createElement('i');
+                if (t.status === 'ว่าง') {
+                    icon.className = 'fa-solid fa-circle-check status-icon free';
+                } else {
+                    icon.className = 'fa-solid fa-circle-xmark status-icon busy';
+                }
 
                 const label = document.createElement('span');
                 label.textContent = `${t.name} (${t.status})`;
