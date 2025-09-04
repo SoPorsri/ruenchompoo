@@ -133,40 +133,28 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
 const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
+const SUPABASE_KEY = 'YOUR_KEY_HERE';
 const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const el=id=>document.getElementById(id);
 const fmt=n=>new Intl.NumberFormat('th-TH',{style:'currency',currency:'THB'}).format(n||0);
 function safeEval(expr){if(!expr)return 0;expr=expr.replace(/\s+/g,'');if(!/^[0-9+\-*/.]+$/.test(expr))return 0;try{return Function('"use strict";return('+expr+')')();}catch{return 0;}}
-
 function todayText(){const d=new Date();return d.toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'});}
 function nextBillNo(){const key='pink-grill-last-bill';let n=parseInt(localStorage.getItem(key)||'0',10)+1;localStorage.setItem(key,String(n));return String(n).padStart(5,'0');}
 
 let menuData = [];
-
-// ดึงโต๊ะจาก query string
 const params = new URLSearchParams(window.location.search);
 const table_id = params.get('table_id');
+
 async function loadTableName() {
   if (!table_id) return;
-  const { data, error } = await supabase
-    .from('tables')
-    .select('*')
-    .eq('id', table_id)
-    .single();
+  const { data, error } = await client.from('tables').select('*').eq('id', table_id).single();
   if (error) { console.log(error); return; }
   if (data) {
     el('customer').value = data.name;
-    // อัปเดต status เป็น "ไม่ว่าง"
-    const { error:updateError } = await supabase
-      .from('tables')
-      .update({ status: 'ไม่ว่าง' })
-      .eq('id', table_id);
-    if (updateError) console.log('อัปเดตโต๊ะไม่ว่างผิดพลาด', updateError);
+    await client.from('tables').update({ status:'ไม่ว่าง' }).eq('id', table_id);
   }
 }
-
 
 async function loadMenu(){
   const { data, error } = await client.from('menu').select('*').order('id');
@@ -197,6 +185,35 @@ function calc(){
   else{el('cash').style.borderColor='var(--line)';el('cashWarn').style.display='none';el('change').value = fmt(change>0?change:0);}
 }
 
+function buildPrintView(){
+  let html = `<h2 style="text-align:center">ร้านเรือนชมพูเนื้อย่างเกาหลี<br>สาขานาเชือก</h2>
+  <p>วันที่: ${todayText()}<br>เลขที่บิล: ${el('billno').value}<br>ลูกค้า/โต๊ะ: ${el('customer').value}</p>
+  <table border="1" cellspacing="0" cellpadding="6" style="width:100%;border-collapse:collapse">
+  <tr><th>สินค้า</th><th>จำนวน</th><th>ราคา</th></tr>`;
+  
+  document.querySelectorAll('#menuItems .row').forEach(r=>{
+    const label = r.querySelector('label').textContent;
+    const qty = safeEval(r.querySelector('input').value);
+    const id = parseInt(r.querySelector('input').dataset.id);
+    const menuItem = menuData.find(m=>m.id===id);
+    if(menuItem && qty>0){
+      html += `<tr>
+        <td>${label}</td>
+        <td style="text-align:right">${qty}</td>
+        <td style="text-align:right">${fmt(qty*menuItem.price)}</td>
+      </tr>`;
+    }
+  });
+
+  html += `<tr>
+    <td colspan="2" style="text-align:right"><b>รวมทั้งหมด</b></td>
+    <td style="text-align:right"><b>${el('grand').textContent}</b></td>
+  </tr></table>`;
+
+  if(el('note').value) html += `<p><b>หมายเหตุ:</b> ${el('note').value}</p>`;
+  return html;
+}
+
 window.addEventListener('DOMContentLoaded',()=>{
   el('today').textContent=todayText();
   el('billno').value=nextBillNo();
@@ -204,7 +221,6 @@ window.addEventListener('DOMContentLoaded',()=>{
   loadMenu();
 
   el('btnHome').addEventListener('click',()=>{window.location.href='index.html';});
-
   el('btnAddMenu').addEventListener('click',()=>{el('popup').style.display='flex';});
   el('btnAddMenuCancel').addEventListener('click',()=>{el('popup').style.display='none'; el('newMenuName').value=''; el('newMenuPrice').value='';});
   el('btnAddMenuConfirm').addEventListener('click',async()=>{
@@ -217,25 +233,19 @@ window.addEventListener('DOMContentLoaded',()=>{
   });
 
   el('btnPrint').addEventListener('click', async () => {
-  const w = window.open('', 'PRINT', 'height=600,width=800');
-  // สร้างเนื้อหาพิมพ์
-  w.document.write('<html><head><title>พิมพ์บิล</title></head><body>');
-  w.document.write(buildPrintView());
-  w.document.write('</body></html>');
-  w.document.close();
-  w.focus();
-  w.print();
-  w.close();
+    const w = window.open('', 'PRINT', 'height=600,width=800');
+    w.document.write('<html><head><title>พิมพ์บิล</title></head><body>');
+    w.document.write(buildPrintView());
+    w.document.write('</body></html>');
+    w.document.close();
+    w.focus();
+    w.print();
+    w.close();
 
-  // อัปเดตโต๊ะกลับเป็น "ว่าง"
-  if(table_id){
-    const { error } = await supabase
-      .from('tables')
-      .update({ status: 'ว่าง' })
-      .eq('id', table_id);
-    if (error) console.log('อัปเดตโต๊ะว่างผิดพลาด', error);
-  }
-});
+    if(table_id){
+      await client.from('tables').update({ status: 'ว่าง' }).eq('id', table_id);
+    }
+  });
 
   el('btnNew').addEventListener('click',()=>{
     el('billno').value=nextBillNo();
