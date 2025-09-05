@@ -28,26 +28,26 @@
 
         .layout {
             display: grid;
-            grid-template-columns: 100px 100px 100px 100px;
-            grid-template-rows: repeat(10, 60px);
-            gap: 10px;
-            padding: 20px;
-            justify-content: center;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); 
+            /* แต่ละ column กว้างขั้นต่ำ 100px และยืดเต็มพื้นที่ */
+            grid-auto-rows: minmax(60px, auto); 
+            gap: 12px;
+            padding: 16px;
         }
-
-        /* การ์ดโต๊ะ */
+        
         .table-card {
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 10px;
-            font-size: 14px;
+            border-radius: 12px;
+            font-size: clamp(12px, 2vw, 16px); /* ปรับขนาด font อัตโนมัติตามจอ */
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-            padding: 6px;
+            padding: 12px;
             text-align: center;
+            min-height: 50px; /* ความสูงขั้นต่ำ */
         }
 
         .table-card:hover {
