@@ -71,7 +71,8 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
         <button class="ghost" id="btnSave"><span class="icon">💾</span> บันทึกฉบับร่าง</button>
         <button class="warn" id="btnClear"><span class="icon">🗑️</span> ยกเลิกบิล</button>
         <button class="secondary" id="btnHome"><span class="icon">🏠</span> หน้าแรก</button>
-        <button class="accent" id="btnPrint"><span class="icon">🖨️</span> พิมพ์บิล</button>
+        <!-- <button class="accent" id="btnPrint"><span class="icon">🖨️</span> พิมพ์บิล</button> -->
+        <button class="accent" id="btnCheckout"><span class="icon">✅</span> เช็คบิล</button>
       </div>
     </header>
 
@@ -125,6 +126,19 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
     <input type="number" id="newMenuPrice" placeholder="ราคา" min="0">
     <button id="btnAddMenuConfirm">บันทึก</button>
     <button id="btnAddMenuCancel">ยกเลิก</button>
+  </div>
+</div>
+
+<!-- popup เช็คบิล -->
+<div id="popupCheckout" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+  <div style="background:white; padding:20px; border-radius:12px; width:300px;">
+    <h3 style="margin-top:0">สรุปบิล</h3>
+    <p>ยอดรวม: <b id="sumTotal"></b></p>
+    <p>รับเงินมา: <b id="sumCash"></b></p>
+    <p>เงินทอน: <b id="sumChange"></b></p>
+    <button id="btnConfirmCheckout" style="background:var(--accent);color:white;width:100%;margin-top:8px;padding:10px;border:none;border-radius:8px">ยืนยันเช็คบิล</button>
+    <button id="btnCancelCheckout" style="background:var(--danger);color:white;width:100%;margin-top:6px;padding:10px;border:none;border-radius:8px">ยกเลิก</button>
   </div>
 </div>
 
@@ -508,6 +522,32 @@ window.addEventListener('DOMContentLoaded',()=>{
 
   el('cash').addEventListener('input',calc);
 });
+
+// เปิด popup เช็คบิล
+el('btnCheckout').addEventListener('click', () => {
+  const total = safeEval(el('grand').textContent.replace(/[^\d.]/g,''));
+  const cash = safeEval(el('cash').value);
+  const change = safeEval(el('change').value);
+
+  el('sumTotal').textContent = fmt(total);
+  el('sumCash').textContent = fmt(cash);
+  el('sumChange').textContent = fmt(change);
+
+  el('popupCheckout').style.display = 'flex';
+});
+
+// ยกเลิก popup
+el('btnCancelCheckout').addEventListener('click', () => {
+  el('popupCheckout').style.display = 'none';
+});
+
+// ยืนยัน -> saveBill()
+el('btnConfirmCheckout').addEventListener('click', () => {
+  el('popupCheckout').style.display = 'none';
+  saveBill();
+});
+
+  
 </script>
 </body>
 </html>
