@@ -67,8 +67,7 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
         <div class="branch">สาขานาเชือก • <small id="today"></small></div>
       </div>
       <div class="controls noprint">
-        <button class="accent" id="btnAddMenu"><span class="icon">➕</span> เพิ่มเมนู</button>
-        <button class="secondary" id="btnNew"><span class="icon">🆕</span> เริ่มบิลใหม่</button>
+        <button class="accent" id="btnAddMenu"><span class="icon">📝</span> เพิ่มเมนู</button>
         <button class="ghost" id="btnSave"><span class="icon">💾</span> บันทึกฉบับร่าง</button>
         <button class="warn" id="btnClear"><span class="icon">❌</span> ยกเลิกบิล</button>
         <button class="secondary" id="btnHome"><span class="icon">🏠</span> หน้าแรก</button>
@@ -476,11 +475,6 @@ window.addEventListener('DOMContentLoaded',()=>{
 
   el('btnPrint').addEventListener('click',saveBill);
   el('btnSave').addEventListener('click',saveDraft);
-
-  el('btnNew').addEventListener('click',()=>{
-    el('billno').value=nextBillNo();
-    document.querySelectorAll('#menuItems input').forEach(i=>i.value=''); el('cash').value=''; el('note').value=''; calc();
-  });
 
   el('btnClear').addEventListener('click', async () => {
   if (confirm('ยืนยันการยกเลิกบิลนี้หรือไม่?')) {
