@@ -70,7 +70,7 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
         <button class="accent" id="btnAddMenu"><span class="icon">➕</span> เพิ่มเมนู</button>
         <button class="secondary" id="btnNew"><span class="icon">🆕</span> เริ่มบิลใหม่</button>
         <button class="ghost" id="btnSave"><span class="icon">💾</span> บันทึกฉบับร่าง</button>
-        <button class="warn" id="btnClear"><span class="icon">🧹</span> ล้างทั้งหมด</button>
+        <button class="warn" id="btnClear"><span class="icon">🧹</span> ยกเลิกบิล</button>
         <button class="secondary" id="btnHome"><span class="icon">🏠</span> หน้าแรก</button>
         <button class="accent" id="btnPrint"><span class="icon">🖨️</span> พิมพ์บิล</button>
       </div>
@@ -482,11 +482,35 @@ window.addEventListener('DOMContentLoaded',()=>{
     document.querySelectorAll('#menuItems input').forEach(i=>i.value=''); el('cash').value=''; el('note').value=''; calc();
   });
 
-  el('btnClear').addEventListener('click',()=>{
-    if(confirm('ล้างทั้งหมด?')){
-      document.querySelectorAll('#menuItems input').forEach(i=>i.value=''); el('cash').value=''; el('note').value=''; calc();
+  el('btnClear').addEventListener('click', async () => {
+  if (confirm('ยืนยันการยกเลิกบิลนี้หรือไม่?')) {
+    // อัปเดตสถานะโต๊ะเป็น 'ว่าง'
+    if (table_id) {
+      const { error: updateError } = await client.from('tables').update({ status: 'ว่าง' }).eq('id', table_id);
+      if (updateError) {
+        console.log('อัปเดตสถานะโต๊ะผิดพลาด', updateError);
+      }
     }
-  });
+
+    // ลบ draft ทั้งหมดที่เกี่ยวข้องกับโต๊ะนี้
+    if (table_id) {
+        const { data: draftData, error: draftError } = await client.from('drafts')
+            .select('id').eq('table_id', table_id).single();
+        if (draftData) {
+            await client.from('draft_items').delete().eq('draft_id', draftData.id);
+            await client.from('drafts').delete().eq('id', draftData.id);
+        }
+    }
+
+    // ล้างข้อมูลในฟอร์ม
+    document.querySelectorAll('#menuItems input').forEach(i => i.value = '');
+    el('customer').value = '';
+    el('cash').value = '';
+    el('note').value = '';
+    calc();
+    alert('ยกเลิกบิลเรียบร้อยแล้ว');
+  }
+});
 
   el('cash').addEventListener('input',calc);
 });
