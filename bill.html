@@ -402,7 +402,7 @@ async function saveBill(){
   }
 
   // 4️⃣ ลบ draft + draft_items
-  const { data: draftData, error: draftError } = await client.from('drafts')
+  const { data: draftData } = await client.from('drafts')
     .select('id').eq('billno', billno).single();
 
   if(draftData){
@@ -410,15 +410,10 @@ async function saveBill(){
     await client.from('drafts').delete().eq('id', draftData.id);
   }
 
-  // 5️⃣ พิมพ์บิล
-  const w = window.open('', 'PRINT', 'height=600,width=800');
-  w.document.write('<html><head><title>พิมพ์บิล</title></head><body>');
-  w.document.write(buildPrintView());
-  w.document.write('</body></html>');
-  w.document.close();
-  w.focus();
-  w.print();
-  w.close();
+  // 5️⃣ เปิดบิลในหน้าใหม่ (ไม่สั่ง print โดยตรง)
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(buildPrintView());
+  printWindow.document.close();
 
   // 6️⃣ ล้างหน้าบิล
   el('billno').value = nextBillNo();
@@ -427,6 +422,7 @@ async function saveBill(){
   el('note').value=''; 
   calc();
 }
+
 
 
 window.addEventListener('DOMContentLoaded',()=>{
