@@ -111,7 +111,7 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
         </div>
         <div style="margin-top:10px">
           <label class="muted">หมายเหตุ</label>
-          <textarea class="note" id="note" rows="3" placeholder="เช่น ไม่ใส่พริก, เพิ่มเตา"></textarea>
+          <textarea class="note" id="note" rows="3" placeholder=""></textarea>
         </div>
       </section>
     </main>
@@ -437,24 +437,32 @@ window.addEventListener('DOMContentLoaded',()=>{
   loadMenu().then(loadDraft);
 
   el('btnHome').addEventListener('click', async () => {
-    // ตรวจสอบว่ามีการป้อนข้อมูลในฟอร์มรายการอาหารหรือชื่อลูกค้าหรือไม่
-    const hasItems = Array.from(document.querySelectorAll('#menuItems input')).some(inp => safeEval(inp.value) > 0);
-    const hasCustomer = el('customer').value.trim() !== '';
-  
-    // ถ้ามีข้อมูลในบิลแต่ยังไม่ได้บันทึกและมี table_id
-    if ((hasItems || hasCustomer) && table_id) {
+  if (table_id) {
+    // 1️⃣ ตรวจสอบว่ามี draft ที่ถูกบันทึกไว้สำหรับโต๊ะนี้หรือไม่
+    const { data: draftData, error: draftError } = await client.from('drafts')
+      .select('id')
+      .eq('table_id', table_id)
+      .single();
+
+    // 2️⃣ ถ้าไม่มี draft และมีการป้อนข้อมูลในฟอร์ม แสดงว่าผู้ใช้ไม่ได้บันทึก
+    const hasUnsavedData = Array.from(document.querySelectorAll('#menuItems input')).some(inp => safeEval(inp.value) > 0) || el('customer').value.trim() !== '';
+
+    if (!draftData && hasUnsavedData) {
+      // 3️⃣ เปลี่ยนสถานะโต๊ะเป็น 'ว่าง' และแจ้งเตือน
       const { error: updateError } = await client.from('tables').update({ status: 'ว่าง' }).eq('id', table_id);
       if (updateError) {
         console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
         alert('บันทึกสถานะโต๊ะผิดพลาด กรุณาลองใหม่อีกครั้ง');
       } else {
-        alert('ยังไม่ได้บันทึกข้อมูล สถานะโต๊ะจะถูกตั้งเป็นว่าง');
+        alert('คุณยังไม่ได้บันทึกข้อมูล สถานะโต๊ะจะถูกเปลี่ยนเป็น "ว่าง"');
       }
     }
-  
-    // กลับไปหน้าหลักเสมอ
-    window.location.href = 'index.html';
-  });
+    // กรณีอื่น ๆ (มี draft หรือฟอร์มว่าง) ไม่ต้องทำอะไรกับสถานะโต๊ะ
+  }
+
+  // กลับไปหน้าหลักเสมอ
+  window.location.href = 'index.html';
+});
   el('btnAddMenu').addEventListener('click',()=>{el('popup').style.display='flex';});
   el('btnAddMenuCancel').addEventListener('click',()=>{el('popup').style.display='none'; el('newMenuName').value=''; el('newMenuPrice').value='';});
   el('btnAddMenuConfirm').addEventListener('click',async()=>{
