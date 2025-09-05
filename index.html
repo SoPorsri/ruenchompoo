@@ -28,14 +28,13 @@
 
         .layout {
             display: grid;
-            grid-template-columns: 80px 90px 90px 80px;
-            grid-template-rows: repeat(12, 60px);
+            grid-template-columns: repeat(4, minmax(60px, 1fr)); /* ปรับคอลัมน์ให้ยืดหยุ่น */
+            grid-auto-rows: minmax(40px, auto); /* ความสูง auto */
             gap: 12px;
             padding: 24px;
             justify-content: center;
         }
-
-        /* การ์ดโต๊ะ */
+        
         .table-card {
             display: flex;
             align-items: center;
@@ -46,9 +45,16 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-            padding: 6px;
+            padding: 8px 12px;
             text-align: center;
+        
+            /* ลบ width/height ตายตัวออก แล้วใช้ auto */
+            min-width: 60px;
+            min-height: 40px;
+            width: auto;
+            height: auto;
         }
+
 
         .table-card:hover {
             transform: translateY(-4px) scale(1.05);
