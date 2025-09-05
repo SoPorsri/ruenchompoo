@@ -28,8 +28,8 @@
 
         .layout {
             display: grid;
-            grid-template-columns: repeat(4, minmax(60px, 1fr)); /* ปรับคอลัมน์ให้ยืดหยุ่น */
-            grid-auto-rows: minmax(40px, auto); /* ความสูง auto */
+            grid-template-columns: 80px 90px 90px 80px; /* คงความกว้างเดิมไว้ */
+            grid-auto-rows: minmax(40px, auto); /* ความสูง auto ตามเนื้อหา */
             gap: 12px;
             padding: 24px;
             justify-content: center;
@@ -48,11 +48,12 @@
             padding: 8px 12px;
             text-align: center;
         
-            /* ลบ width/height ตายตัวออก แล้วใช้ auto */
-            min-width: 60px;
+            /* ลบ height เดิมออก แล้วให้ auto */
             min-height: 40px;
-            width: auto;
             height: auto;
+        
+            /* กำหนดความกว้าง fix */
+            width: 100%; /* ให้เต็มช่อง grid ที่ fix ไว้ */
         }
 
 
