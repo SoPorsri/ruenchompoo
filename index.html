@@ -28,11 +28,10 @@
 
         .layout {
             display: grid;
-            grid-template-columns: 80px 90px 90px 80px; 
+            grid-template-columns: repeat(4, minmax(70px, 1fr));
             grid-auto-rows: minmax(40px, auto);
-            gap: 12px; /* ช่องไฟระหว่าง card */
-            padding: 24px; /* ช่องไฟรอบนอกทั้งหมด */
-            justify-content: center;
+            gap: 20px;
+            padding: 24px;
         }
         
         .table-card {
