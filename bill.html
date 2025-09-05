@@ -487,7 +487,9 @@ window.addEventListener('DOMContentLoaded',()=>{
     else { el('popup').style.display='none'; el('newMenuName').value=''; el('newMenuPrice').value=''; loadMenu(); }
   });
 
-  el('btnPrint').addEventListener('click',saveBill);
+  if (el('btnPrint')) {
+    el('btnPrint').addEventListener('click', saveBill);
+  }
   el('btnSave').addEventListener('click',saveDraft);
 
   el('btnClear').addEventListener('click', async () => {
