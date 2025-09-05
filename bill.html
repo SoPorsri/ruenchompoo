@@ -128,22 +128,6 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
   </div>
 </div>
 
-<!-- Popup สำหรับบิล -->
-<div id="billModal" 
-     style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-            background:rgba(0,0,0,.5);justify-content:center;align-items:center;z-index:9999;">
-  <div style="background:white;width:90%;max-width:400px;height:80%;overflow:auto;
-              border-radius:12px;padding:16px;position:relative;">
-    <button onclick="closeBillModal()" 
-            style="position:absolute;top:10px;right:10px;border:none;
-                   background:#ef4444;color:white;padding:6px 10px;border-radius:6px;">
-      ✖
-    </button>
-    <div id="billContent"></div>
-  </div>
-</div>
-
-
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
@@ -413,11 +397,12 @@ async function saveBill(){
 
   // 3️⃣ อัปเดตโต๊ะเป็นว่าง
   if(table_id){
-    await client.from('tables').update({ status:'ว่าง' }).eq('id', table_id);
+    const { error:updateError } = await client.from('tables').update({ status:'ว่าง' }).eq('id', table_id);
+    if(updateError) console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
   }
 
   // 4️⃣ ลบ draft + draft_items
-  const { data: draftData } = await client.from('drafts')
+  const { data: draftData, error: draftError } = await client.from('drafts')
     .select('id').eq('billno', billno).single();
 
   if(draftData){
@@ -425,17 +410,15 @@ async function saveBill(){
     await client.from('drafts').delete().eq('id', draftData.id);
   }
 
-  // 5️⃣ แสดงบิลใน modal
-  const billHtml = buildPrintView() + `
-    <div style="text-align:center;margin-top:20px;">
-      <button onclick="window.print()" 
-        style="padding:10px 20px;font-size:16px;border:none;border-radius:8px;background:#10b981;color:white;">
-        🖨️ พิมพ์บิล
-      </button>
-    </div>
-  `;
-  document.getElementById("billContent").innerHTML = billHtml;
-  document.getElementById("billModal").style.display = "flex";
+  // 5️⃣ พิมพ์บิล
+  const w = window.open('', 'PRINT', 'height=600,width=800');
+  w.document.write('<html><head><title>พิมพ์บิล</title></head><body>');
+  w.document.write(buildPrintView());
+  w.document.write('</body></html>');
+  w.document.close();
+  w.focus();
+  w.print();
+  w.close();
 
   // 6️⃣ ล้างหน้าบิล
   el('billno').value = nextBillNo();
