@@ -388,8 +388,12 @@ async function saveDraft() {
 }
 
 function showBillModal() {
-  const html = buildPrintView(); // ใช้ฟังก์ชันที่คุณมีอยู่แล้ว
-  document.getElementById('billContent').innerHTML = html;
+  // ดึงเฉพาะ body จาก buildPrintView()
+  const fullHtml = buildPrintView();
+  const bodyMatch = fullHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  const onlyBody = bodyMatch ? bodyMatch[1] : fullHtml;
+
+  document.getElementById('billContent').innerHTML = onlyBody;
   document.getElementById('billModal').style.display = 'flex';
 }
 
@@ -398,11 +402,8 @@ function closeBillModal() {
 }
 
 function printBill() {
-  const printContents = document.getElementById('billContent').innerHTML;
   const w = window.open('', '', 'height=600,width=400');
-  w.document.write('<html><head><title>พิมพ์บิล</title></head><body>');
-  w.document.write(printContents);
-  w.document.write('</body></html>');
+  w.document.write(buildPrintView()); // พิมพ์ HTML เต็มชุด
   w.document.close();
   w.print();
 }
