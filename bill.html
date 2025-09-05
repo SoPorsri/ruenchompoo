@@ -397,8 +397,7 @@ async function saveBill(){
 
   // 3️⃣ อัปเดตโต๊ะเป็นว่าง
   if(table_id){
-    const { error:updateError } = await client.from('tables').update({ status:'ว่าง' }).eq('id', table_id);
-    if(updateError) console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
+    await client.from('tables').update({ status:'ว่าง' }).eq('id', table_id);
   }
 
   // 4️⃣ ลบ draft + draft_items
@@ -410,9 +409,17 @@ async function saveBill(){
     await client.from('drafts').delete().eq('id', draftData.id);
   }
 
-  // 5️⃣ เปิดบิลในหน้าใหม่ (ไม่สั่ง print โดยตรง)
+  // 5️⃣ เปิดบิลในหน้าใหม่ พร้อมปุ่ม "พิมพ์บิล"
+  const printHtml = buildPrintView() + `
+    <div style="text-align:center;margin-top:20px;">
+      <button onclick="window.print()" 
+        style="padding:10px 20px;font-size:16px;border:none;border-radius:8px;background:#10b981;color:white;">
+        🖨️ พิมพ์บิล
+      </button>
+    </div>
+  `;
   const printWindow = window.open('', '_blank');
-  printWindow.document.write(buildPrintView());
+  printWindow.document.write(printHtml);
   printWindow.document.close();
 
   // 6️⃣ ล้างหน้าบิล
@@ -422,6 +429,7 @@ async function saveBill(){
   el('note').value=''; 
   calc();
 }
+
 
 
 
