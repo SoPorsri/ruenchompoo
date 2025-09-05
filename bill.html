@@ -529,7 +529,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 el('btnCheckout').addEventListener('click', () => {
   const total = safeEval(el('grand').textContent.replace(/[^\d.]/g,''));
   const cash = safeEval(el('cash').value);
-  const change = safeEval(el('change').value);
+  const change = safeEval(el('change').value.replace(/[^\d.]/g,'')); // ✅ ล้างสัญลักษณ์ออก
 
   el('sumTotal').textContent = fmt(total);
   el('sumCash').textContent = fmt(cash);
