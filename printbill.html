@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>พิมพ์บิล - ร้านเรือนชมพูเนื้อย่างเกาหลี</title>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"></script>
+<style>
+body { font-family: "Noto Sans Thai", sans-serif; margin:20px; color:#111; }
+h1,h2,h3 { margin:0; padding:0; }
+.header { text-align:center; margin-bottom:12px; }
+.header h1 { font-size:22px; }
+.header p { font-size:14px; margin:2px 0; }
+table { width:100%; border-collapse: collapse; margin-top:10px; font-size:14px; }
+table, th, td { border:1px solid #000; }
+th, td { padding:6px 8px; text-align:left; }
+th.right, td.right { text-align:right; }
+.summary { margin-top:12px; width:100%; font-size:14px; }
+.summary .line { display:flex; justify-content:space-between; margin:4px 0; }
+.big { font-weight:800; font-size:16px; }
+.note { margin-top:8px; font-size:13px; }
+.footer { text-align:center; margin-top:18px; font-size:12px; }
+@media print {
+  body { margin:0; }
+}
+</style>
+</head>
+<body>
+<div id="printArea">กำลังโหลด...</div>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
+const client = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const params = new URLSearchParams(window.location.search);
+const bill_no = params.get('bill_no');
+
+const fmt = n => new Intl.NumberFormat('th-TH',{style:'currency',currency:'THB'}).format(n||0);
+
+async function loadBill() {
+  if (!bill_no) {
+    document.getElementById('printArea').innerHTML = '<p style="color:red">ไม่พบเลขที่บิล</p>';
+    return;
+  }
+
+  // 1️⃣ ดึงข้อมูลบิล
+  const { data: bill, error: billError } = await client
+    .from('bills')
+    .select('*')
+    .eq('bill_no', bill_no)
+    .single();
+
+  if (billError || !bill) {
+    console.log(billError);
+    document.getElementById('printArea').innerHTML = '<p style="color:red">โหลดบิลไม่สำเร็จ</p>';
+    return;
+  }
+
+  // 2️⃣ ดึงรายการสินค้า
+  const { data: items, error: itemsError } = await client
+    .from('bill_items')
+    .select('*, menu(name)')
+    .eq('bill_id', bill.id);
+
+  if (itemsError) {
+    console.log(itemsError);
+    document.getElementById('printArea').innerHTML = '<p style="color:red">โหลดรายการสินค้าไม่สำเร็จ</p>';
+    return;
+  }
+
+  // 3️⃣ สร้าง HTML บิล
+  const now = new Date(bill.created_at).toLocaleString('th-TH',{ dateStyle:'short', timeStyle:'short' });
+  let html = `
+    <div class="header">
+      <h1>ร้านเรือนชมพูเนื้อย่างเกาหลี</h1>
+      <p>สาขานาเชือก</p>
+      <p>โทร: 099-9999999</p>
+      <p>เลขที่บิล: ${bill.bill_no}</p>
+      <p>ลูกค้า/โต๊ะ: ${bill.customer || '-'}</p>
+      <p>วันที่: ${now}</p>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>สินค้า</th>
+          <th class="right">ราคา</th>
+          <th class="right">จำนวน</th>
+          <th class="right">รวม</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  items.forEach(it=>{
+    html += `<tr>
+      <td>${it.menu?.name || '-'}</td>
+      <td class="right">${fmt(it.price)}</td>
+      <td class="right">${it.qty}</td>
+      <td class="right">${fmt(it.qty * it.price)}</td>
+    </tr>`;
+  });
+
+  html += `</tbody></table>
+    <div class="summary">
+      <div class="line"><span>ยอดรวม</span><span class="big">${fmt(bill.total)}</span></div>
+      <div class="line"><span>รับเงินมา</span><span>${fmt(bill.cash)}</span></div>
+      <div class="line"><span>เงินทอน</span><span>${fmt(bill.change)}</span></div>
+    </div>
+    <div class="note">หมายเหตุ: ${bill.note || '-'}</div>
+    <div class="footer">*** ขอบคุณที่อุดหนุน ***</div>
+  `;
+
+  document.getElementById('printArea').innerHTML = html;
+
+  // 4️⃣ Auto print
+  setTimeout(()=>window.print(), 500);
+}
+
+loadBill();
+</script>
+</body>
+</html>
