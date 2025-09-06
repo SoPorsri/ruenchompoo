@@ -80,33 +80,33 @@ main {
   gap: 12px;
 }
 
-/* กัน input / textarea ไม่ให้ล้น */
-#right > div,
+/* ป้องกัน input/textarea ล้น container */
 #right input,
 #right select,
 #right textarea {
-  min-width: 0;
+  width: 100% !important;
   max-width: 100%;
-  width: 100%;
   box-sizing: border-box;
+  display: block;
 }
 
-/* grid 2 คอลัมน์ในฝั่งขวา */
-#right .grid-2col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  width: 100%;
+/* แก้ flex ให้ยืด-หดแทนที่จะ fix 40% */
+#right {
+  flex: 1; /* ยืดได้ตามพื้นที่ที่เหลือ */
+  min-width: 0; /* ป้องกัน overflow */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
-#right .grid-2col > div {
-  min-width: 0;
+
+/* label หรือ text ที่ยาวเกิน ให้ตัดบรรทัด */
+#right label,
+#right span,
+#right div {
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
-#right .grid-2col input,
-#right .grid-2col textarea {
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-}
+
 
 /* --- Layout แนวตั้ง (มือถือ) --- */
 @media screen and (orientation: portrait) {
