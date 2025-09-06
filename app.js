@@ -117,7 +117,36 @@ el('btnSave').onclick=saveDraft;
 el('btnClear').onclick=()=>{if(confirm('แน่ใจ?')){document.querySelectorAll('#menuItems input').forEach(i=>i.value='');el('customer').value='';el('cash').value='';el('note').value='';calc();}};
 el('btnCheckout').onclick=()=>{el('sumTotal').textContent=el('grand').textContent;el('sumCash').textContent=fmt(safeEval(el('cash').value));el('sumChange').textContent=el('change').value;el('popupCheckout').style.display='flex';};
 el('btnCancelCheckout').onclick=()=>el('popupCheckout').style.display='none';
-el('btnConfirmCheckout').onclick=saveBill;
+el('btnConfirmCheckout').onclick = async () => {
+  const items=[];
+  menuData.forEach(item=>{
+    const qty=safeEval(document.querySelector(`#menuItems input[data-id="${item.id}"]`)?.value);
+    if(qty>0)items.push({menu_id:item.id,qty,price:item.price});
+  });
+
+  const bill={
+    bill_no:el('billno').value,
+    customer:el('customer').value,
+    total:calc(),
+    cash:safeEval(el('cash').value),
+    change:safeEval(el('change').value),
+    note:el('note').value,
+    items,
+    created_at:new Date()
+  };
+
+  const { data, error } = await client.from('bills').insert(bill).select().single();
+  if (table_id) await client.from('drafts').delete().eq('table_id', table_id);
+
+  if (!error && data) {
+    // ✅ ไปหน้า printbill.html พร้อม bill_no
+    window.location.href = `printbill.html?bill_no=${data.bill_no}`;
+  } else {
+    alert('เกิดข้อผิดพลาดในการบันทึกบิล');
+    console.log(error);
+  }
+};
+
 el('btnAddMenu').onclick=()=>{el('popup').style.display='flex';};
 el('btnAddMenuCancel').onclick=()=>{el('popup').style.display='none';};
 el('btnAddMenuConfirm').onclick=async()=>{const name=el('newMenuName').value.trim();const price=parseFloat(el('newMenuPrice').value);if(!name||!price)return;await client.from('menu').insert({name,price,sort_order:menuData.length+1});el('popup').style.display='none';el('newMenuName').value='';el('newMenuPrice').value='';loadMenu();};
