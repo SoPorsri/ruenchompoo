@@ -342,7 +342,7 @@ function buildPrintView() {
 
   const total = safeEval(el('grand').textContent.replace(/[^\d.]/g,''));
   const cash = safeEval(el('cash').value);
-  const change = safeEval(el('change').value);
+  const change = safeEval(el('change').value.replace(/[^\d.]/g,''));
 
   html += `</tbody></table>
     <div class="summary">
@@ -434,7 +434,7 @@ async function saveBill(){
   const customer = el('customer').value;
   const total = safeEval(el('grand').textContent.replace(/[^\d.]/g,''));
   const cash = safeEval(el('cash').value);
-  const change = safeEval(el('change').value);
+  const change = safeEval(el('change').value.replace(/[^\d.]/g,''));
   const note = el('note').value;
 
   // 1️⃣ บันทึกบิลหลัก
