@@ -144,9 +144,10 @@
 
         async function loadTables() {
             const { data, error } = await client.from('tables').select('*').order('id');
-            if (error) {
-                console.error(error);
-                return;
+            if (error) { 
+              alert("เกิดข้อผิดพลาด: " + JSON.stringify(error)); 
+              console.log(error); 
+              return; 
             }
             tablesDiv.innerHTML = '';
             data.forEach(t => {
@@ -193,11 +194,7 @@
               loadTables();
           });
 
-        if (error) { 
-          alert("เกิดข้อผิดพลาด: " + JSON.stringify(error)); 
-          console.log(error); 
-          return; 
-        }
+
 
         channel.subscribe();
         console.log("Realtime channel subscribed");
