@@ -2,34 +2,32 @@
 <html lang="th">
 <head>
   <meta charset="utf-8">
-  <title>ใบเสร็จ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>กำลังพิมพ์บิล...</title>
   <link rel="stylesheet" href="style.css">
+  <!-- โหลด Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- โหลดโค้ดพิมพ์บิล -->
   <script src="printbill.js" defer></script>
+  <style>
+    body { font-family: "Noto Sans Thai", sans-serif; text-align: center; margin-top: 50px; color:#333; }
+    .spinner {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #333;
+      border-radius: 50%;
+      width: 40px; height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
-  <h2>ใบเสร็จ</h2>
-  <div>บิลเลขที่: <span id="billNo"></span></div>
-  <div>ลูกค้า: <span id="customer"></span></div>
-  <div>วันที่: <span id="date"></span></div>
-  <br>
-
-  <table border="1" width="100%">
-    <thead>
-      <tr>
-        <th>เมนู</th>
-        <th>จำนวน</th>
-        <th>ราคา</th>
-        <th>รวม</th>
-      </tr>
-    </thead>
-    <tbody id="billItems"></tbody>
-  </table>
-
-  <br>
-  <div>รวมทั้งหมด: <span id="total"></span></div>
-  <div>เงินสด: <span id="cash"></span></div>
-  <div>เงินทอน: <span id="change"></span></div>
-  <div>หมายเหตุ: <span id="note"></span></div>
+  <h2>กำลังสร้างใบเสร็จ...</h2>
+  <div class="spinner"></div>
+  <p>กรุณารอสักครู่</p>
 </body>
 </html>
