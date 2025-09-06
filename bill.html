@@ -263,26 +263,32 @@ function initDragAndDrop() {
       container.querySelectorAll('.drag-over, .drag-over-valid')
                .forEach(el => el.classList.remove('drag-over', 'drag-over-valid'));
       dragging = null;
-      saveNewOrder(); // อัปเดต sort_order หลัง drag เสร็จ
-    });
 
-    item.addEventListener('dragover', e => {
-      e.preventDefault();
-      const afterElement = getDragAfterElement(container, e.clientY);
-      container.querySelectorAll('.drag-over, .drag-over-valid')
-               .forEach(el => el.classList.remove('drag-over', 'drag-over-valid'));
-
-      if (afterElement == null) {
-        container.appendChild(dragging);
-      } else {
-        afterElement.classList.add('drag-over-valid');
-        container.insertBefore(dragging, afterElement);
-      }
+      // 👉 เรียก save หลังจาก DOM ถูกเปลี่ยนจริง
+      saveNewOrder();
     });
+  });
 
-    item.addEventListener('dragleave', e => {
-      item.classList.remove('drag-over', 'drag-over-valid');
+  container.addEventListener('dragover', e => {
+    e.preventDefault();
+    const afterElement = getDragAfterElement(container, e.clientY);
+    if (afterElement == null) {
+      container.appendChild(dragging);
+    } else {
+      container.insertBefore(dragging, afterElement);
+    }
+
+    // highlight เส้น
+    container.querySelectorAll('.draggable').forEach(el => {
+      el.classList.remove('drag-over', 'drag-over-valid');
     });
+    if (afterElement) {
+      afterElement.classList.add('drag-over-valid'); // เขียวถ้าวางได้
+    }
+  });
+
+  container.addEventListener('dragleave', e => {
+    e.target.classList.remove('drag-over', 'drag-over-valid');
   });
 }
 
@@ -299,7 +305,6 @@ function getDragAfterElement(container, y) {
   }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
 
-  
 async function saveNewOrder() {
   const rows = document.querySelectorAll('#menuItems .draggable');
   const updates = [];
@@ -311,9 +316,9 @@ async function saveNewOrder() {
 
   const { error } = await client.from('menu').upsert(updates, { onConflict: 'id' });
   if (error) {
-    console.log('อัปเดต sort_order ผิดพลาด', error);
+    console.error('อัปเดต sort_order ผิดพลาด', error);
   } else {
-    console.log('อัปเดตเรียงลำดับเมนูเรียบร้อย');
+    console.log('✅ อัปเดตเรียงลำดับเมนูเรียบร้อย');
   }
 }
 
