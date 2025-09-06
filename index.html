@@ -59,6 +59,15 @@
     #table-B2 { grid-column: 4; grid-row: 7; }
     #table-B3 { grid-column: 4; grid-row: 6; }
     #table-B4 { grid-column: 4; grid-row: 5; }
+
+    .dog-bg {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      width: 150px;
+      pointer-events: none; /* ไม่ให้คลิกโดน */
+      z-index: 9999;
+    }
   </style>
 </head>
 <body>
@@ -92,6 +101,8 @@
     <div id="table-B3" class="table-card"></div>
     <div id="table-B4" class="table-card"></div>
   </div>
+
+  <img src="https://i.ibb.co/Jwc9bwmx/Namchok.png" class="dog-bg" alt="Namchok">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
