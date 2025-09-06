@@ -1,14 +1,63 @@
+//bill.html
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ร้านเรือนชมพูเนื้อย่างเกาหลี - ออกบิล</title>
-  <link rel="stylesheet" href="style.css">
-  <!-- โหลด Supabase SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- โหลดโค้ดหลัก -->
-  <script src="app.js" defer></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ร้านเรือนชมพูเนื้อย่างเกาหลี - ออกบิล</title>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"></script>
+<style>
+:root{
+  --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --muted:#475569; --accent:#10b981; --line:#e2e8f0; --danger:#ef4444;
+}
+body{margin:0;font-family:system-ui, "Noto Sans Thai", sans-serif;background:var(--bg);color:var(--ink);}
+.container{max-width:1000px;margin:24px auto;padding:16px;}
+.app{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(2,8,23,.05);}
+header{padding:20px 24px;border-bottom:1px solid var(--line);display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;}
+header h1{margin:0;font-size:clamp(18px, 2.6vw, 24px);}
+.brand{display:flex;flex-direction:column}
+.brand .shop{font-weight:800;color:#111827}
+.brand .branch{color:var(--muted);font-size:.95em}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+button{appearance:none;border:none;padding:10px 14px;border-radius:12px;cursor:pointer;background:var(--ink);color:white;font-weight:600;display:flex;align-items:center;gap:4px;}
+button.accent{background:var(--accent)}
+button.secondary{background:#334155}
+button.warn{background:var(--danger)}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.icon{width:16px;height:16px;display:inline-block;vertical-align:middle;}
+main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
+@media (max-width:860px){main{grid-template-columns:1fr;}}
+.panel{padding:20px 24px;}
+.panel + .panel{border-left:1px solid var(--line);} 
+@media (max-width:860px){.panel + .panel{border-left:none;border-top:1px solid var(--line);}}
+.grid{display:grid;grid-template-columns:1fr 110px 130px;gap:10px;align-items:center}
+.grid.header{font-weight:700;border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:8px}
+.row{padding:6px 0;border-bottom:1px dashed var(--line)}
+.muted{color:var(--muted)}
+.right{text-align:right}
+.num{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:16px}
+.num[readonly]{background:#f5f7fb}
+.title-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.summary{display:grid;gap:10px}
+.summary .line{display:flex;justify-content:space-between;align-items:center}
+.big{font-size:28px;font-weight:800}
+.note{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
+.danger-text{color:var(--danger);font-weight:600;margin-top:4px;font-size:.9em}
+
+/* popup เพิ่มเมนู */
+#popup { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
+#popup .content { background:white; padding:20px; border-radius:12px; width:300px; }
+#popup input { width:100%; margin-bottom:10px; padding:8px; border:1px solid var(--line); border-radius:8px; }
+#popup button { width:100%; margin-top:6px; }
+@media print{
+  body{background:white}
+  .container{margin:0;padding:0}
+  .app{border:none;box-shadow:none;border-radius:0}
+  header .controls,.noprint{display:none !important}
+  main{grid-template-columns:1fr}
+  .panel + .panel{border:none}
+}
+</style>
 </head>
 <body>
 <div class="container">
@@ -19,31 +68,24 @@
         <div class="branch">สาขานาเชือก • <small id="today"></small></div>
       </div>
       <div class="controls noprint">
-        <button class="accent" id="btnAddMenu">📝 เพิ่มเมนู</button>
-        <button class="ghost" id="btnSave">💾 บันทึกฉบับร่าง</button>
-        <button class="warn" id="btnClear">🗑️ ยกเลิกบิล</button>
-        <button class="secondary" id="btnHome">🏠 หน้าแรก</button>
-        <button class="accent" id="btnCheckout">✅ เช็คบิล</button>
+        <button class="accent" id="btnAddMenu"><span class="icon">📝</span> เพิ่มเมนู</button>
+        <button class="ghost" id="btnSave"><span class="icon">💾</span> บันทึกฉบับร่าง</button>
+        <button class="warn" id="btnClear"><span class="icon">🗑️</span> ยกเลิกบิล</button>
+        <button class="secondary" id="btnHome"><span class="icon">🏠</span> หน้าแรก</button>
+        <button class="accent" id="btnPrint"><span class="icon">🖨️</span> พิมพ์บิล</button>
       </div>
     </header>
 
     <main>
       <section class="panel" id="left">
-        <div class="title-row">
-          <h2 style="margin:0">รายการขาย</h2>
-          <small class="muted">ราคาตามเมนู</small>
-        </div>
-        <div class="grid header">
-          <div>สินค้า</div>
-          <div class="right">ราคา</div>
-          <div class="right">จำนวน</div>
-        </div>
+        <div class="title-row"><h2 style="margin:0">รายการขาย</h2><small class="muted">ราคาตามเมนู</small></div>
+        <div class="grid header"><div>สินค้า</div><div class="right">ราคา</div><div class="right">จำนวน</div></div>
         <div id="menuItems"></div>
       </section>
 
       <section class="panel" id="right">
         <h2 style="margin:0 0 10px 0">สรุปบิล</h2>
-        <div class="bill-info">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
           <div>
             <label class="muted">ชื่อลูกค้า/โต๊ะ</label>
             <input class="num" id="customer" placeholder="โต๊ะ 3 หรือ ชื่อลูกค้า">
@@ -54,11 +96,9 @@
           </div>
         </div>
         <div class="summary">
-          <div class="line">
-            <span>ยอดรวม</span><span class="big" id="grand">฿0.00</span>
-          </div>
+          <div class="line"><span>ยอดรวม</span><span class="big" id="grand">฿0.00</span></div>
         </div>
-        <div class="payment">
+        <div style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div>
             <label class="muted">รับเงินมา</label>
             <input class="num" id="cash" placeholder="เช่น 500+500">
@@ -69,9 +109,9 @@
             <input class="num" id="change" readonly>
           </div>
         </div>
-        <div>
+        <div style="margin-top:10px">
           <label class="muted">หมายเหตุ</label>
-          <textarea class="note" id="note" rows="3"></textarea>
+          <textarea class="note" id="note" rows="3" placeholder=""></textarea>
         </div>
       </section>
     </main>
@@ -79,7 +119,7 @@
 </div>
 
 <!-- popup เพิ่มเมนู -->
-<div id="popup" class="popup">
+<div id="popup">
   <div class="content">
     <h3>เพิ่มเมนูใหม่</h3>
     <input type="text" id="newMenuName" placeholder="ชื่อเมนู">
@@ -89,16 +129,386 @@
   </div>
 </div>
 
-<!-- popup เช็คบิล -->
-<div id="popupCheckout" class="popup">
-  <div class="content">
-    <h3>สรุปบิล</h3>
-    <p>ยอดรวม: <b id="sumTotal"></b></p>
-    <p>รับเงินมา: <b id="sumCash"></b></p>
-    <p>เงินทอน: <b id="sumChange"></b></p>
-    <button id="btnConfirmCheckout">ยืนยันเช็คบิล</button>
-    <button id="btnCancelCheckout">ยกเลิก</button>
-  </div>
-</div>
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
+const client = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const el=id=>document.getElementById(id);
+const fmt=n=>new Intl.NumberFormat('th-TH',{style:'currency',currency:'THB'}).format(n||0);
+function safeEval(expr){if(!expr)return 0;expr=expr.replace(/\s+/g,'');if(!/^[0-9+\-*/.]+$/.test(expr))return 0;try{return Function('"use strict";return('+expr+')')();}catch{return 0;}}
+
+function todayText(){const d=new Date();return d.toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'});}
+function nextBillNo(){const key='pink-grill-last-bill';let n=parseInt(localStorage.getItem(key)||'0',10)+1;localStorage.setItem(key,String(n));return String(n).padStart(5,'0');}
+
+let menuData = [];
+const params = new URLSearchParams(window.location.search);
+const table_id = params.get('table_id');
+
+async function loadTableName() {
+  if (!table_id) return;
+  const { data, error } = await client.from('tables').select('*').eq('id', table_id).single();
+  if (error) { console.log(error); return; }
+  if (data) {
+    el('customer').value = data.name;
+    const { error:updateError } = await client.from('tables').update({ status: 'ไม่ว่าง' }).eq('id', table_id);
+    if(updateError) console.log('อัปเดตโต๊ะไม่ว่างผิดพลาด', updateError);
+  }
+}
+
+async function loadMenu(){
+  const { data, error } = await client.from('menu').select('*').order('id');
+  if(error){alert('โหลดเมนูผิดพลาด');console.log(error);return;}
+  menuData = data;
+  const container = el('menuItems'); container.innerHTML='';
+  data.forEach(item=>{
+    const row=document.createElement('div');
+    row.className='row grid';
+    row.innerHTML=`<label>${item.name}</label><div class="right muted">฿${item.price}</div><input class="num" type="text" data-id="${item.id}" placeholder="เช่น 1+2+3">`;
+    container.appendChild(row);
+  });
+  document.querySelectorAll('#menuItems input').forEach(i=>i.addEventListener('input',calc));
+}
+
+// โหลด draft ล่าสุดของโต๊ะ
+async function loadDraft() {
+  if (!table_id) return; 
+
+  // 1️⃣ ดึง draft ล่าสุดของโต๊ะ
+  const { data: draftData, error: draftError } = await client.from('drafts')
+    .select('*').eq('table_id', table_id).single();
+
+  if(draftError){ console.log('โหลด draft ผิดพลาด', draftError); return; }
+  if(!draftData) return;
+
+  el('billno').value = draftData.billno || nextBillNo();
+  el('customer').value = draftData.customer || '';
+  el('cash').value = draftData.cash || '';
+  el('note').value = draftData.note || '';
+
+  // 2️⃣ ดึงรายการสินค้า
+  const { data: items, error: itemsError } = await client.from('draft_items')
+    .select('*').eq('draft_id', draftData.id);
+
+  if(itemsError){ console.log('โหลด draft_items ผิดพลาด', itemsError); return; }
+
+  items.forEach(item=>{
+    const input = document.querySelector(`#menuItems input[data-id="${item.menu_id}"]`);
+    if(input) input.value = item.qty;
+  });
+
+  calc();
+}
+
+function calc(){
+  let total=0;
+  document.querySelectorAll('#menuItems input').forEach(inp=>{
+    const qty=safeEval(inp.value);
+    const id=parseInt(inp.dataset.id);
+    const menuItem=menuData.find(m=>m.id===id);
+    if(menuItem && qty>0) total+=qty*menuItem.price;
+  });
+  const cash=safeEval(el('cash').value);
+  const change=cash-total;
+  el('grand').textContent=fmt(total);
+  if(cash>0 && change<0){el('cash').style.borderColor='var(--danger)';el('cashWarn').style.display='block';el('change').value='';}
+  else{el('cash').style.borderColor='var(--line)';el('cashWarn').style.display='none';el('change').value = fmt(change>0?change:0);}
+}
+
+function buildPrintView() {
+  const now = new Date();
+  const dateText = now.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+
+  let html = `
+  <html>
+  <head>
+    <title>บิลร้านเรือนชมพูเนื้อย่างเกาหลี</title>
+    <style>
+      body { font-family: "Noto Sans Thai", sans-serif; margin:20px; color:#111; }
+      h1,h2,h3 { margin:0; padding:0; }
+      .header { text-align:center; margin-bottom:12px; }
+      .header h1 { font-size:24px; }
+      .header p { font-size:14px; margin:2px 0; }
+      table { width:100%; border-collapse: collapse; margin-top:10px; }
+      table, th, td { border:1px solid #000; }
+      th, td { padding:6px 8px; text-align:left; }
+      th.right, td.right { text-align:right; }
+      .summary { margin-top:12px; width:100%; display:grid; grid-template-columns:1fr auto; }
+      .summary div { padding:4px 0; }
+      .big { font-weight:800; font-size:20px; }
+      .note { margin-top:8px; font-size:14px; }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>ร้านเรือนชมพูเนื้อย่างเกาหลี</h1>
+      <p>สาขานาเชือก</p>
+      <p>โทร: 099-9999999</p>
+      <p>บิลเลขที่: ${el('billno').value}</p>
+      <p>โต๊ะ/ลูกค้า: ${el('customer').value}</p>
+      <p>วันที่: ${dateText}</p>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>สินค้า</th>
+          <th class="right">ราคา/หน่วย</th>
+          <th class="right">จำนวน</th>
+          <th class="right">รวม</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  document.querySelectorAll('#menuItems input').forEach(inp => {
+    const qty = safeEval(inp.value);
+    if (qty <= 0) return;
+    const menu_id = parseInt(inp.dataset.id);
+    const menuItem = menuData.find(m => m.id === menu_id);
+    if (menuItem) {
+      html += `<tr>
+        <td>${menuItem.name}</td>
+        <td class="right">${menuItem.price.toFixed(2)}</td>
+        <td class="right">${qty}</td>
+        <td class="right">${(qty * menuItem.price).toFixed(2)}</td>
+      </tr>`;
+    }
+  });
+
+  const total = safeEval(el('grand').textContent.replace(/[^\d.]/g,''));
+  const cash = safeEval(el('cash').value);
+  const change = safeEval(el('change').value);
+
+  html += `</tbody></table>
+    <div class="summary">
+      <div>ยอดรวม</div><div class="right big">${total.toFixed(2)}</div>
+      <div>รับเงินมา</div><div class="right">${cash.toFixed(2)}</div>
+      <div>เงินทอน</div><div class="right">${change.toFixed(2)}</div>
+    </div>
+    <div class="note">
+      หมายเหตุ: ${el('note').value || '-'}
+    </div>
+    <p style="text-align:center; margin-top:20px; font-size:12px;">ขอบคุณที่อุดหนุนร้านเรือนชมพูเนื้อย่างเกาหลี</p>
+  </body>
+  </html>
+  `;
+  return html;
+}
+
+
+async function saveDraft() {
+  const billno = el('billno').value || nextBillNo();
+  const customer = el('customer').value;
+  const total = safeEval(el('grand').textContent.replace(/[^\d.]/g,''));
+  const cash = safeEval(el('cash').value);
+  const change = safeEval(el('change').value);
+  const note = el('note').value;
+
+  try {
+    // 1️⃣ ตรวจสอบว่ามี draft เดิมหรือยัง
+    let { data: existingDraft } = await client.from('drafts')
+      .select('*')
+      .eq('billno', billno)
+      .single();
+
+    let draftId;
+    if (existingDraft) {
+      // update draft
+      const { data: updatedDraft, error: updateError } = await client.from('drafts')
+        .update({ customer, table_id, total, cash, change, note, updated_at: new Date().toISOString() })
+        .eq('id', existingDraft.id)
+        .select()
+        .single();
+      if(updateError) throw updateError;
+      draftId = updatedDraft.id;
+    } else {
+      // insert draft ใหม่
+      const { data: newDraft, error: insertError } = await client.from('drafts')
+        .insert([{ billno, customer, table_id, total, cash, change, note }])
+        .select()
+        .single();
+      if(insertError) throw insertError;
+      draftId = newDraft.id;
+    }
+
+    // 2️⃣ ลบรายการเก่าใน draft_items
+    await client.from('draft_items').delete().eq('draft_id', draftId);
+
+    // 3️⃣ เตรียมรายการใหม่
+    const items = [];
+    document.querySelectorAll('#menuItems input').forEach(inp => {
+      const qty = safeEval(inp.value);
+      if (qty > 0) items.push({
+        draft_id: draftId,
+        menu_id: parseInt(inp.dataset.id),
+        qty
+      });
+    });
+
+    // 4️⃣ insert รายการใหม่
+    if (items.length > 0) {
+      const { error: itemError } = await client.from('draft_items').insert(items);
+      if(itemError) throw itemError;
+    }
+
+    // 5️⃣ อัปเดตโต๊ะ
+    if (table_id) {
+      await client.from('tables').update({ status: 'ไม่ว่าง' }).eq('id', table_id);
+    }
+
+    alert('บันทึกฉบับร่างเรียบร้อย');
+
+  } catch(err) {
+    console.log('saveDraft error:', err);
+    alert('บันทึกฉบับร่างผิดพลาด');
+  }
+}
+
+async function saveBill(){
+  const billno = el('billno').value;
+  const customer = el('customer').value;
+  const total = safeEval(el('grand').textContent.replace(/[^\d.]/g,''));
+  const cash = safeEval(el('cash').value);
+  const change = safeEval(el('change').value);
+  const note = el('note').value;
+
+  // 1️⃣ บันทึกบิลหลัก
+  const { data: bill, error: billError } = await client.from('bills').insert([{
+    billno, customer, table_id, total, cash, change, note, status:'closed'
+  }]).select().single();
+
+  if(billError){ alert('บันทึกบิลผิดพลาด'); console.log(billError); return; }
+
+  // 2️⃣ บันทึกรายการ bill_items
+  const items = [];
+  document.querySelectorAll('#menuItems input').forEach(inp=>{
+    const qty = safeEval(inp.value);
+    if(qty<=0) return;
+    const menu_id = parseInt(inp.dataset.id);
+    const menuItem = menuData.find(m=>m.id===menu_id);
+    if(menuItem) items.push({ bill_id: bill.id, menu_id, qty, price: menuItem.price });
+  });
+
+  if(items.length>0){
+    const { error: itemError } = await client.from('bill_items').insert(items);
+    if(itemError) console.log('บันทึกรายการ bill_items ผิดพลาด', itemError);
+  }
+
+  // 3️⃣ อัปเดตโต๊ะเป็นว่าง
+  if(table_id){
+    const { error:updateError } = await client.from('tables').update({ status:'ว่าง' }).eq('id', table_id);
+    if(updateError) console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
+  }
+
+  // 4️⃣ ลบ draft + draft_items
+  const { data: draftData, error: draftError } = await client.from('drafts')
+    .select('id').eq('billno', billno).single();
+
+  if(draftData){
+    await client.from('draft_items').delete().eq('draft_id', draftData.id);
+    await client.from('drafts').delete().eq('id', draftData.id);
+  }
+
+  // 5️⃣ พิมพ์บิล
+  const w = window.open('', 'PRINT', 'height=600,width=800');
+  w.document.write('<html><head><title>พิมพ์บิล</title></head><body>');
+  w.document.write(buildPrintView());
+  w.document.write('</body></html>');
+  w.document.close();
+  w.focus();
+  w.print();
+  w.close();
+
+  // 6️⃣ ล้างหน้าบิล
+  el('billno').value = nextBillNo();
+  document.querySelectorAll('#menuItems input').forEach(i=>i.value=''); 
+  el('cash').value=''; 
+  el('note').value=''; 
+  calc();
+}
+
+
+window.addEventListener('DOMContentLoaded',()=>{
+  el('today').textContent = todayText();
+  el('billno').value = nextBillNo();
+  loadTableName();
+  loadMenu().then(loadDraft);
+
+  el('btnHome').addEventListener('click', async () => {
+  if (table_id) {
+    // 1️⃣ ตรวจสอบว่ามี draft ที่ถูกบันทึกไว้สำหรับโต๊ะนี้หรือไม่
+    const { data: draftData, error: draftError } = await client.from('drafts')
+      .select('id')
+      .eq('table_id', table_id)
+      .single();
+
+    // 2️⃣ ถ้าไม่มี draft และมีการป้อนข้อมูลในฟอร์ม แสดงว่าผู้ใช้ไม่ได้บันทึก
+    const hasUnsavedData = Array.from(document.querySelectorAll('#menuItems input')).some(inp => safeEval(inp.value) > 0) || el('customer').value.trim() !== '';
+
+    if (!draftData && hasUnsavedData) {
+      // 3️⃣ เปลี่ยนสถานะโต๊ะเป็น 'ว่าง' และแจ้งเตือน
+      const { error: updateError } = await client.from('tables').update({ status: 'ว่าง' }).eq('id', table_id);
+      if (updateError) {
+        console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
+        alert('บันทึกสถานะโต๊ะผิดพลาด กรุณาลองใหม่อีกครั้ง');
+      } else {
+        alert('คุณยังไม่ได้บันทึกข้อมูล สถานะโต๊ะจะถูกเปลี่ยนเป็น "ว่าง"');
+      }
+    }
+    // กรณีอื่น ๆ (มี draft หรือฟอร์มว่าง) ไม่ต้องทำอะไรกับสถานะโต๊ะ
+  }
+
+  // กลับไปหน้าหลักเสมอ
+  window.location.href = 'index.html';
+});
+  el('btnAddMenu').addEventListener('click',()=>{el('popup').style.display='flex';});
+  el('btnAddMenuCancel').addEventListener('click',()=>{el('popup').style.display='none'; el('newMenuName').value=''; el('newMenuPrice').value='';});
+  el('btnAddMenuConfirm').addEventListener('click',async()=>{
+    const name = el('newMenuName').value.trim();
+    const price = parseFloat(el('newMenuPrice').value);
+    if(!name || !price){alert('กรุณากรอกชื่อและราคา'); return;}
+    const { error } = await client.from('menu').insert([{ name, price }]);
+    if(error){alert('บันทึกผิดพลาด'); console.log(error);} 
+    else { el('popup').style.display='none'; el('newMenuName').value=''; el('newMenuPrice').value=''; loadMenu(); }
+  });
+
+  el('btnPrint').addEventListener('click',saveBill);
+  el('btnSave').addEventListener('click',saveDraft);
+
+  el('btnClear').addEventListener('click', async () => {
+  if (confirm('ยืนยันการยกเลิกบิลนี้หรือไม่?')) {
+    // อัปเดตสถานะโต๊ะเป็น 'ว่าง'
+    if (table_id) {
+      const { error: updateError } = await client.from('tables').update({ status: 'ว่าง' }).eq('id', table_id);
+      if (updateError) {
+        console.log('อัปเดตสถานะโต๊ะผิดพลาด', updateError);
+      }
+    }
+
+    // ลบ draft ทั้งหมดที่เกี่ยวข้องกับโต๊ะนี้
+    if (table_id) {
+        const { data: draftData, error: draftError } = await client.from('drafts')
+            .select('id').eq('table_id', table_id).single();
+        if (draftData) {
+            await client.from('draft_items').delete().eq('draft_id', draftData.id);
+            await client.from('drafts').delete().eq('id', draftData.id);
+        }
+    }
+
+    // ล้างข้อมูลในฟอร์ม
+    document.querySelectorAll('#menuItems input').forEach(i => i.value = '');
+    el('customer').value = '';
+    el('cash').value = '';
+    el('note').value = '';
+    calc();
+    alert('ยกเลิกบิลเรียบร้อยแล้ว');
+  }
+});
+
+  el('cash').addEventListener('input',calc);
+});
+</script>
 </body>
 </html>
