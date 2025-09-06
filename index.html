@@ -64,9 +64,31 @@
       position: fixed;
       bottom: 10px;
       right: 10px;
-      width: 150px;
-      pointer-events: none; /* ไม่ให้คลิกโดน */
-      z-index: 9999;
+      width: 180px;
+      max-width: 35vw;
+      height: auto;
+      z-index: 0; /* อยู่ข้างหลัง */
+      opacity: 0.9; /* โปร่งนิดหน่อย */
+    }
+  
+    @media (max-width: 768px) {
+      .dog-bg {
+        width: 120px;
+        max-width: 40vw;
+      }
+    }
+  
+    @media (max-width: 480px) {
+      .dog-bg {
+        width: 90px;
+        max-width: 45vw;
+      }
+    }
+  
+    /* ให้ layout ลอยอยู่เหนือภาพ */
+    .layout {
+      position: relative;
+      z-index: 1;
     }
   </style>
 </head>
@@ -75,7 +97,8 @@
     <img src="images/bg_index.png" alt="โลโก้ร้าน" style="height:40px; vertical-align:middle; margin-right:6px;">
     ร้านเรือนชมพูเนื้อย่างเกาหลี • สาขานาเชือก
   </header>
-
+  <img src="images/Numchok.png" class="dog-bg" alt="Numchok">
+  
   <div class="layout" id="tables">
     <!-- fix โต๊ะ -->
     <div id="table-ซุ้ม1" class="table-card"></div>
@@ -101,8 +124,6 @@
     <div id="table-B3" class="table-card"></div>
     <div id="table-B4" class="table-card"></div>
   </div>
-
-  <img src="images/Namchok.png" class="dog-bg" alt="Namchok">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
