@@ -448,9 +448,13 @@ function buildPreviewView() {
 }
 
 
-function buildPrintView() {
-  const now = new Date();
-  const dateText = now.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+function buildPrintView(bill) {
+  const createdText = bill.created_at 
+    ? new Date(bill.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) 
+    : '-';
+  const closedText = bill.closed_at 
+    ? new Date(bill.closed_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) 
+    : '-';
 
   let html = `
   <html>
@@ -476,9 +480,10 @@ function buildPrintView() {
       <h1>ร้านเรือนชมพูเนื้อย่างเกาหลี</h1>
       <p>สาขานาเชือก</p>
       <p>โทร: 0885305228, 0621392902</p>
-      <p>บิลเลขที่: ${el('billno').value}</p>
-      <p>โต๊ะ/ลูกค้า: ${el('customer').value}</p>
-      <p>วันที่: ${dateText}</p>
+      <p>บิลเลขที่: ${bill.billno}</p>
+      <p>โต๊ะ/ลูกค้า: ${bill.customer || '-'}</p>
+      <p>เวลาเปิดบิล: ${createdText}</p>
+      <p>เวลาเช็คบิล: ${closedText}</p>
     </div>
     <table>
       <thead>
@@ -523,7 +528,6 @@ function buildPrintView() {
   `;
   return html;
 }
-
 
 async function saveDraft() {
   const billno = el('billno').value || nextBillNo();
@@ -593,18 +597,25 @@ async function saveDraft() {
 }
 
 async function saveBill(){
-  const billno = el('billno').value;
+  const billno   = el('billno').value;
   const customer = el('customer').value;
-  const total = safeEval(el('grand').textContent.replace(/[^\d.]/g,''));
-  const cash = safeEval(el('cash').value);
-  const change = safeEval(el('change').value.replace(/[^\d.]/g,''));
+  const total    = safeEval(el('grand').textContent.replace(/[^\d.]/g,''));
+  const cash     = safeEval(el('cash').value);
+  const change   = safeEval(el('change').value.replace(/[^\d.]/g,''));
 
-  // 1️⃣ บันทึกบิลหลัก
+  // 1️⃣ บันทึกบิลหลัก (เพิ่ม closed_at ตอนนี้เลยเพราะถือว่าเช็คบิลแล้ว)
   const { data: bill, error: billError } = await client.from('bills').insert([{
-    billno, customer, table_id, total, cash, change, status:'closed'
+    billno, customer, table_id, total, cash, change,
+    status:'closed',
+    closed_at: new Date() // เวลาเช็คบิล
+    // created_at จะ auto ใส่เอง (DEFAULT NOW())
   }]).select().single();
 
-  if(billError){ alert('บันทึกบิลผิดพลาด'); console.log(billError); return; }
+  if(billError){ 
+    alert('บันทึกบิลผิดพลาด'); 
+    console.log(billError); 
+    return; 
+  }
 
   // 2️⃣ บันทึกรายการ bill_items
   const items = [];
@@ -623,7 +634,9 @@ async function saveBill(){
 
   // 3️⃣ อัปเดตโต๊ะเป็นว่าง
   if(table_id){
-    const { error:updateError } = await client.from('tables').update({ status:'ว่าง' }).eq('id', table_id);
+    const { error:updateError } = await client.from('tables')
+      .update({ status:'ว่าง' })
+      .eq('id', table_id);
     if(updateError) console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
   }
 
@@ -636,10 +649,10 @@ async function saveBill(){
     await client.from('drafts').delete().eq('id', draftData.id);
   }
 
-  // 5️⃣ พิมพ์บิล
+  // 5️⃣ พิมพ์บิล (ส่ง bill ไปให้ buildPrintView แสดงเวลาเข้า/ออก)
   const w = window.open('', 'PRINT', 'height=600,width=800');
   w.document.write('<html><head><title>พิมพ์บิล</title></head><body>');
-  w.document.write(buildPrintView());
+  w.document.write(buildPrintView(bill)); // ✅ ส่ง bill ไป
   w.document.write('</body></html>');
   w.document.close();
   w.focus();
@@ -652,6 +665,7 @@ async function saveBill(){
   el('cash').value=''; 
   calc();
 }
+
 
 
 window.addEventListener('DOMContentLoaded', async ()=>{
