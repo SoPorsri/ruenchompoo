@@ -60,31 +60,47 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
 main {
   display: flex;
   gap: 10px;
-  flex-direction: row; /* ค่าเริ่มต้นแนวนอน */
+  height: 100%;
+  box-sizing: border-box;
 }
 
-/* ซ้าย 60% ขวา 40% */
+/* --- Layout แนวนอน --- */
+main {
+  flex-direction: row;
+}
+
 #left {
-  flex: 0 0 60%;
-}
-#right {
-  flex: 0 0 40%;
+  flex: 0 0 60%; /* ซ้าย 60% */
+  min-width: 0;  /* กัน overflow */
 }
 
-/* --- Layout แบบแนวตั้ง (มือถือ/portrait) --- */
+#right {
+  flex: 0 0 40%; /* ขวา 40% */
+  min-width: 0;  /* กัน overflow */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ให้ input / textarea / select ใน panel ขวาไม่ล้น */
+#right input,
+#right textarea,
+#right select {
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+/* --- Layout แนวตั้ง (มือถือ) --- */
 @media screen and (orientation: portrait) {
   main {
     flex-direction: column;
   }
   #right {
-    order: -1; /* ย้ายสรุปบิลขึ้นไปด้านบน */
-    flex: 1 1 auto; /* ให้ยืดเต็มความกว้าง */
-  }
-  #left {
-    flex: 1 1 auto; /* ให้ยืดเต็มความกว้าง */
+    order: -1; /* เอาสรุปบิลขึ้นไปด้านบน */
   }
   #note-container {
-    order: 99; /* หมายเหตุอยู่ล่างสุด */
+    order: 99; /* หมายเหตุไว้ล่างสุด */
   }
 }
 
