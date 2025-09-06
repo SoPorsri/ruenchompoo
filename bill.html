@@ -61,36 +61,34 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
 /* --- Layout หลัก --- */
 main {
   display: flex;
-  gap: 10px;
-  height: 100%;
-  box-sizing: border-box;
   flex-direction: row;
+  height: 100%;
+  gap: 10px;
+  box-sizing: border-box;
 }
 
 #left {
-  flex: 0 0 60%; /* ซ้าย 60% */
-  min-width: 0;  /* กัน overflow */
+  flex: 0 0 60%;
+  min-width: 0;
 }
 
 #right {
-  flex: 0 0 40%; /* ขวา 40% */
-  min-width: 0;  /* กัน overflow */
+  flex: 1; /* ใช้ flex: 1 เพื่อให้ยืดหดตามพื้นที่ที่เหลือ */
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-/* ป้องกัน input/textarea ล้น container */
 #right input,
 #right select,
 #right textarea {
-  width: 100% !important;
+  width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   display: block;
 }
 
-/* label หรือ text ที่ยาวเกิน ให้ตัดบรรทัด */
 #right label,
 #right span,
 #right div {
@@ -98,47 +96,23 @@ main {
   word-break: break-word;
 }
 
-/* --- Layout แนวตั้ง (มือถือ) --- */
 @media screen and (orientation: portrait) {
   main {
     flex-direction: column;
   }
   #right {
-    order: -1; /* เอาสรุปบิลขึ้นไปด้านบน */
+    order: -1;
   }
 }
 
-/* ✅ จัด label + input ให้อยู่แถวเดียว */
-.form-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.form-row label {
-  flex: 0 0 100px; /* ความกว้าง label fix */
-  font-size: 14px;
-  color: var(--muted);
-}
-
-.form-row input,
-.form-row textarea,
-.form-row select {
-  flex: 1; /* input/textarea/select ขยายเต็ม */
-  padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  font-size: 14px;
-  box-sizing: border-box;
-}
-
-/* Drag highlight */
 .drag-over {
   border-top: 3px solid blue;
 }
+
 .drag-over-valid {
   border-top: 3px solid green;
 }
+
 
 </style>
 </head>
@@ -161,44 +135,51 @@ main {
 
     <main>
       <section class="panel" id="left">
-        <div class="title-row"><h2 style="margin:0">รายการขาย</h2><small class="muted">ราคาตามเมนู</small></div>
-        <div class="grid header"><div>สินค้า</div><div class="right">ราคา</div><div class="right">จำนวน</div></div>
+        <div class="title-row">
+          <h2 style="margin:0">รายการขาย</h2>
+          <small class="muted">ราคาตามเมนู</small>
+        </div>
+        <div class="grid header">
+          <div>สินค้า</div>
+          <div class="right">ราคา</div>
+          <div class="right">จำนวน</div>
+        </div>
         <div id="menuItems"></div>
       </section>
-
+    
       <section class="panel" id="right">
         <h2 style="margin:0 0 10px 0">สรุปบิล</h2>
       
-        <div class="form-row">
-          <label for="customer">ชื่อลูกค้า/โต๊ะ</label>
-          <input class="num" id="customer" placeholder="โต๊ะ 3 หรือ ชื่อลูกค้า">
+        <div class="grid-2col" style="margin-bottom:12px">
+          <div>
+            <label class="muted">ชื่อลูกค้า/โต๊ะ</label>
+            <input class="num" id="customer" placeholder="โต๊ะ 3 หรือ ชื่อลูกค้า">
+          </div>
+          <div>
+            <label class="muted">เลขที่บิล</label>
+            <input class="num" id="billno" readonly>
+          </div>
         </div>
-        
-        <div class="form-row">
-          <label for="billno">เลขที่บิล</label>
-          <input class="num" id="billno" readonly>
-        </div>
-        
+      
         <div class="summary">
-          <div class="line"><span>ยอดรวม</span><span class="big" id="grand">฿0.00</span></div>
+          <div class="line">
+            <span>ยอดรวม</span>
+            <span class="big" id="grand">฿0.00</span>
+          </div>
         </div>
-        
-        <div class="form-row">
-          <label for="cash">รับเงินมา</label>
-          <input class="num" id="cash" placeholder="เช่น 500+500">
+      
+        <div class="grid-2col" style="margin-top:18px">
+          <div>
+            <label class="muted">รับเงินมา</label>
+            <input class="num" id="cash" placeholder="เช่น 500+500">
+            <div id="cashWarn" class="danger-text" style="display:none">⚠️ รับเงินมาไม่พอ</div>
+          </div>
+          <div>
+            <label class="muted">เงินทอน</label>
+            <input class="num" id="change" readonly>
+          </div>
         </div>
-        <div id="cashWarn" class="danger-text" style="display:none;margin-left:108px;">
-          ⚠️ รับเงินมาไม่พอ
-        </div>
-        
-        <div class="form-row">
-          <label for="change">เงินทอน</label>
-          <input class="num" id="change" readonly>
-        </div>
-
       </section>
-
-
     </main>
   </div>
 </div>
