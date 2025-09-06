@@ -113,7 +113,10 @@ main {
   border-top: 3px solid green;
 }
 
-
+.placeholder {
+  border: 2px dashed #00bcd4;
+  background: #e0f7fa;
+}
 </style>
 </head>
 <body>
@@ -275,8 +278,12 @@ async function loadMenu(){
 
 function initDragAndDrop() {
   const container = el('menuItems');
-  let dragging;
+  let dragging = null;
+  let placeholder = null;
 
+  // -------------------
+  // 🖥️ Desktop Drag & Drop
+  // -------------------
   container.querySelectorAll('.draggable').forEach(item => {
     item.addEventListener('dragstart', e => {
       dragging = item;
@@ -285,14 +292,7 @@ function initDragAndDrop() {
     });
 
     item.addEventListener('dragend', e => {
-      dragging.classList.remove('dragging');
-      dragging.style.opacity = '1';
-      container.querySelectorAll('.drag-over, .drag-over-valid')
-               .forEach(el => el.classList.remove('drag-over', 'drag-over-valid'));
-      dragging = null;
-
-      // 👉 เรียก save หลังจาก DOM ถูกเปลี่ยนจริง
-      saveNewOrder();
+      finishDrag();
     });
   });
 
@@ -317,6 +317,75 @@ function initDragAndDrop() {
   container.addEventListener('dragleave', e => {
     e.target.classList.remove('drag-over', 'drag-over-valid');
   });
+
+  // -------------------
+  // 📱 Mobile Touch Drag
+  // -------------------
+  container.querySelectorAll('.draggable').forEach(item => {
+    item.addEventListener('touchstart', e => {
+      dragging = item;
+
+      // placeholder
+      placeholder = document.createElement("div");
+      placeholder.className = "row grid placeholder";
+      placeholder.style.height = dragging.offsetHeight + "px";
+      dragging.parentNode.insertBefore(placeholder, dragging.nextSibling);
+
+      // สไตล์ให้ item ลอย
+      dragging.style.position = "absolute";
+      dragging.style.zIndex = "1000";
+      dragging.style.width = placeholder.offsetWidth + "px";
+      moveAt(e.touches[0].pageX, e.touches[0].pageY);
+
+      e.preventDefault();
+    });
+
+    item.addEventListener('touchmove', e => {
+      if (!dragging) return;
+      moveAt(e.touches[0].pageX, e.touches[0].pageY);
+
+      const afterElement = getDragAfterElement(container, e.touches[0].clientY);
+      if (afterElement == null) {
+        container.appendChild(placeholder);
+      } else {
+        container.insertBefore(placeholder, afterElement);
+      }
+    });
+
+    item.addEventListener('touchend', e => {
+      if (!dragging) return;
+
+      // วาง item กลับเข้าที่
+      dragging.style.position = "static";
+      dragging.style.zIndex = "";
+      placeholder.parentNode.insertBefore(dragging, placeholder);
+      placeholder.remove();
+
+      finishDrag();
+    });
+  });
+
+  // -------------------
+  // ฟังก์ชันย่อย
+  // -------------------
+  function moveAt(x, y) {
+    dragging.style.left = x - dragging.offsetWidth / 2 + "px";
+    dragging.style.top = y - dragging.offsetHeight / 2 + "px";
+  }
+
+  function finishDrag() {
+    if (dragging) {
+      dragging.classList.remove('dragging');
+      dragging.style.opacity = '1';
+      dragging.style.position = "static";
+      dragging.style.zIndex = "";
+      dragging = null;
+      if (placeholder) placeholder.remove();
+
+      // 👉 บันทึก sort_order
+      saveNewOrder();
+    }
+  }
 }
 
 function getDragAfterElement(container, y) {
