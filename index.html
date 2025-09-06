@@ -62,13 +62,13 @@
 
     .dog-bg {
       position: fixed;
-      bottom: 10px;
+      top: 10px;   /* เปลี่ยนจาก bottom → top */
       right: 10px;
       width: 180px;
       max-width: 35vw;
       height: auto;
-      z-index: 0; /* อยู่ข้างหลัง */
-      opacity: 0.9; /* โปร่งนิดหน่อย */
+      z-index: 0; /* อยู่หลังโต๊ะ */
+      opacity: 0.9;
     }
   
     @media (max-width: 768px) {
@@ -85,10 +85,9 @@
       }
     }
   
-    /* ให้ layout ลอยอยู่เหนือภาพ */
     .layout {
       position: relative;
-      z-index: 1;
+      z-index: 1; /* โต๊ะอยู่ข้างหน้า */
     }
   </style>
 </head>
