@@ -8,59 +8,33 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
   <style>
-    body {
-      font-family: system-ui, "Noto Sans Thai", sans-serif;
-      margin: 0;
-      background-color: #e6fff7;
-    }
+    body { font-family: system-ui, "Noto Sans Thai", sans-serif; margin: 0; background-color: #e6fff7; }
     header {
       background: linear-gradient(90deg, #ec4899, #d946ef);
-      color: white;
-      padding: 16px;
-      text-align: center;
-      font-size: 20px;
-      font-weight: bold;
-      letter-spacing: 0.5px;
+      color: white; padding: 16px; text-align: center;
+      font-size: 20px; font-weight: bold; letter-spacing: 0.5px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
     .layout {
-      display: grid;
-      grid-template-columns: 90px 90px 90px 90px;
-      grid-template-rows: repeat(12, 60px);
-      gap: 12px;
-      padding: 24px;
+      display: grid; grid-template-columns: 90px 90px 90px 90px;
+      grid-template-rows: repeat(12, 60px); gap: 12px; padding: 24px;
       justify-content: center;
     }
     .table-card {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 10px; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
       box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-      padding: 6px;
-      text-align: center;
+      padding: 6px; text-align: center;
     }
-    .table-card:hover {
-      transform: translateY(-4px) scale(1.05);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    }
-    .free {
-      background: linear-gradient(135deg, #34d399, #10b981);
-      color: white;
-    }
-    .busy {
-      background: linear-gradient(135deg, #f87171, #ef4444);
-      color: white;
-    }
+    .table-card:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+    .free { background: linear-gradient(135deg, #34d399, #10b981); color: white; }
+    .busy { background: linear-gradient(135deg, #f87171, #ef4444); color: white; }
     .status-icon { font-size: 18px; margin-right: 6px; }
     .status-icon.free { color: #bbf7d0; }
     .status-icon.busy { color: #fecaca; }
 
-    /* ตำแหน่ง layout เดิม */
+    /* layout position */
     #table-ซุ้ม1 { grid-column: 1; grid-row: 10; }
     #table-ซุ้ม2 { grid-column: 1; grid-row: 9; }
     #table-ซุ้ม3 { grid-column: 1; grid-row: 8; }
@@ -94,7 +68,7 @@
   </header>
 
   <div class="layout" id="tables">
-    <!-- ✅ fix โต๊ะไว้เลย -->
+    <!-- fix โต๊ะ -->
     <div id="table-ซุ้ม1" class="table-card"></div>
     <div id="table-ซุ้ม2" class="table-card"></div>
     <div id="table-ซุ้ม3" class="table-card"></div>
@@ -125,7 +99,6 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ✅ fix รายชื่อโต๊ะ
     const tables = [
       { id: 1, name: "ซุ้ม1" }, { id: 2, name: "ซุ้ม2" }, { id: 3, name: "ซุ้ม3" }, { id: 4, name: "ซุ้ม4" },
       { id: 5, name: "ซุ้ม5" }, { id: 6, name: "ซุ้ม6" }, { id: 7, name: "ซุ้ม7" }, { id: 8, name: "ซุ้ม8" },
@@ -134,6 +107,22 @@
       { id: 17, name: "A7" }, { id: 18, name: "A8" }, { id: 19, name: "B1" }, { id: 20, name: "B2" },
       { id: 21, name: "B3" }, { id: 22, name: "B4" }
     ];
+
+    async function ensureTablesExist() {
+      const { data: dbTables, error } = await client.from('tables').select('id');
+      if (error) { console.error(error); return; }
+
+      const existingIds = dbTables.map(t => t.id);
+      const missing = tables.filter(t => !existingIds.includes(t.id));
+
+      if (missing.length > 0) {
+        console.log("Insert missing tables:", missing);
+        const { error: insertError } = await client.from('tables').insert(
+          missing.map(m => ({ id: m.id, name: m.name, status: "ว่าง" }))
+        );
+        if (insertError) console.error("Insert error:", insertError);
+      }
+    }
 
     async function loadTables() {
       const { data, error } = await client.from('tables').select('id,status');
@@ -176,7 +165,11 @@
       });
     }
 
-    loadTables();
+    // เรียงลำดับการทำงาน
+    (async () => {
+      await ensureTablesExist();
+      await loadTables();
+    })();
 
     // realtime update
     client.channel('tables-changes')
