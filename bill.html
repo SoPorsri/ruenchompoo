@@ -172,18 +172,51 @@ async function loadTableName() {
 }
 
 async function loadMenu(){
-  const { data, error } = await client.from('menu').select('*').order('id');
+  const { data, error } = await client.from('menu').select('*').order('sort_order', { ascending: true });
   if(error){alert('โหลดเมนูผิดพลาด');console.log(error);return;}
   menuData = data;
   const container = el('menuItems'); container.innerHTML='';
   data.forEach(item=>{
     const row=document.createElement('div');
     row.className='row grid';
-    row.innerHTML=`<label>${item.name}</label><div class="right muted">฿${item.price}</div><input class="num" type="text" data-id="${item.id}" placeholder="เช่น 1+2+3">`;
+    row.innerHTML=`
+      <label>
+        ${item.name}
+        <button class="ghost btnUp" data-id="${item.id}">⬆️</button>
+        <button class="ghost btnDown" data-id="${item.id}">⬇️</button>
+      </label>
+      <div class="right muted">฿${item.price}</div>
+      <input class="num" type="text" data-id="${item.id}" placeholder="เช่น 1+2+3">
+    `;
     container.appendChild(row);
   });
   document.querySelectorAll('#menuItems input').forEach(i=>i.addEventListener('input',calc));
+
+  // 🔥 จัดการปุ่มเลื่อน
+  document.querySelectorAll('.btnUp').forEach(btn => btn.addEventListener('click', () => moveMenu(btn.dataset.id, -1)));
+  document.querySelectorAll('.btnDown').forEach(btn => btn.addEventListener('click', () => moveMenu(btn.dataset.id, 1)));
 }
+
+async function moveMenu(menuId, direction) {
+  const index = menuData.findIndex(m => m.id == menuId);
+  if (index < 0) return;
+
+  const newIndex = index + direction;
+  if (newIndex < 0 || newIndex >= menuData.length) return; // ออกนอกขอบเขต
+
+  // สลับค่า sort_order
+  const current = menuData[index];
+  const target = menuData[newIndex];
+
+  try {
+    await client.from('menu').update({ sort_order: target.sort_order }).eq('id', current.id);
+    await client.from('menu').update({ sort_order: current.sort_order }).eq('id', target.id);
+    loadMenu(); // reload ใหม่
+  } catch (err) {
+    console.log('moveMenu error:', err);
+  }
+}
+
 
 // โหลด draft ล่าสุดของโต๊ะ
 async function loadDraft() {
@@ -450,32 +483,25 @@ window.addEventListener('DOMContentLoaded',()=>{
   loadMenu().then(loadDraft);
 
   el('btnHome').addEventListener('click', async () => {
-  if (table_id) {
-    // 1️⃣ ตรวจสอบว่ามี draft ที่ถูกบันทึกไว้สำหรับโต๊ะนี้หรือไม่
-    const { data: draftData, error: draftError } = await client.from('drafts')
-      .select('id')
-      .eq('table_id', table_id)
-      .single();
-
-    // 2️⃣ ถ้าไม่มี draft และมีการป้อนข้อมูลในฟอร์ม แสดงว่าผู้ใช้ไม่ได้บันทึก
-    const hasUnsavedData = Array.from(document.querySelectorAll('#menuItems input')).some(inp => safeEval(inp.value) > 0) || el('customer').value.trim() !== '';
-
-    if (!draftData && hasUnsavedData) {
-      // 3️⃣ เปลี่ยนสถานะโต๊ะเป็น 'ว่าง' และแจ้งเตือน
-      const { error: updateError } = await client.from('tables').update({ status: 'ว่าง' }).eq('id', table_id);
-      if (updateError) {
-        console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
-        alert('บันทึกสถานะโต๊ะผิดพลาด กรุณาลองใหม่อีกครั้ง');
-      } else {
-        alert('คุณยังไม่ได้บันทึกข้อมูล สถานะโต๊ะจะถูกเปลี่ยนเป็น "ว่าง"');
+    if (table_id) {
+      const { data: draftData } = await client.from('drafts')
+        .select('id')
+        .eq('table_id', table_id)
+        .single();
+  
+      // มีการกรอกข้อมูลไว้ (qty > 0 หรือชื่อลูกค้าไม่ว่าง)
+      const hasUnsavedData = Array.from(document.querySelectorAll('#menuItems input'))
+        .some(inp => safeEval(inp.value) > 0);
+  
+      if (!draftData && hasUnsavedData) {
+        if (!confirm('คุณยังไม่ได้บันทึกข้อมูล ต้องการกลับหน้าแรกจริงหรือไม่?')) {
+          return; // ยกเลิกการกลับ
+        }
       }
     }
-    // กรณีอื่น ๆ (มี draft หรือฟอร์มว่าง) ไม่ต้องทำอะไรกับสถานะโต๊ะ
-  }
+    window.location.href = 'index.html';
+  });
 
-  // กลับไปหน้าหลักเสมอ
-  window.location.href = 'index.html';
-});
   el('btnAddMenu').addEventListener('click',()=>{el('popup').style.display='flex';});
   el('btnAddMenuCancel').addEventListener('click',()=>{el('popup').style.display='none'; el('newMenuName').value=''; el('newMenuPrice').value='';});
   el('btnAddMenuConfirm').addEventListener('click',async()=>{
