@@ -13,6 +13,7 @@ let menuData = [];
 const params = new URLSearchParams(window.location.search);
 const table_id = params.get('table_id');
 
+// โหลดเมนู
 async function loadMenu(){
   const { data, error } = await client.from('menu').select('*').order('sort_order',{ascending:true});
   if(error){alert('โหลดเมนูผิดพลาด');console.log(error);return;}
@@ -37,6 +38,7 @@ async function loadMenu(){
   document.querySelectorAll('#menuItems input').forEach(i=>i.addEventListener('input',calc));
 }
 
+// drag & drop
 let dragSrcId=null;
 function handleDragStart(e){dragSrcId=this.dataset.id;e.dataTransfer.effectAllowed='move';}
 function handleDragOver(e){e.preventDefault();this.classList.add('drag-over');}
@@ -56,6 +58,7 @@ async function handleDrop(e){
   }catch(err){console.log('drag drop update error:',err);}
 }
 
+// คำนวณรวม
 function calc(){
   let sum=0;
   menuData.forEach(item=>{
@@ -72,22 +75,24 @@ function calc(){
   return sum;
 }
 
+// บันทึก draft
 async function saveDraft(){
   const items=[];
   menuData.forEach(item=>{
     const qty=safeEval(document.querySelector(`#menuItems input[data-id="${item.id}"]`)?.value);
-    if(qty>0)items.push({menu_id:item.id,qty,price:item.price});
+    if(qty>0)items.push({menu_id:item.id, name:item.name, qty, price:item.price});
   });
   const draft={table_id,customer:el('customer').value,items,note:el('note').value};
   await client.from('drafts').upsert(draft,{onConflict:'table_id'});
   alert('บันทึกฉบับร่างแล้ว');
 }
 
+// บันทึกบิล
 async function saveBill(){
   const items=[];
   menuData.forEach(item=>{
     const qty=safeEval(document.querySelector(`#menuItems input[data-id="${item.id}"]`)?.value);
-    if(qty>0)items.push({menu_id:item.id,qty,price:item.price});
+    if(qty>0)items.push({menu_id:item.id, name:item.name, qty, price:item.price});
   });
   const bill={
     bill_no:el('billno').value,
@@ -99,13 +104,12 @@ async function saveBill(){
     items,
     created_at:new Date()
   };
-  await client.from('bills').insert(bill);
-  // บันทึกบิล
+
   const { data, error } = await client.from('bills').insert(bill).select().single();
   if (table_id) await client.from('drafts').delete().eq('table_id', table_id);
-  
-  // ถ้าบันทึกสำเร็จ → ไปหน้า printbill.html พร้อมส่ง bill_no
+
   if (!error && data) {
+    // 👉 ไปหน้า printbill.html พร้อม bill_no
     window.location.href = `printbill.html?bill_no=${data.bill_no}`;
   } else {
     alert('เกิดข้อผิดพลาดในการบันทึกบิล');
@@ -113,44 +117,18 @@ async function saveBill(){
   }
 }
 
+// event handlers
 el('btnSave').onclick=saveDraft;
 el('btnClear').onclick=()=>{if(confirm('แน่ใจ?')){document.querySelectorAll('#menuItems input').forEach(i=>i.value='');el('customer').value='';el('cash').value='';el('note').value='';calc();}};
 el('btnCheckout').onclick=()=>{el('sumTotal').textContent=el('grand').textContent;el('sumCash').textContent=fmt(safeEval(el('cash').value));el('sumChange').textContent=el('change').value;el('popupCheckout').style.display='flex';};
 el('btnCancelCheckout').onclick=()=>el('popupCheckout').style.display='none';
-el('btnConfirmCheckout').onclick = async () => {
-  const items=[];
-  menuData.forEach(item=>{
-    const qty=safeEval(document.querySelector(`#menuItems input[data-id="${item.id}"]`)?.value);
-    if(qty>0)items.push({menu_id:item.id,qty,price:item.price});
-  });
-
-  const bill={
-    bill_no:el('billno').value,
-    customer:el('customer').value,
-    total:calc(),
-    cash:safeEval(el('cash').value),
-    change:safeEval(el('change').value),
-    note:el('note').value,
-    items,
-    created_at:new Date()
-  };
-
-  const { data, error } = await client.from('bills').insert(bill).select().single();
-  if (table_id) await client.from('drafts').delete().eq('table_id', table_id);
-
-  if (!error && data) {
-    // ✅ ไปหน้า printbill.html พร้อม bill_no
-    window.location.href = `printbill.html?bill_no=${data.bill_no}`;
-  } else {
-    alert('เกิดข้อผิดพลาดในการบันทึกบิล');
-    console.log(error);
-  }
-};
+el('btnConfirmCheckout').onclick=saveBill;
 
 el('btnAddMenu').onclick=()=>{el('popup').style.display='flex';};
 el('btnAddMenuCancel').onclick=()=>{el('popup').style.display='none';};
 el('btnAddMenuConfirm').onclick=async()=>{const name=el('newMenuName').value.trim();const price=parseFloat(el('newMenuPrice').value);if(!name||!price)return;await client.from('menu').insert({name,price,sort_order:menuData.length+1});el('popup').style.display='none';el('newMenuName').value='';el('newMenuPrice').value='';loadMenu();};
 
+// กลับหน้าแรก
 el('btnHome').addEventListener('click', async () => {
   if (table_id) {
     const { data: draftData } = await client.from('drafts').select('id').eq('table_id', table_id).single();
@@ -168,17 +146,10 @@ el('btnHome').addEventListener('click', async () => {
   window.location.href = 'index.html';
 });
 
-window.onload = async () => {
-  const params = new URLSearchParams(window.location.search);
-  const bill_no = params.get("bill_no");
-
-  if (bill_no) {
-    const { data, error } = await client.from("bills").select("*").eq("bill_no", bill_no).single();
-    if (!error && data) {
-      document.getElementById("billContent").innerText = JSON.stringify(data, null, 2);
-      window.print();
-      // เสร็จแล้วกลับไป index.html
-      window.onafterprint = () => window.location.href = "index.html";
-    }
-  }
+// init
+window.onload=()=>{
+  el('today').textContent=todayText();
+  el('billno').value=nextBillNo();
+  loadMenu();
+  el('cash').addEventListener('input', calc);
 };
