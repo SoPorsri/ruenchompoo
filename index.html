@@ -192,9 +192,8 @@
               loadTables();
           });
 
-        channel.subscribe().then(() => {
-          console.log("Realtime channel subscribed");
-        });
+        channel.subscribe();
+        console.log("Realtime channel subscribed");
         //await channel.subscribe(); // ✅ ใช้ await
     </script>
 </body>
