@@ -1,30 +1,73 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <title>ใบเสร็จรับเงิน</title>
-  <style>
-    body { font-family: Tahoma, sans-serif; padding: 20px; }
-    .row { display: flex; justify-content: space-between; margin-bottom: 5px; }
-    .right { text-align: right; flex: 1; }
-    h2 { text-align: center; }
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script src="printbill.js" defer></script>
-</head>
-<body>
-  <h2>ใบเสร็จรับเงิน</h2>
-  <p>เลขที่บิล: <span id="billNo"></span></p>
-  <p>วันที่: <span id="billDate"></span></p>
-  <p>ชื่อลูกค้า: <span id="billCustomer"></span></p>
+const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  <hr>
+const el = id => document.getElementById(id);
+const fmt = n => new Intl.NumberFormat('th-TH', { style:'currency', currency:'THB' }).format(n||0);
 
-  <div id="billItems"></div>
+async function loadBill() {
+  const params = new URLSearchParams(window.location.search);
+  const bill_no = params.get("bill_no");
 
-  <hr>
-  <p>รวมทั้งหมด: <span id="billTotal"></span></p>
-  <p>รับเงิน: <span id="billCash"></span></p>
-  <p>เงินทอน: <span id="billChange"></span></p>
-</body>
-</html>
+  if (!bill_no) {
+    alert("ไม่พบหมายเลขบิล");
+    window.location.href = "index.html";
+    return;
+  }
+
+  // 1) ดึงข้อมูลบิล
+  const { data: bill, error: billError } = await client
+    .from("bills")
+    .select("*")
+    .eq("billno", bill_no)
+    .single();
+
+  if (billError || !bill) {
+    console.error("Load bill error:", billError);
+    alert("ไม่สามารถโหลดข้อมูลบิลได้");
+    window.location.href = "index.html";
+    return;
+  }
+
+  // 2) ดึงรายการอาหาร
+  const { data: items, error: itemsError } = await client
+    .from("bill_items")
+    .select("qty, price, total, menu(name)")
+    .eq("bill_id", bill.id);
+
+  if (itemsError) {
+    console.error("Load items error:", itemsError);
+    alert("ไม่สามารถโหลดรายการอาหารได้");
+    return;
+  }
+
+  // 3) แสดงผลในหน้า
+  el("billNo").textContent = bill.billno;
+  el("customer").textContent = bill.customer || "-";
+  el("date").textContent = new Date(bill.created_at).toLocaleString("th-TH");
+  el("total").textContent = fmt(bill.total);
+  el("cash").textContent = fmt(bill.cash);
+  el("change").textContent = fmt(bill.change);
+  el("note").textContent = bill.note || "";
+
+  const tbody = el("billItems");
+  tbody.innerHTML = "";
+  items.forEach(it => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${it.menu?.name || "-"}</td>
+      <td class="right">${it.qty}</td>
+      <td class="right">${fmt(it.price)}</td>
+      <td class="right">${fmt(it.total)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // 4) พิมพ์อัตโนมัติ แล้วกลับหน้าแรก
+  setTimeout(() => {
+    window.print();
+    window.onafterprint = () => window.location.href = "index.html";
+  }, 500);
+}
+
+window.onload = loadBill;
