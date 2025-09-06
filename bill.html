@@ -40,7 +40,6 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
 .summary{display:grid;gap:10px}
 .summary .line{display:flex;justify-content:space-between;align-items:center}
 .big{font-size:28px;font-weight:800}
-.note{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
 .danger-text{color:var(--danger);font-weight:600;margin-top:4px;font-size:.9em}
 
 /* popup เพิ่มเมนู */
@@ -82,13 +81,14 @@ main {
   gap: 12px;
 }
 
-/* ให้ input / textarea / select ใน panel ขวาไม่ล้น */
+/* กันไม่ให้ input ล้น panel */
+#right > div,
 #right input,
-#right textarea,
 #right select {
+  min-width: 0;
+  max-width: 100%;
   width: 100%;
   box-sizing: border-box;
-  max-width: 100%;
 }
 
 /* --- Layout แนวตั้ง (มือถือ) --- */
@@ -99,11 +99,9 @@ main {
   #right {
     order: -1; /* เอาสรุปบิลขึ้นไปด้านบน */
   }
-  #note-container {
-    order: 99; /* หมายเหตุไว้ล่างสุด */
-  }
 }
 
+/* Drag highlight */
 .drag-over {
   border-top: 3px solid blue;
 }
@@ -161,11 +159,6 @@ main {
             <label class="muted">เงินทอน</label>
             <input class="num" id="change" readonly>
           </div>
-        </div>
-      
-        <div id="note-container" style="margin-top:10px">
-          <label class="muted">หมายเหตุ</label>
-          <textarea class="note" id="note" rows="3" placeholder=""></textarea>
         </div>
       </section>
 
@@ -323,19 +316,19 @@ function getDragAfterElement(container, y) {
 
 async function saveNewOrder() {
   const rows = document.querySelectorAll('#menuItems .draggable');
-  const updates = [];
 
-  rows.forEach((row, index) => {
-    const id = parseInt(row.dataset.id);
-    updates.push({ id, sort_order: index + 1 });
-  });
+  for (let i = 0; i < rows.length; i++) {
+    const id = parseInt(rows[i].dataset.id);
+    const sort_order = i + 1;
+    const { error } = await client.from('menu')
+      .update({ sort_order })
+      .eq('id', id);
 
-  const { error } = await client.from('menu').upsert(updates, { onConflict: 'id' });
-  if (error) {
-    console.error('อัปเดต sort_order ผิดพลาด', error);
-  } else {
-    console.log('✅ อัปเดตเรียงลำดับเมนูเรียบร้อย');
+    if (error) {
+      console.error('❌ update sort_order ผิดพลาด', error);
+    }
   }
+  console.log('✅ บันทึก sort_order เรียบร้อยแล้ว');
 }
 
 
@@ -354,7 +347,6 @@ async function loadDraft() {
   el('billno').value = draftData.billno || nextBillNo();
   el('customer').value = draftData.customer || '';
   el('cash').value = draftData.cash || '';
-  el('note').value = draftData.note || '';
 
   // 2️⃣ ดึงรายการสินค้า
   const { data: items, error: itemsError } = await client.from('draft_items')
@@ -427,9 +419,6 @@ function buildPreviewView() {
       <div><strong>รับเงินมา:</strong> ${cash.toFixed(2)}</div>
       <div><strong>เงินทอน:</strong> ${change.toFixed(2)}</div>
     </div>
-    <div style="margin-top:8px;">
-      <strong>หมายเหตุ:</strong> ${el('note').value || '-'}
-    </div>
   `;
 
   return html;
@@ -457,7 +446,6 @@ function buildPrintView() {
       .summary { margin-top:12px; width:100%; display:grid; grid-template-columns:1fr auto; }
       .summary div { padding:4px 0; }
       .big { font-weight:800; font-size:20px; }
-      .note { margin-top:8px; font-size:14px; }
     </style>
   </head>
   <body>
@@ -506,9 +494,6 @@ function buildPrintView() {
       <div>รับเงินมา</div><div class="right">${cash.toFixed(2)}</div>
       <div>เงินทอน</div><div class="right">${change.toFixed(2)}</div>
     </div>
-    <div class="note">
-      หมายเหตุ: ${el('note').value || '-'}
-    </div>
     <p style="text-align:center; margin-top:20px; font-size:12px;">ขอบคุณที่อุดหนุนร้านเรือนชมพูเนื้อย่างเกาหลี</p>
   </body>
   </html>
@@ -523,7 +508,6 @@ async function saveDraft() {
   const total = safeEval(el('grand').textContent.replace(/[^\d.]/g,''));
   const cash = safeEval(el('cash').value);
   const change = safeEval(el('change').value);
-  const note = el('note').value;
 
   try {
     // 1️⃣ ตรวจสอบว่ามี draft เดิมหรือยัง
@@ -536,7 +520,7 @@ async function saveDraft() {
     if (existingDraft) {
       // update draft
       const { data: updatedDraft, error: updateError } = await client.from('drafts')
-        .update({ customer, table_id, total, cash, change, note, updated_at: new Date().toISOString() })
+        .update({ customer, table_id, total, cash, change, updated_at: new Date().toISOString() })
         .eq('id', existingDraft.id)
         .select()
         .single();
@@ -545,7 +529,7 @@ async function saveDraft() {
     } else {
       // insert draft ใหม่
       const { data: newDraft, error: insertError } = await client.from('drafts')
-        .insert([{ billno, customer, table_id, total, cash, change, note }])
+        .insert([{ billno, customer, table_id, total, cash, change }])
         .select()
         .single();
       if(insertError) throw insertError;
@@ -591,11 +575,10 @@ async function saveBill(){
   const total = safeEval(el('grand').textContent.replace(/[^\d.]/g,''));
   const cash = safeEval(el('cash').value);
   const change = safeEval(el('change').value.replace(/[^\d.]/g,''));
-  const note = el('note').value;
 
   // 1️⃣ บันทึกบิลหลัก
   const { data: bill, error: billError } = await client.from('bills').insert([{
-    billno, customer, table_id, total, cash, change, note, status:'closed'
+    billno, customer, table_id, total, cash, change, status:'closed'
   }]).select().single();
 
   if(billError){ alert('บันทึกบิลผิดพลาด'); console.log(billError); return; }
@@ -644,7 +627,6 @@ async function saveBill(){
   el('billno').value = nextBillNo();
   document.querySelectorAll('#menuItems input').forEach(i=>i.value=''); 
   el('cash').value=''; 
-  el('note').value=''; 
   calc();
 }
 
@@ -755,7 +737,6 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     document.querySelectorAll('#menuItems input').forEach(i => i.value = '');
     el('customer').value = '';
     el('cash').value = '';
-    el('note').value = '';
     calc();
     alert('ยกเลิกบิลเรียบร้อยแล้ว');
   }
