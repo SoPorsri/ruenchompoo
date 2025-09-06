@@ -128,6 +128,19 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
   </div>
 </div>
 
+<!-- popup preview -->
+<div id="previewModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:9999;">
+  <div style="background:white; padding:20px; border-radius:12px; width:90%; max-width:600px; max-height:90%; overflow:auto;">
+    <h2 style="margin-top:0">ตัวอย่างบิล</h2>
+    <div id="previewContent"></div>
+    <div style="margin-top:16px; display:flex; justify-content:flex-end; gap:8px;">
+      <button id="btnCancelPreview" class="ghost">ยกเลิก</button>
+      <button id="btnConfirmPrint" class="accent">ยืนยันพิมพ์</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
@@ -215,6 +228,57 @@ function calc(){
   if(cash>0 && change<0){el('cash').style.borderColor='var(--danger)';el('cashWarn').style.display='block';el('change').value='';}
   else{el('cash').style.borderColor='var(--line)';el('cashWarn').style.display='none';el('change').value = fmt(change>0?change:0);}
 }
+
+function buildPreviewView() {
+  let html = `
+    <table style="width:100%; border-collapse: collapse; margin-top:10px;">
+      <thead>
+        <tr>
+          <th style="border:1px solid #000; padding:6px;">สินค้า</th>
+          <th style="border:1px solid #000; padding:6px; text-align:right;">ราคา/หน่วย</th>
+          <th style="border:1px solid #000; padding:6px; text-align:right;">จำนวน</th>
+          <th style="border:1px solid #000; padding:6px; text-align:right;">รวม</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  document.querySelectorAll('#menuItems input').forEach(inp => {
+    const qty = safeEval(inp.value);
+    if (qty <= 0) return;
+    const menu_id = parseInt(inp.dataset.id);
+    const menuItem = menuData.find(m => m.id === menu_id);
+    if (menuItem) {
+      html += `
+        <tr>
+          <td style="border:1px solid #000; padding:6px;">${menuItem.name}</td>
+          <td style="border:1px solid #000; padding:6px; text-align:right;">${menuItem.price.toFixed(2)}</td>
+          <td style="border:1px solid #000; padding:6px; text-align:right;">${qty}</td>
+          <td style="border:1px solid #000; padding:6px; text-align:right;">${(qty * menuItem.price).toFixed(2)}</td>
+        </tr>`;
+    }
+  });
+
+  const total = safeEval(el('grand').textContent.replace(/[^\d.]/g,''));
+  const cash = safeEval(el('cash').value);
+  const change = safeEval(el('change').value);
+
+  html += `
+      </tbody>
+    </table>
+    <div style="margin-top:12px; text-align:right;">
+      <div><strong>ยอดรวม:</strong> ${total.toFixed(2)}</div>
+      <div><strong>รับเงินมา:</strong> ${cash.toFixed(2)}</div>
+      <div><strong>เงินทอน:</strong> ${change.toFixed(2)}</div>
+    </div>
+    <div style="margin-top:8px;">
+      <strong>หมายเหตุ:</strong> ${el('note').value || '-'}
+    </div>
+  `;
+
+  return html;
+}
+
 
 function buildPrintView() {
   const now = new Date();
@@ -492,7 +556,22 @@ window.addEventListener('DOMContentLoaded',()=>{
     else { el('popup').style.display='none'; el('newMenuName').value=''; el('newMenuPrice').value=''; loadMenu(); }
   });
 
-  el('btnPrint').addEventListener('click',saveBill);
+  el('btnPrint').addEventListener('click', () => {
+    // แสดง preview modal
+    el('previewContent').innerHTML = buildPreviewView();
+    el('previewModal').style.display = 'flex';
+  });
+  
+  // ปิด modal
+  el('btnCancelPreview').addEventListener('click', () => {
+    el('previewModal').style.display = 'none';
+  });
+  
+  // ยืนยันพิมพ์จริง
+  el('btnConfirmPrint').addEventListener('click', () => {
+    el('previewModal').style.display = 'none';
+    saveBill(); // เรียกฟังก์ชันเดิมที่บันทึกและสั่งพิมพ์
+  });
   el('btnSave').addEventListener('click',saveDraft);
 
   el('btnClear').addEventListener('click', async () => {
