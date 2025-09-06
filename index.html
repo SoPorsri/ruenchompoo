@@ -144,8 +144,7 @@
 
         async function loadTables() {
             const { data, error } = await client.from('tables').select('*').order('id');
-            if (error) { 
-              alert("เกิดข้อผิดพลาด: " + JSON.stringify(error)); 
+            if (error) {
               console.log(error); 
               return; 
             }
