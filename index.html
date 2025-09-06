@@ -129,7 +129,7 @@
   <script>
     const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
-    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const tables = [
       { id: 1, name: "ซุ้ม1" }, { id: 2, name: "ซุ้ม2" }, { id: 3, name: "ซุ้ม3" }, { id: 4, name: "ซุ้ม4" },
