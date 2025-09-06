@@ -88,34 +88,59 @@ async function saveDraft(){
 }
 
 // บันทึกบิล
-async function saveBill(){
-  const items=[];
-  menuData.forEach(item=>{
-    const qty=safeEval(document.querySelector(`#menuItems input[data-id="${item.id}"]`)?.value);
-    if(qty>0)items.push({menu_id:item.id, name:item.name, qty, price:item.price});
+async function saveBill() {
+  // 1) เก็บรายการอาหาร
+  const items = [];
+  menuData.forEach(item => {
+    const qty = safeEval(document.querySelector(`#menuItems input[data-id="${item.id}"]`)?.value);
+    if (qty > 0) items.push({ menu_id: item.id, qty, price: item.price });
   });
-  const bill={
-    bill_no:el('billno').value,
-    customer:el('customer').value,
-    total:calc(),
-    cash:safeEval(el('cash').value),
-    change:safeEval(el('change').value),
-    note:el('note').value,
-    items,
-    created_at:new Date()
+
+  // 2) สร้างบิลใหม่
+  const bill = {
+    billno: el('billno').value,
+    customer: el('customer').value,
+    table_id: table_id ? parseInt(table_id) : null,
+    total: calc(),
+    cash: safeEval(el('cash').value),
+    change: safeEval(el('change').value),
+    note: el('note').value
   };
 
-  const { data, error } = await client.from('bills').insert(bill).select().single();
+  const { data: newBill, error: billError } = await client
+    .from('bills')
+    .insert(bill)
+    .select()
+    .single();
+
+  if (billError) {
+    console.error("Insert bill error:", billError);
+    alert("ไม่สามารถบันทึกบิลได้");
+    return;
+  }
+
+  // 3) insert bill_items (หลายแถวในครั้งเดียว)
+  const billItems = items.map(it => ({
+    bill_id: newBill.id,   // ← FK เชื่อมกับ bills.id
+    menu_id: it.menu_id,
+    qty: it.qty,
+    price: it.price
+  }));
+
+  const { error: itemsError } = await client.from('bill_items').insert(billItems);
+  if (itemsError) {
+    console.error("Insert items error:", itemsError);
+    alert("บันทึกรายการอาหารผิดพลาด");
+    return;
+  }
+
+  // 4) ลบ draft ถ้ามี
   if (table_id) await client.from('drafts').delete().eq('table_id', table_id);
 
-  if (!error && data) {
-    // 👉 ไปหน้า printbill.html พร้อม bill_no
-    window.location.href = `printbill.html?bill_no=${data.bill_no}`;
-  } else {
-    alert('เกิดข้อผิดพลาดในการบันทึกบิล');
-    console.log(error);
-  }
+  // 5) ไปหน้าปริ้นบิล
+  window.location.href = `printbill.html?bill_no=${newBill.billno}`;
 }
+
 
 // event handlers
 el('btnSave').onclick=saveDraft;
