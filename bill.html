@@ -154,7 +154,9 @@ main {
 
       <section class="panel" id="right">
         <h2 style="margin:0 0 10px 0">สรุปบิล</h2>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      
+        <!-- ใช้ class grid-2col -->
+        <div class="grid-2col" style="margin-bottom:12px">
           <div>
             <label class="muted">ชื่อลูกค้า/โต๊ะ</label>
             <input class="num" id="customer" placeholder="โต๊ะ 3 หรือ ชื่อลูกค้า">
@@ -164,10 +166,12 @@ main {
             <input class="num" id="billno" readonly>
           </div>
         </div>
+      
         <div class="summary">
           <div class="line"><span>ยอดรวม</span><span class="big" id="grand">฿0.00</span></div>
         </div>
-        <div style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      
+        <div class="grid-2col" style="margin-top:18px">
           <div>
             <label class="muted">รับเงินมา</label>
             <input class="num" id="cash" placeholder="เช่น 500+500">
@@ -179,6 +183,7 @@ main {
           </div>
         </div>
       </section>
+
 
     </main>
   </div>
