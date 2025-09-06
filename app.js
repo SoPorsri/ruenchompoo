@@ -168,10 +168,17 @@ el('btnHome').addEventListener('click', async () => {
   window.location.href = 'index.html';
 });
 
-window.onload=()=>{
-  el('today').textContent=todayText();
-  el('billno').value=nextBillNo();
-  loadMenu();
-  // ✅ เพิ่มตรงนี้ เพื่อให้คำนวณเงินทอนแบบ real-time
-  el('cash').addEventListener('input', calc);
+window.onload = async () => {
+  const params = new URLSearchParams(window.location.search);
+  const bill_no = params.get("bill_no");
+
+  if (bill_no) {
+    const { data, error } = await client.from("bills").select("*").eq("bill_no", bill_no).single();
+    if (!error && data) {
+      document.getElementById("billContent").innerText = JSON.stringify(data, null, 2);
+      window.print();
+      // เสร็จแล้วกลับไป index.html
+      window.onafterprint = () => window.location.href = "index.html";
+    }
+  }
 };
