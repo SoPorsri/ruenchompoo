@@ -100,9 +100,17 @@ async function saveBill(){
     created_at:new Date()
   };
   await client.from('bills').insert(bill);
-  if(table_id)await client.from('drafts').delete().eq('table_id',table_id);
-  alert('เช็คบิลเรียบร้อย');
-  window.print();
+  // บันทึกบิล
+  const { data, error } = await client.from('bills').insert(bill).select().single();
+  if (table_id) await client.from('drafts').delete().eq('table_id', table_id);
+  
+  // ถ้าบันทึกสำเร็จ → ไปหน้า printbill.html พร้อมส่ง bill_no
+  if (!error && data) {
+    window.location.href = `printbill.html?bill_no=${data.bill_no}`;
+  } else {
+    alert('เกิดข้อผิดพลาดในการบันทึกบิล');
+    console.log(error);
+  }
 }
 
 el('btnSave').onclick=saveDraft;
