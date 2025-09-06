@@ -60,16 +60,15 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
 main {
   display: flex;
   gap: 10px;
+  flex-direction: row; /* ค่าเริ่มต้นแนวนอน */
 }
 
-/* --- Layout แบบแนวนอน (ค่าเริ่มต้น) --- */
-main {
-  flex-direction: row;
+/* ซ้าย 60% ขวา 40% */
+#left {
+  flex: 0 0 60%;
 }
-
-#left, 
 #right {
-  flex: 1;   /* ให้พื้นที่เท่ากัน */
+  flex: 0 0 40%;
 }
 
 /* --- Layout แบบแนวตั้ง (มือถือ/portrait) --- */
@@ -79,9 +78,13 @@ main {
   }
   #right {
     order: -1; /* ย้ายสรุปบิลขึ้นไปด้านบน */
+    flex: 1 1 auto; /* ให้ยืดเต็มความกว้าง */
+  }
+  #left {
+    flex: 1 1 auto; /* ให้ยืดเต็มความกว้าง */
   }
   #note-container {
-    order: 99; /* ให้หมายเหตุไปอยู่ล่างสุด */
+    order: 99; /* หมายเหตุอยู่ล่างสุด */
   }
 }
 </style>
