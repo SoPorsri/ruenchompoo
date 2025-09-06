@@ -628,12 +628,10 @@ async function saveBill(){
 }
 
 
-window.addEventListener('DOMContentLoaded',()=>{
+window.addEventListener('DOMContentLoaded', async ()=>{
   el('today').textContent = todayText();
   el('billno').value = nextBillNo();
   await loadTableName();
-
-  // โหลดเมนูให้เสร็จก่อน แล้วค่อยโหลด draft
   await loadMenu();
   await loadDraft();
 
