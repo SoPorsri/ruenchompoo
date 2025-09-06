@@ -144,6 +144,8 @@
 
         async function loadTables() {
             const { data, error } = await client.from('tables').select('*').order('id');
+            console.log("data:", data);
+            console.log("error:", error);
             if (error) {
                 console.error(error);
                 return;
@@ -193,16 +195,6 @@
               loadTables();
           });
 
-         // test
-          client.from("tables").select("*").then(({ data, error }) => {
-            if (error) {
-              alert("Error: " + error.message);
-              console.error(error);
-            } else {
-              alert("Loaded " + data.length + " rows");
-              console.log(data);
-            }
-          });
 
         channel.subscribe();
         console.log("Realtime channel subscribed");
