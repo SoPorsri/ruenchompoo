@@ -87,6 +87,13 @@ main {
     order: 99; /* หมายเหตุอยู่ล่างสุด */
   }
 }
+
+.drag-over {
+  border-top: 3px solid blue;
+}
+.drag-over-valid {
+  border-top: 3px solid green;
+}
 </style>
 </head>
 <body>
@@ -204,18 +211,98 @@ async function loadTableName() {
 }
 
 async function loadMenu(){
-  const { data, error } = await client.from('menu').select('*').order('id');
+  const { data, error } = await client.from('menu').select('*').order('sort_order', { ascending: true });
   if(error){alert('โหลดเมนูผิดพลาด');console.log(error);return;}
   menuData = data;
   const container = el('menuItems'); container.innerHTML='';
+
   data.forEach(item=>{
     const row=document.createElement('div');
-    row.className='row grid';
-    row.innerHTML=`<label>${item.name}</label><div class="right muted">฿${item.price}</div><input class="num" type="text" data-id="${item.id}" placeholder="เช่น 1+2+3">`;
+    row.className='row grid draggable';
+    row.draggable = true;
+    row.dataset.id = item.id;
+    row.innerHTML=`<label>${item.name}</label>
+                   <div class="right muted">฿${item.price}</div>
+                   <input class="num" type="text" data-id="${item.id}" placeholder="เช่น 1+2+3">`;
     container.appendChild(row);
   });
+
   document.querySelectorAll('#menuItems input').forEach(i=>i.addEventListener('input',calc));
+  initDragAndDrop();
 }
+
+function initDragAndDrop() {
+  const container = el('menuItems');
+  let dragging;
+
+  container.querySelectorAll('.draggable').forEach(item => {
+    item.addEventListener('dragstart', e => {
+      dragging = item;
+      item.classList.add('dragging');
+      item.style.opacity = '0.5';
+    });
+
+    item.addEventListener('dragend', e => {
+      dragging.classList.remove('dragging');
+      dragging.style.opacity = '1';
+      container.querySelectorAll('.drag-over, .drag-over-valid')
+               .forEach(el => el.classList.remove('drag-over', 'drag-over-valid'));
+      dragging = null;
+      saveNewOrder(); // อัปเดต sort_order หลัง drag เสร็จ
+    });
+
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      const afterElement = getDragAfterElement(container, e.clientY);
+      container.querySelectorAll('.drag-over, .drag-over-valid')
+               .forEach(el => el.classList.remove('drag-over', 'drag-over-valid'));
+
+      if (afterElement == null) {
+        container.appendChild(dragging);
+      } else {
+        afterElement.classList.add('drag-over-valid');
+        container.insertBefore(dragging, afterElement);
+      }
+    });
+
+    item.addEventListener('dragleave', e => {
+      item.classList.remove('drag-over', 'drag-over-valid');
+    });
+  });
+}
+
+function getDragAfterElement(container, y) {
+  const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
+  return draggableElements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) {
+      return { offset: offset, element: child };
+    } else {
+      return closest;
+    }
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+  
+async function saveNewOrder() {
+  const rows = document.querySelectorAll('#menuItems .draggable');
+  const updates = [];
+
+  rows.forEach((row, index) => {
+    const id = parseInt(row.dataset.id);
+    updates.push({ id, sort_order: index + 1 });
+  });
+
+  const { error } = await client.from('menu').upsert(updates, { onConflict: 'id' });
+  if (error) {
+    console.log('อัปเดต sort_order ผิดพลาด', error);
+  } else {
+    console.log('อัปเดตเรียงลำดับเมนูเรียบร้อย');
+  }
+}
+
+
 
 // โหลด draft ล่าสุดของโต๊ะ
 async function loadDraft() {
