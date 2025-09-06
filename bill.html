@@ -489,18 +489,28 @@ window.addEventListener('DOMContentLoaded',()=>{
         .eq('table_id', table_id)
         .single();
   
-      // มีการกรอกข้อมูลไว้ (qty > 0 หรือชื่อลูกค้าไม่ว่าง)
       const hasUnsavedData = Array.from(document.querySelectorAll('#menuItems input'))
-        .some(inp => safeEval(inp.value) > 0);
+        .some(inp => safeEval(inp.value) > 0) || el('customer').value.trim() !== '';
   
       if (!draftData && hasUnsavedData) {
         if (!confirm('คุณยังไม่ได้บันทึกข้อมูล ต้องการกลับหน้าแรกจริงหรือไม่?')) {
-          return; // ยกเลิกการกลับ
+          return; // ❌ ยกเลิกการกลับ
         }
+  
+        // ✅ เคลียร์ค่าทุกช่องถ้าไม่มี draft
+        document.querySelectorAll('#menuItems input').forEach(i => i.value = '');
+        el('customer').value = '';
+        el('cash').value = '';
+        el('note').value = '';
+        el('change').value = '';
+        el('grand').textContent = '฿0.00';
       }
     }
+  
+    // กลับไปหน้าหลัก
     window.location.href = 'index.html';
   });
+
 
   el('btnAddMenu').addEventListener('click',()=>{el('popup').style.display='flex';});
   el('btnAddMenuCancel').addEventListener('click',()=>{el('popup').style.display='none'; el('newMenuName').value=''; el('newMenuPrice').value='';});
