@@ -191,8 +191,11 @@
               console.log('change detected', payload);
               loadTables();
           });
-        
-        await channel.subscribe(); // ✅ ใช้ await
+
+        channel.subscribe().then(() => {
+          console.log("Realtime channel subscribed");
+        });
+        //await channel.subscribe(); // ✅ ใช้ await
     </script>
 </body>
 </html>
