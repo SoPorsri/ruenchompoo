@@ -56,23 +56,34 @@ main{display:grid;grid-template-columns:1.2fr .8fr;gap:0;}
   main{grid-template-columns:1fr}
   .panel + .panel{border:none}
 }
+  
 main {
   display: flex;
   gap: 10px;
 }
 
-/* ค่าเริ่มต้น: จัดซ้าย-ขวา */
+/* --- Layout แบบแนวนอน (ค่าเริ่มต้น) --- */
 main {
   flex-direction: row;
 }
 
-/* ถ้าเป็นจอแนวตั้ง (สูงมากกว่ากว้าง) → จัดเรียงบน-ล่าง โดยให้ #right อยู่บน */
+#left {
+  flex: 2; /* กว้างกว่า */
+}
+#right {
+  flex: 1;
+}
+
+/* --- Layout แบบแนวตั้ง (มือถือ/portrait) --- */
 @media screen and (orientation: portrait) {
   main {
     flex-direction: column;
   }
   #right {
-    order: -1; /* ย้ายสรุปบิลขึ้นไปอยู่บนสุด */
+    order: -1; /* ย้ายสรุปบิลขึ้นไปด้านบน */
+  }
+  #note-container {
+    order: 99; /* ให้หมายเหตุไปอยู่ล่างสุด */
   }
 }
 </style>
@@ -127,11 +138,14 @@ main {
             <input class="num" id="change" readonly>
           </div>
         </div>
-        <div style="margin-top:10px">
+      
+        <!-- ✅ ครอบหมายเหตุ -->
+        <div id="note-container" style="margin-top:10px">
           <label class="muted">หมายเหตุ</label>
           <textarea class="note" id="note" rows="3" placeholder=""></textarea>
         </div>
       </section>
+
     </main>
   </div>
 </div>
