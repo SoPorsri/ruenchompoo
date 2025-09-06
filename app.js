@@ -135,4 +135,6 @@ window.onload=()=>{
   el('today').textContent=todayText();
   el('billno').value=nextBillNo();
   loadMenu();
+  // ✅ เพิ่มตรงนี้ เพื่อให้คำนวณเงินทอนแบบ real-time
+  el('cash').addEventListener('input', calc);
 };
