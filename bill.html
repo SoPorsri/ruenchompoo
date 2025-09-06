@@ -594,16 +594,26 @@ async function saveDraft() {
 async function saveBill(){
   const billno   = el('billno').value;
   const customer = el('customer').value;
-  const total    = safeEval(el('grand').textContent.replace(/[^\d.]/g,''));
+  const total    = safeEval(el('grand').textContent.replace(/[^\d.]/g,'')); 
   const cash     = safeEval(el('cash').value);
   const change   = safeEval(el('change').value.replace(/[^\d.]/g,''));
 
-  // 1️⃣ บันทึกบิลหลัก (เพิ่ม closed_at ตอนนี้เลยเพราะถือว่าเช็คบิลแล้ว)
+  // 🔹 ดึง draft ก่อน (เพื่อตามหา created_at ของ draft)
+  let draftData = null;
+  if (billno) {
+    const { data, error } = await client.from('drafts')
+      .select('*')
+      .eq('billno', billno)
+      .single();
+    if (!error && data) draftData = data;
+  }
+
+  // 1️⃣ บันทึกบิลหลัก
   const { data: bill, error: billError } = await client.from('bills').insert([{
     billno, customer, table_id, total, cash, change,
     status:'closed',
-    closed_at: new Date() // เวลาเช็คบิล
-    // created_at จะ auto ใส่เอง (DEFAULT NOW())
+    created_at: draftData ? draftData.created_at : new Date(),  // ✅ ใช้เวลาจาก draft ถ้ามี
+    closed_at: new Date()                                       // เวลาเช็คบิล
   }]).select().single();
 
   if(billError){ 
@@ -636,18 +646,15 @@ async function saveBill(){
   }
 
   // 4️⃣ ลบ draft + draft_items
-  const { data: draftData, error: draftError } = await client.from('drafts')
-    .select('id').eq('billno', billno).single();
-
   if(draftData){
     await client.from('draft_items').delete().eq('draft_id', draftData.id);
     await client.from('drafts').delete().eq('id', draftData.id);
   }
 
-  // 5️⃣ พิมพ์บิล (ส่ง bill ไปให้ buildPrintView แสดงเวลาเข้า/ออก)
+  // 5️⃣ พิมพ์บิล
   const w = window.open('', 'PRINT', 'height=600,width=800');
   w.document.write('<html><head><title>พิมพ์บิล</title></head><body>');
-  w.document.write(buildPrintView(bill)); // ✅ ส่ง bill ไป
+  w.document.write(buildPrintView(bill));
   w.document.write('</body></html>');
   w.document.close();
   w.focus();
