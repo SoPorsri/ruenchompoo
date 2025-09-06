@@ -1,183 +1,199 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ร้านเรือนชมพูเนื้อย่างเกาหลี - หน้าหลัก</title>
-  <!-- โหลด Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ร้านเรือนชมพูเนื้อย่างเกาหลี - หน้าหลัก</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-  <style>
-    body { font-family: system-ui, "Noto Sans Thai", sans-serif; margin: 0; background-color: #e6fff7; }
-    header {
-      background: linear-gradient(90deg, #ec4899, #d946ef);
-      color: white; padding: 16px; text-align: center;
-      font-size: 20px; font-weight: bold; letter-spacing: 0.5px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  <style>
+    body { 
+        font-family: system-ui, "Noto Sans Thai", sans-serif; 
+        margin: 0; 
+        background-color: #e6fff7;
+        position: relative; /* เพิ่มเพื่อให้ตำแหน่ง absolute ของรูปภาพอ้างอิงกับ body */
+        min-height: 100vh; /* ทำให้ body มีความสูงเต็มหน้าจอ */
     }
-    .layout {
-      display: grid; grid-template-columns: 90px 90px 90px 90px;
-      grid-template-rows: repeat(12, 60px); gap: 12px; padding: 24px;
-      justify-content: center;
+    header {
+      background: linear-gradient(90deg, #ec4899, #d946ef);
+      color: white; padding: 16px; text-align: center;
+      font-size: 20px; font-weight: bold; letter-spacing: 0.5px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .layout {
+      display: grid; grid-template-columns: 90px 90px 90px 90px;
+      grid-template-rows: repeat(12, 60px); gap: 12px; padding: 24px;
+      justify-content: center;
+    }
+    .table-card {
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 10px; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      padding: 6px; text-align: center;
+    }
+    .table-card:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+    .free { background: linear-gradient(135deg, #34d399, #10b981); color: white; }
+    .busy { background: linear-gradient(135deg, #f87171, #ef4444); color: white; }
+    .status-icon { font-size: 18px; margin-right: 6px; }
+    .status-icon.free { color: #bbf7d0; }
+    .status-icon.busy { color: #fecaca; }
+
+    /* layout position */
+    #table-ซุ้ม1 { grid-column: 1; grid-row: 10; }
+    #table-ซุ้ม2 { grid-column: 1; grid-row: 9; }
+    #table-ซุ้ม3 { grid-column: 1; grid-row: 8; }
+    #table-ซุ้ม4 { grid-column: 1; grid-row: 7; }
+    #table-ซุ้ม5 { grid-column: 1; grid-row: 6; }
+    #table-ซุ้ม6 { grid-column: 1; grid-row: 5; }
+    #table-ซุ้ม7 { grid-column: 1; grid-row: 4; }
+    #table-ซุ้ม8 { grid-column: 1; grid-row: 3; }
+    #table-ซุ้ม9 { grid-column: 1; grid-row: 2; }
+    #table-ซุ้ม10 { grid-column: 1; grid-row: 1; }
+
+    #table-A1 { grid-column: 2; grid-row: 8 / span 2; height:160px; width:80px; align-self:start; }
+    #table-A2 { grid-column: 3; grid-row: 8 / span 2; height:160px; width:80px; align-self:start; }
+    #table-A3 { grid-column:2 / span 2; grid-row:7; height:50px; }
+    #table-A4 { grid-column:2 / span 2; grid-row:6; height:50px; }
+    #table-A5 { grid-column:2 / span 2; grid-row:5; height:50px; }
+    #table-A6 { grid-column:2 / span 2; grid-row:4; height:50px; }
+    #table-A7 { grid-column:2 / span 2; grid-row:3; height:50px; }
+    #table-A8 { grid-column:2 / span 2; grid-row:2; height:50px; }
+
+    #table-B1 { grid-column: 4; grid-row: 8; }
+    #table-B2 { grid-column: 4; grid-row: 7; }
+    #table-B3 { grid-column: 4; grid-row: 6; }
+    #table-B4 { grid-column: 4; grid-row: 5; }
+
+    /* CSS สำหรับรูปภาพสุนัข */
+    .dog-image {
+        position: absolute;
+        bottom: 20px; /* ระยะห่างจากด้านล่าง */
+        left: 20px; /* ระยะห่างจากด้านซ้าย */
+        width: 150px; /* ขนาดของรูปภาพ */
+        height: auto;
+        z-index: 100; /* ให้รูปภาพอยู่ด้านบนสุด */
     }
-    .table-card {
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 10px; font-size: 14px; font-weight: 600;
-      cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-      padding: 6px; text-align: center;
-    }
-    .table-card:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
-    .free { background: linear-gradient(135deg, #34d399, #10b981); color: white; }
-    .busy { background: linear-gradient(135deg, #f87171, #ef4444); color: white; }
-    .status-icon { font-size: 18px; margin-right: 6px; }
-    .status-icon.free { color: #bbf7d0; }
-    .status-icon.busy { color: #fecaca; }
-
-    /* layout position */
-    #table-ซุ้ม1 { grid-column: 1; grid-row: 10; }
-    #table-ซุ้ม2 { grid-column: 1; grid-row: 9; }
-    #table-ซุ้ม3 { grid-column: 1; grid-row: 8; }
-    #table-ซุ้ม4 { grid-column: 1; grid-row: 7; }
-    #table-ซุ้ม5 { grid-column: 1; grid-row: 6; }
-    #table-ซุ้ม6 { grid-column: 1; grid-row: 5; }
-    #table-ซุ้ม7 { grid-column: 1; grid-row: 4; }
-    #table-ซุ้ม8 { grid-column: 1; grid-row: 3; }
-    #table-ซุ้ม9 { grid-column: 1; grid-row: 2; }
-    #table-ซุ้ม10 { grid-column: 1; grid-row: 1; }
-
-    #table-A1 { grid-column: 2; grid-row: 8 / span 2; height:160px; width:80px; align-self:start; }
-    #table-A2 { grid-column: 3; grid-row: 8 / span 2; height:160px; width:80px; align-self:start; }
-    #table-A3 { grid-column:2 / span 2; grid-row:7; height:50px; }
-    #table-A4 { grid-column:2 / span 2; grid-row:6; height:50px; }
-    #table-A5 { grid-column:2 / span 2; grid-row:5; height:50px; }
-    #table-A6 { grid-column:2 / span 2; grid-row:4; height:50px; }
-    #table-A7 { grid-column:2 / span 2; grid-row:3; height:50px; }
-    #table-A8 { grid-column:2 / span 2; grid-row:2; height:50px; }
-
-    #table-B1 { grid-column: 4; grid-row: 8; }
-    #table-B2 { grid-column: 4; grid-row: 7; }
-    #table-B3 { grid-column: 4; grid-row: 6; }
-    #table-B4 { grid-column: 4; grid-row: 5; }
-  </style>
+  </style>
 </head>
 <body>
-  <header> 
-    <img src="images/bg_index.png" alt="โลโก้ร้าน" style="height:40px; vertical-align:middle; margin-right:6px;">
-    ร้านเรือนชมพูเนื้อย่างเกาหลี • สาขานาเชือก
-  </header>
+  <header> 
+    <img src="images/bg_index.png" alt="โลโก้ร้าน" style="height:40px; vertical-align:middle; margin-right:6px;">
+    ร้านเรือนชมพูเนื้อย่างเกาหลี • สาขานาเชือก
+  </header>
 
-  <div class="layout" id="tables">
-    <!-- fix โต๊ะ -->
-    <div id="table-ซุ้ม1" class="table-card"></div>
-    <div id="table-ซุ้ม2" class="table-card"></div>
-    <div id="table-ซุ้ม3" class="table-card"></div>
-    <div id="table-ซุ้ม4" class="table-card"></div>
-    <div id="table-ซุ้ม5" class="table-card"></div>
-    <div id="table-ซุ้ม6" class="table-card"></div>
-    <div id="table-ซุ้ม7" class="table-card"></div>
-    <div id="table-ซุ้ม8" class="table-card"></div>
-    <div id="table-ซุ้ม9" class="table-card"></div>
-    <div id="table-ซุ้ม10" class="table-card"></div>
-    <div id="table-A1" class="table-card"></div>
-    <div id="table-A2" class="table-card"></div>
-    <div id="table-A3" class="table-card"></div>
-    <div id="table-A4" class="table-card"></div>
-    <div id="table-A5" class="table-card"></div>
-    <div id="table-A6" class="table-card"></div>
-    <div id="table-A7" class="table-card"></div>
-    <div id="table-A8" class="table-card"></div>
-    <div id="table-B1" class="table-card"></div>
-    <div id="table-B2" class="table-card"></div>
-    <div id="table-B3" class="table-card"></div>
-    <div id="table-B4" class="table-card"></div>
-  </div>
+  <div class="layout" id="tables">
+        <div id="table-ซุ้ม1" class="table-card"></div>
+    <div id="table-ซุ้ม2" class="table-card"></div>
+    <div id="table-ซุ้ม3" class="table-card"></div>
+    <div id="table-ซุ้ม4" class="table-card"></div>
+    <div id="table-ซุ้ม5" class="table-card"></div>
+    <div id="table-ซุ้ม6" class="table-card"></div>
+    <div id="table-ซุ้ม7" class="table-card"></div>
+    <div id="table-ซุ้ม8" class="table-card"></div>
+    <div id="table-ซุ้ม9" class="table-card"></div>
+    <div id="table-ซุ้ม10" class="table-card"></div>
+    <div id="table-A1" class="table-card"></div>
+    <div id="table-A2" class="table-card"></div>
+    <div id="table-A3" class="table-card"></div>
+    <div id="table-A4" class="table-card"></div>
+    <div id="table-A5" class="table-card"></div>
+    <div id="table-A6" class="table-card"></div>
+    <div id="table-A7" class="table-card"></div>
+    <div id="table-A8" class="table-card"></div>
+    <div id="table-B1" class="table-card"></div>
+    <div id="table-B2" class="table-card"></div>
+    <div id="table-B3" class="table-card"></div>
+    <div id="table-B4" class="table-card"></div>
+  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
-    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <img src="https://i.ibb.co/L519V3B/image.png" alt="dog" class="dog-image">
 
-    const tables = [
-      { id: 1, name: "ซุ้ม1" }, { id: 2, name: "ซุ้ม2" }, { id: 3, name: "ซุ้ม3" }, { id: 4, name: "ซุ้ม4" },
-      { id: 5, name: "ซุ้ม5" }, { id: 6, name: "ซุ้ม6" }, { id: 7, name: "ซุ้ม7" }, { id: 8, name: "ซุ้ม8" },
-      { id: 9, name: "ซุ้ม9" }, { id: 10, name: "ซุ้ม10" }, { id: 11, name: "A1" }, { id: 12, name: "A2" },
-      { id: 13, name: "A3" }, { id: 14, name: "A4" }, { id: 15, name: "A5" }, { id: 16, name: "A6" },
-      { id: 17, name: "A7" }, { id: 18, name: "A8" }, { id: 19, name: "B1" }, { id: 20, name: "B2" },
-      { id: 21, name: "B3" }, { id: 22, name: "B4" }
-    ];
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    async function ensureTablesExist() {
-      const { data: dbTables, error } = await client.from('tables').select('id');
-      if (error) { console.error(error); return; }
+    const tables = [
+      { id: 1, name: "ซุ้ม1" }, { id: 2, name: "ซุ้ม2" }, { id: 3, name: "ซุ้ม3" }, { id: 4, name: "ซุ้ม4" },
+      { id: 5, name: "ซุ้ม5" }, { id: 6, name: "ซุ้ม6" }, { id: 7, name: "ซุ้ม7" }, { id: 8, name: "ซุ้ม8" },
+      { id: 9, name: "ซุ้ม9" }, { id: 10, name: "ซุ้ม10" }, { id: 11, name: "A1" }, { id: 12, name: "A2" },
+      { id: 13, name: "A3" }, { id: 14, name: "A4" }, { id: 15, name: "A5" }, { id: 16, name: "A6" },
+      { id: 17, name: "A7" }, { id: 18, name: "A8" }, { id: 19, name: "B1" }, { id: 20, name: "B2" },
+      { id: 21, name: "B3" }, { id: 22, name: "B4" }
+    ];
 
-      const existingIds = dbTables.map(t => t.id);
-      const missing = tables.filter(t => !existingIds.includes(t.id));
+    async function ensureTablesExist() {
+      const { data: dbTables, error } = await client.from('tables').select('id');
+      if (error) { console.error(error); return; }
 
-      if (missing.length > 0) {
-        console.log("Insert missing tables:", missing);
-        const { error: insertError } = await client.from('tables').insert(
-          missing.map(m => ({ id: m.id, name: m.name, status: "ว่าง" }))
-        );
-        if (insertError) console.error("Insert error:", insertError);
-      }
-    }
+      const existingIds = dbTables.map(t => t.id);
+      const missing = tables.filter(t => !existingIds.includes(t.id));
 
-    async function loadTables() {
-      const { data, error } = await client.from('tables').select('id,status');
-      if (error) { console.error(error); return; }
+      if (missing.length > 0) {
+        console.log("Insert missing tables:", missing);
+        const { error: insertError } = await client.from('tables').insert(
+          missing.map(m => ({ id: m.id, name: m.name, status: "ว่าง" }))
+        );
+        if (insertError) console.error("Insert error:", insertError);
+      }
+    }
 
-      tables.forEach(t => {
-        const div = document.getElementById("table-" + t.name);
-        if (!div) return;
+    async function loadTables() {
+      const { data, error } = await client.from('tables').select('id,status');
+      if (error) { console.error(error); return; }
 
-        const record = data.find(d => d.id === t.id);
-        const status = record ? record.status : "ว่าง";
+      tables.forEach(t => {
+        const div = document.getElementById("table-" + t.name);
+        if (!div) return;
 
-        div.className = 'table-card ' + (status === 'ว่าง' ? 'free' : 'busy');
-        div.innerHTML = '';
+        const record = data.find(d => d.id === t.id);
+        const status = record ? record.status : "ว่าง";
 
-        const icon = document.createElement('i');
-        icon.className = status === 'ว่าง'
-          ? 'fa-solid fa-circle-check status-icon free'
-          : 'fa-solid fa-circle-xmark status-icon busy';
+        div.className = 'table-card ' + (status === 'ว่าง' ? 'free' : 'busy');
+        div.innerHTML = '';
 
-        const label = document.createElement('span');
-        label.textContent = `${t.name} (${status})`;
+        const icon = document.createElement('i');
+        icon.className = status === 'ว่าง'
+          ? 'fa-solid fa-circle-check status-icon free'
+          : 'fa-solid fa-circle-xmark status-icon busy';
 
-        div.appendChild(icon);
-        div.appendChild(label);
+        const label = document.createElement('span');
+        label.textContent = `${t.name} (${status})`;
 
-        div.onclick = async () => {
-          if (status === 'ว่าง') {
-            const { error: updateError } = await client.from('tables')
-              .update({ status: 'ไม่ว่าง' })
-              .eq('id', t.id);
-            if (updateError) {
-              console.error(updateError);
-              alert('อัปเดตสถานะโต๊ะผิดพลาด');
-              return;
-            }
-          }
-          window.location.href = `bill.html?table_id=${t.id}`;
-        };
-      });
-    }
+        div.appendChild(icon);
+        div.appendChild(label);
 
-    // เรียงลำดับการทำงาน
-    (async () => {
-      await ensureTablesExist();
-      await loadTables();
-    })();
+        div.onclick = async () => {
+          if (status === 'ว่าง') {
+            const { error: updateError } = await client.from('tables')
+              .update({ status: 'ไม่ว่าง' })
+              .eq('id', t.id);
+            if (updateError) {
+              console.error(updateError);
+              alert('อัปเดตสถานะโต๊ะผิดพลาด');
+              return;
+            }
+          }
+          window.location.href = `bill.html?table_id=${t.id}`;
+        };
+      });
+    }
 
-    // realtime update
-    client.channel('tables-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, payload => {
-        console.log('change detected', payload);
-        loadTables();
-      })
-      .subscribe();
-  </script>
+    // เรียงลำดับการทำงาน
+    (async () => {
+      await ensureTablesExist();
+      await loadTables();
+    })();
+
+    // realtime update
+    client.channel('tables-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, payload => {
+        console.log('change detected', payload);
+        loadTables();
+      })
+      .subscribe();
+  </script>
 </body>
 </html>
