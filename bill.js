@@ -340,18 +340,30 @@ function buildPrintView(bill) {
   <head>
     <title>บิลร้านเรือนชมพูเนื้อย่างเกาหลี</title>
     <style>
-      body { font-family: "Noto Sans Thai", sans-serif; margin:20px; color:#111; }
-      h1,h2,h3 { margin:0; padding:0; }
-      .header { text-align:center; margin-bottom:12px; }
-      .header h1 { font-size:24px; }
-      .header p { font-size:14px; margin:2px 0; }
-      table { width:100%; border-collapse: collapse; margin-top:10px; }
-      table, th, td { border:1px solid #000; }
-      th, td { padding:6px 8px; text-align:left; }
-      th.right, td.right { text-align:right; }
-      .summary { margin-top:12px; width:100%; display:grid; grid-template-columns:1fr auto; }
-      .summary div { padding:4px 0; }
-      .big { font-weight:800; font-size:20px; }
+      @page {
+        size: 57mm auto;   /* ✅ กำหนดกระดาษความกว้าง 57mm */
+        margin: 0;
+      }
+      body { 
+        font-family: "Noto Sans Thai", sans-serif; 
+        font-size: 12px;   /* ✅ ขนาดเล็กพอดีกับบิล */
+        margin: 0;
+        padding: 4px;
+        color: #000;
+      }
+      h1,h2,h3,p { margin: 0; padding: 0; }
+      .header { text-align: center; margin-bottom: 8px; }
+      .header h1 { font-size: 14px; font-weight: bold; }
+      .header p { font-size: 12px; margin: 2px 0; }
+      table { width: 100%; border-collapse: collapse; font-size: 12px; }
+      th, td { padding: 2px 0; }
+      th { border-bottom: 1px dashed #000; }
+      td { border-bottom: 1px dashed #ccc; }
+      th.right, td.right { text-align: right; }
+      .summary { margin-top: 6px; width: 100%; font-size: 12px; }
+      .summary div { display: flex; justify-content: space-between; }
+      .big { font-weight: bold; font-size: 14px; }
+      .footer { text-align: center; margin-top: 10px; font-size: 11px; }
     </style>
   </head>
   <body>
@@ -361,14 +373,15 @@ function buildPrintView(bill) {
       <p>โทร: 0885305228, 0621392902</p>
       <p>บิลเลขที่: ${bill.billno}</p>
       <p>โต๊ะ/ลูกค้า: ${bill.customer || '-'}</p>
-      <p>เวลาเปิดบิล: ${createdText}</p>
-      <p>เวลาเช็คบิล: ${closedText}</p>
+      <p>เปิดบิล: ${createdText}</p>
+      <p>เช็คบิล: ${closedText}</p>
+      <hr>
     </div>
     <table>
       <thead>
         <tr>
           <th>สินค้า</th>
-          <th class="right">ราคา/หน่วย</th>
+          <th class="right">ราคา</th>
           <th class="right">จำนวน</th>
           <th class="right">รวม</th>
         </tr>
@@ -397,16 +410,17 @@ function buildPrintView(bill) {
 
   html += `</tbody></table>
     <div class="summary">
-      <div>ยอดรวม</div><div class="right big">${total.toFixed(2)}</div>
-      <div>รับเงินมา</div><div class="right">${cash.toFixed(2)}</div>
-      <div>เงินทอน</div><div class="right">${change.toFixed(2)}</div>
+      <div><span>ยอดรวม</span><span class="big">${total.toFixed(2)}</span></div>
+      <div><span>รับเงิน</span><span>${cash.toFixed(2)}</span></div>
+      <div><span>เงินทอน</span><span>${change.toFixed(2)}</span></div>
     </div>
-    <p style="text-align:center; margin-top:20px; font-size:12px;">ขอบคุณที่อุดหนุนร้านเรือนชมพูเนื้อย่างเกาหลี</p>
+    <div class="footer">ขอบคุณที่อุดหนุน 🙏</div>
   </body>
   </html>
   `;
   return html;
 }
+
 
 async function saveDraft() {
   const billno = el('billno').value || nextBillNo();
