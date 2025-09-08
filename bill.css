@@ -16,14 +16,22 @@ button.secondary { background:#334155; }
 button.warn { background:var(--danger); }
 button.ghost { background:transparent; color:var(--ink); border:1px solid var(--line); }
 .icon { width:16px; height:16px; display:inline-block; vertical-align:middle; }
-main { display:grid; grid-template-columns:1.2fr .8fr; gap:0; }
-@media (max-width:860px){main{grid-template-columns:1fr;}}
+
+/* Layout หลัก */
+main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:border-box; }
+#left { flex:0 0 60%; min-width:0; }
+#right { flex:1; min-width:0; display:flex; flex-direction:column; gap:12px; }
+#right input, #right select, #right textarea { width:100%; max-width:100%; box-sizing:border-box; display:block; }
+#right label, #right span, #right div { overflow-wrap:break-word; word-break:break-word; }
+@media screen and (orientation:portrait) {
+  main { flex-direction:column; }
+  #right { order:-1; }
+}
+
 .panel { padding:20px 24px; }
 .panel + .panel { border-left:1px solid var(--line); }
 @media (max-width:860px){.panel + .panel{border-left:none;border-top:1px solid var(--line);} }
-.grid { display:grid; grid-template-columns:1fr 110px 130px; gap:10px; align-items:center; }
 .grid.header { font-weight:700; border-bottom:1px solid var(--line); padding-bottom:6px; margin-bottom:8px; }
-.row { padding:6px 0; border-bottom:1px dashed var(--line); }
 .muted { color:var(--muted); }
 .right { text-align:right; }
 .num { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:16px; }
@@ -46,19 +54,8 @@ main { display:grid; grid-template-columns:1.2fr .8fr; gap:0; }
   .container { margin:0; padding:0; }
   .app { border:none; box-shadow:none; border-radius:0; }
   header .controls, .noprint { display:none !important; }
-  main { grid-template-columns:1fr; }
-  .panel + .panel { border:none; }
-}
-
-/* Layout หลัก */
-main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:border-box; }
-#left { flex:0 0 60%; min-width:0; }
-#right { flex:1; min-width:0; display:flex; flex-direction:column; gap:12px; }
-#right input, #right select, #right textarea { width:100%; max-width:100%; box-sizing:border-box; display:block; }
-#right label, #right span, #right div { overflow-wrap:break-word; word-break:break-word; }
-@media screen and (orientation:portrait) {
   main { flex-direction:column; }
-  #right { order:-1; }
+  .panel + .panel { border:none; }
 }
 
 /* Drag & Drop */
@@ -67,3 +64,41 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
 .drag-handle { cursor:grab; }
 .drag-handle:active { cursor:grabbing; }
 .placeholder { border:2px dashed #00bcd4; background:#e0f7fa; }
+
+/* ✅ ปรับ row ให้ ☰ อยู่หน้าสุด */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+.drag-handle {
+  cursor: grab;
+  font-size: 18px;
+  color: var(--muted);
+  width: 20px;          /* fix ขนาด */
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.row label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-price {
+  min-width: 80px;
+  text-align: right;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.menu-qty {
+  width: 100px;
+  text-align: right;
+  flex-shrink: 0;
+}
