@@ -56,16 +56,17 @@
           </div>
         </div>
       
-        <div class="grid-2col" style="margin-top:18px">
-          <div>
-            <label class="muted">รับเงินมา</label>
-            <input class="num" id="cash" placeholder="เช่น 500+500">
-            <div id="cashWarn" class="danger-text" style="display:none">⚠️ รับเงินมาไม่พอ</div>
-          </div>
-          <div>
-            <label class="muted">เงินทอน</label>
-            <input class="num" id="change" readonly>
-          </div>
+        <div style="display:flex; align-items:center; gap:12px; margin-top:18px">
+          <label class="muted">รับเงินมา</label>
+          <input class="num" id="cash" placeholder="เช่น 500+500" style="flex:1">
+        
+          <label class="muted">เงินทอน</label>
+          <input class="num" id="change" readonly style="width:100px">
+        </div>
+        
+        <!-- คำเตือนให้อยู่ข้างล่าง -->
+        <div id="cashWarn" class="danger-text" style="display:none; margin-top:4px">
+          ⚠️ รับเงินมาไม่พอ
         </div>
       </section>
     </main>
