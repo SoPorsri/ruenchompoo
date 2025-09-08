@@ -306,7 +306,6 @@ function buildPreviewView() {
   return html;
 }
 
-
 function buildPrintView(bill) {
   const createdText = bill.created_at 
     ? new Date(bill.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) 
@@ -542,55 +541,63 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   await loadDraft();
 
   el('btnHome').addEventListener('click', async () => {
-  if (table_id) {
-    // ตรวจสอบว่ามีการคีย์ข้อมูลในเมนูหรือไม่
-    const hasOrder = Array.from(document.querySelectorAll('#menuItems input'))
-      .some(inp => safeEval(inp.value) > 0);
-
-    if (!hasOrder) {
-      // 👉 ไม่มีการคีย์ข้อมูล → เปลี่ยนสถานะโต๊ะเป็น 'ว่าง' โดยไม่แจ้งเตือน
-      const { error: updateError } = await client.from('tables')
-        .update({ status: 'ว่าง' })
-        .eq('id', table_id);
-
-      if (updateError) {
-        console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
-      }
-
-    } else {
-      // 👉 มีการคีย์ข้อมูล → ตรวจสอบ draft
-      const { data: draftData, error: draftError } = await client.from('drafts')
-        .select('id')
-        .eq('table_id', table_id)
-        .single();
-
-      const hasUnsavedData = Array.from(document.querySelectorAll('#menuItems input'))
-        .some(inp => safeEval(inp.value) > 0) || el('customer').value.trim() !== '';
-
-      if (!draftData && hasUnsavedData) {
-        const confirmReset = confirm("คุณยังไม่ได้บันทึกข้อมูล\nต้องการเปลี่ยนสถานะโต๊ะเป็น 'ว่าง' ใช่หรือไม่?");
-        
-        if (!confirmReset) {
-          // ถ้ากด Cancel จะหยุดแค่ตรงนี้
-          return;
-        }
-      
-        // มาถึงตรงนี้ แสดงว่ากด OK แล้ว
+    if (table_id) {
+      // ตรวจสอบว่ามีการคีย์ข้อมูลในเมนูหรือไม่
+      const hasOrder = Array.from(document.querySelectorAll('#menuItems input'))
+        .some(inp => safeEval(inp.value) > 0);
+  
+      if (!hasOrder) {
+        // 👉 ไม่มีการคีย์ข้อมูล → เปลี่ยนสถานะโต๊ะเป็น 'ว่าง' โดยไม่แจ้งเตือน
         const { error: updateError } = await client.from('tables')
           .update({ status: 'ว่าง' })
           .eq('id', table_id);
-      
+  
         if (updateError) {
           console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
-          alert('บันทึกสถานะโต๊ะผิดพลาด กรุณาลองใหม่อีกครั้ง');
+        }
+  
+        // กลับไปหน้า index ได้เลย
+        window.location.href = 'index.html';
+        return;
+      } else {
+        // 👉 มีการคีย์ข้อมูล → ตรวจสอบ draft
+        const { data: draftData } = await client.from('drafts')
+          .select('id')
+          .eq('table_id', table_id)
+          .single();
+  
+        const hasUnsavedData = Array.from(document.querySelectorAll('#menuItems input'))
+          .some(inp => safeEval(inp.value) > 0) || el('customer').value.trim() !== '';
+  
+        if (!draftData && hasUnsavedData) {
+          const confirmReset = confirm("คุณยังไม่ได้บันทึกข้อมูล\nต้องการเปลี่ยนสถานะโต๊ะเป็น 'ว่าง' ใช่หรือไม่?");
+          
+          if (!confirmReset) {
+            // ❌ ถ้ากด Cancel จะหยุดทันที และไม่ redirect
+            return;
+          }
+        
+          // ✅ กด OK → อัปเดตแล้ว redirect
+          const { error: updateError } = await client.from('tables')
+            .update({ status: 'ว่าง' })
+            .eq('id', table_id);
+        
+          if (updateError) {
+            console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
+            alert('บันทึกสถานะโต๊ะผิดพลาด กรุณาลองใหม่อีกครั้ง');
+            return;
+          }
+  
+          window.location.href = 'index.html';
+          return;
         }
       }
+    } else {
+      // ไม่มี table_id → กลับ index เลย
+      window.location.href = 'index.html';
     }
-  }
+  });
 
-  // กลับไปหน้าหลักเสมอ
-  window.location.href = 'index.html';
-});
 
   el('btnAddMenu').addEventListener('click',()=>{el('popup').style.display='flex';});
   el('btnAddMenuCancel').addEventListener('click',()=>{el('popup').style.display='none'; el('newMenuName').value=''; el('newMenuPrice').value='';});
