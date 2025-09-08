@@ -303,10 +303,13 @@
       const { data: daily } = await client.rpc('get_daily_sales');
       const { data: monthly } = await client.rpc('get_monthly_sales');
       const { data: yearly } = await client.rpc('get_yearly_sales');
-  
-      document.getElementById('dailySales').textContent = daily?.[0]?.total_sales || 0;
-      document.getElementById('monthlySales').textContent = monthly?.[0]?.total_sales || 0;
-      document.getElementById('yearlySales').textContent = yearly?.[0]?.total_sales || 0;
+    
+      document.getElementById('dailySales').textContent = 
+        (daily?.[0]?.total_sales || 0).toLocaleString("th-TH");
+      document.getElementById('monthlySales').textContent = 
+        (monthly?.[0]?.total_sales || 0).toLocaleString("th-TH");
+      document.getElementById('yearlySales').textContent = 
+        (yearly?.[0]?.total_sales || 0).toLocaleString("th-TH");
     }
   
     async function loadSalesChart(mode = 'daily') {
@@ -358,8 +361,26 @@
         },
         options: {
           responsive: true,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true } }
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.raw.toLocaleString("th-TH") + " บาท";
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return value.toLocaleString("th-TH");
+                }
+              }
+            }
+          }
         }
       });
     }
@@ -380,7 +401,7 @@
           tr.innerHTML = `
             <td>${bill.billno}</td>
             <td>${bill.customer || '-'}</td>
-            <td>${bill.total}</td>
+            <td>${Number(bill.total).toLocaleString("th-TH")}</td>
             <td>${bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH') : '-'}</td>
           `;
           tbody.appendChild(tr);
@@ -404,10 +425,10 @@
       const exportData = data.map(bill => ({
         เลขบิล: bill.billno,
         ลูกค้า_โต๊ะ: bill.customer || '-',
-        ยอดรวม: bill.total,
+        ยอดรวม: Number(bill.total).toLocaleString("th-TH"),
         ปิดบิลเวลา: bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH') : '-'
       }));
-    
+          
       const ws = XLSX.utils.json_to_sheet(exportData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "SalesHistory");
