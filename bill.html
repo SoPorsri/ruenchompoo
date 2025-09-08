@@ -113,6 +113,13 @@ main {
   border-top: 3px solid green;
 }
 
+.drag-handle {
+  cursor: grab;
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+
 .placeholder {
   border: 2px dashed #00bcd4;
   background: #e0f7fa;
@@ -261,9 +268,9 @@ async function loadMenu(){
     row.className='row grid draggable';
     row.draggable = true;
     row.dataset.id = item.id;
-    row.innerHTML=`<label>${item.name}</label>
-                   <div class="right muted">฿${item.price}</div>
-                   <input class="num" type="text" data-id="${item.id}" placeholder="เช่น 1+2+3">`;
+    row.innerHTML=`<label class="drag-handle">${item.name}</label>
+               <div class="right muted">฿${item.price}</div>
+               <input class="num" type="text" data-id="${item.id}" placeholder="เช่น 1+2+3">`;
     container.appendChild(row);
   });
 
@@ -282,16 +289,22 @@ function initDragAndDrop() {
   let placeholder = null;
 
   // -------------------
-  // 🖥️ Desktop Drag & Drop
+  // 🖥️ Desktop Drag & Drop (ลากเฉพาะ .drag-handle)
   // -------------------
   container.querySelectorAll('.draggable').forEach(item => {
-    item.addEventListener('dragstart', e => {
+    const handle = item.querySelector('.drag-handle');
+    if (!handle) return;
+
+    handle.setAttribute("draggable", true); // ✅ ให้ handle เป็นตัวลาก
+
+    handle.addEventListener('dragstart', e => {
       dragging = item;
       item.classList.add('dragging');
       item.style.opacity = '0.5';
+      e.dataTransfer.effectAllowed = "move";
     });
 
-    item.addEventListener('dragend', e => {
+    handle.addEventListener('dragend', e => {
       finishDrag();
     });
   });
@@ -310,7 +323,7 @@ function initDragAndDrop() {
       el.classList.remove('drag-over', 'drag-over-valid');
     });
     if (afterElement) {
-      afterElement.classList.add('drag-over-valid'); // เขียวถ้าวางได้
+      afterElement.classList.add('drag-over-valid');
     }
   });
 
@@ -319,10 +332,13 @@ function initDragAndDrop() {
   });
 
   // -------------------
-  // 📱 Mobile Touch Drag
+  // 📱 Mobile Touch Drag (ลากเฉพาะ .drag-handle)
   // -------------------
   container.querySelectorAll('.draggable').forEach(item => {
-    item.addEventListener('touchstart', e => {
+    const handle = item.querySelector('.drag-handle');
+    if (!handle) return;
+
+    handle.addEventListener('touchstart', e => {
       dragging = item;
 
       // placeholder
@@ -340,7 +356,7 @@ function initDragAndDrop() {
       e.preventDefault();
     });
 
-    item.addEventListener('touchmove', e => {
+    handle.addEventListener('touchmove', e => {
       if (!dragging) return;
       moveAt(e.touches[0].pageX, e.touches[0].pageY);
 
@@ -352,7 +368,7 @@ function initDragAndDrop() {
       }
     });
 
-    item.addEventListener('touchend', e => {
+    handle.addEventListener('touchend', e => {
       if (!dragging) return;
 
       // วาง item กลับเข้าที่
