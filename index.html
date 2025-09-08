@@ -299,6 +299,11 @@
         section.style.display = 'none';
       }
     }
+
+    function reprintBill(billId) {
+      // เปิดหน้าพิมพ์บิลใหม่ พร้อมส่ง bill_id
+      window.open(`printbill.html?bill_id=${billId}`, '_blank');
+    }
   
     async function loadSalesSummary() {
       const { data: daily } = await client.rpc('get_daily_sales');
@@ -405,6 +410,12 @@
             <td>${Number(bill.total).toLocaleString("th-TH")}</td>
             <td>${bill.created_at ? new Date(bill.created_at).toLocaleString('th-TH') : '-'}</td>
             <td>${bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH') : '-'}</td>
+            <td>
+              <button onclick="reprintBill(${bill.id})" 
+                style="background:#ec4899; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">
+                <i class="fa-solid fa-print"></i> พิมพ์ซ้ำ
+              </button>
+            </td>
           `;
           tbody.appendChild(tr);
         });
