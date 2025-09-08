@@ -50,7 +50,12 @@ async function loadMenu(){
       <div class="drag-handle">☰</div>
       <div class="menu-name">${item.name}</div>
       <div class="menu-price right">฿${item.price}</div>
-      <div><input class="num menu-qty" type="text" data-id="${item.id}" placeholder="เช่น 1+2+3"></div>
+      <div><input class="num menu-qty" 
+         type="text" 
+         data-id="${item.id}" 
+         placeholder="เช่น 1+2"
+         inputmode="decimal" 
+         pattern="[0-9.+]*"></div>
     `;
     container.appendChild(row);
   });
