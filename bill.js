@@ -568,20 +568,21 @@ window.addEventListener('DOMContentLoaded', async ()=>{
         .some(inp => safeEval(inp.value) > 0) || el('customer').value.trim() !== '';
 
       if (!draftData && hasUnsavedData) {
-        // ให้ user ยืนยันก่อน
-        const confirmReset = confirm("คุณยังไม่ได้บันทึกข้อมูล!");
+        const confirmReset = confirm("คุณยังไม่ได้บันทึกข้อมูล\nต้องการเปลี่ยนสถานะโต๊ะเป็น 'ว่าง' ใช่หรือไม่?");
         
-        if (confirmReset) {
-          const { error: updateError } = await client.from('tables')
-            .update({ status: 'ว่าง' })
-            .eq('id', table_id);
+        if (!confirmReset) {
+          // ถ้ากด Cancel จะหยุดแค่ตรงนี้
+          return;
+        }
       
-          if (updateError) {
-            console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
-            alert('บันทึกสถานะโต๊ะผิดพลาด กรุณาลองใหม่อีกครั้ง');
-          }
-        } else {
-          console.log("ผู้ใช้ยกเลิกการเปลี่ยนสถานะโต๊ะ");
+        // มาถึงตรงนี้ แสดงว่ากด OK แล้ว
+        const { error: updateError } = await client.from('tables')
+          .update({ status: 'ว่าง' })
+          .eq('id', table_id);
+      
+        if (updateError) {
+          console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
+          alert('บันทึกสถานะโต๊ะผิดพลาด กรุณาลองใหม่อีกครั้ง');
         }
       }
     }
