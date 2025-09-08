@@ -6,7 +6,7 @@ body {
   font-family:system-ui,"Noto Sans Thai",sans-serif; 
   background:var(--bg); 
   color:var(--ink); 
-  font-size:20px;
+  font-size:18px;
 }
 .container { max-width:1000px; margin:24px auto; padding:16px; }
 .app { background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:0 10px 30px rgba(2,8,23,.05); }
@@ -98,7 +98,7 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size:24px;    /* ขยายตัวอักษร */
+  font-size:22px;    /* ขยายตัวอักษร */
   font-weight:600;   /* ทำให้หนา */
 }
 
@@ -107,7 +107,7 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   text-align: right;
   color: var(--muted);
   flex-shrink: 0;
-  font-size:24px;    /* ขยายตัวอักษร */
+  font-size:22px;    /* ขยายตัวอักษร */
   font-weight:600;   /* ทำให้หนา */
 }
 
@@ -115,4 +115,6 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   width: 100px;
   text-align: right;
   flex-shrink: 0;
+  font-size:22px;    /* ขยายตัวอักษร */
+  font-weight:600;   /* ทำให้หนา */
 }
