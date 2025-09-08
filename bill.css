@@ -1,7 +1,13 @@
 :root {
   --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --muted:#475569; --accent:#10b981; --line:#e2e8f0; --danger:#ef4444;
 }
-body { margin:0; font-family:system-ui,"Noto Sans Thai",sans-serif; background:var(--bg); color:var(--ink); }
+body { 
+  margin:0; 
+  font-family:system-ui,"Noto Sans Thai",sans-serif; 
+  background:var(--bg); 
+  color:var(--ink); 
+  font-size:18px;   /* 👈 เพิ่มตรงนี้ */
+}
 .container { max-width:1000px; margin:24px auto; padding:16px; }
 .app { background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:0 10px 30px rgba(2,8,23,.05); }
 header { padding:20px 24px; border-bottom:1px solid var(--line); display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
