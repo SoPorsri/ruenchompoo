@@ -554,49 +554,53 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   
         if (updateError) {
           console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
+          return; // ❌ ถ้า error จะไม่ redirect
         }
   
-        // กลับไปหน้า index ได้เลย
         window.location.href = 'index.html';
         return;
-      } else {
-        // 👉 มีการคีย์ข้อมูล → ตรวจสอบ draft
-        const { data: draftData } = await client.from('drafts')
-          .select('id')
-          .eq('table_id', table_id)
-          .single();
+      }
   
-        const hasUnsavedData = Array.from(document.querySelectorAll('#menuItems input'))
-          .some(inp => safeEval(inp.value) > 0) || el('customer').value.trim() !== '';
+      // 👉 มีการคีย์ข้อมูล → ตรวจสอบ draft
+      const { data: draftData } = await client.from('drafts')
+        .select('id')
+        .eq('table_id', table_id)
+        .single();
   
-        if (!draftData && hasUnsavedData) {
-          const confirmReset = confirm("คุณยังไม่ได้บันทึกข้อมูล\nต้องการเปลี่ยนสถานะโต๊ะเป็น 'ว่าง' ใช่หรือไม่?");
-          
-          if (!confirmReset) {
-            // ❌ ถ้ากด Cancel จะหยุดทันที และไม่ redirect
-            return;
-          }
+      const hasUnsavedData = Array.from(document.querySelectorAll('#menuItems input'))
+        .some(inp => safeEval(inp.value) > 0) || el('customer').value.trim() !== '';
+  
+      if (!draftData && hasUnsavedData) {
+        const confirmReset = confirm("คุณยังไม่ได้บันทึกข้อมูล\nต้องการเปลี่ยนสถานะโต๊ะเป็น 'ว่าง' ใช่หรือไม่?");
         
-          // ✅ กด OK → อัปเดตแล้ว redirect
-          const { error: updateError } = await client.from('tables')
-            .update({ status: 'ว่าง' })
-            .eq('id', table_id);
-        
-          if (updateError) {
-            console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
-            alert('บันทึกสถานะโต๊ะผิดพลาด กรุณาลองใหม่อีกครั้ง');
-            return;
-          }
-  
-          window.location.href = 'index.html';
+        if (!confirmReset) {
+          // ❌ ถ้ากด Cancel จะหยุดทันที
           return;
         }
+      
+        // ✅ กด OK → อัปเดตแล้ว redirect
+        const { error: updateError } = await client.from('tables')
+          .update({ status: 'ว่าง' })
+          .eq('id', table_id);
+      
+        if (updateError) {
+          console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
+          alert('บันทึกสถานะโต๊ะผิดพลาด กรุณาลองใหม่อีกครั้ง');
+          return;
+        }
+  
+        window.location.href = 'index.html';
+        return;
       }
-    } else {
-      // ไม่มี table_id → กลับ index เลย
-      window.location.href = 'index.html';
+  
+      // 👉 กรณีอื่น ๆ (เช่น มี draft แล้ว) จะไม่ redirect อัตโนมัติ
+      return;
     }
+  
+    // 👉 ไม่มี table_id → กลับ index ได้เลย
+    window.location.href = 'index.html';
   });
+
 
 
   el('btnAddMenu').addEventListener('click',()=>{el('popup').style.display='flex';});
