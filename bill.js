@@ -565,7 +565,7 @@ window.addEventListener('DOMContentLoaded', async ()=>{
       const { data: draftData } = await client.from('drafts')
         .select('id')
         .eq('table_id', table_id)
-        .single();
+        .maybeSingle();
   
       const hasUnsavedData = hasOrder || el('customer').value.trim() !== '';
   
@@ -605,10 +605,6 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     // 👉 ไม่มี table_id → กลับ index ได้เลย
     window.location.href = 'index.html';
   });
-
-
-
-
 
   el('btnAddMenu').addEventListener('click',()=>{el('popup').style.display='flex';});
   el('btnAddMenuCancel').addEventListener('click',()=>{el('popup').style.display='none'; el('newMenuName').value=''; el('newMenuPrice').value='';});
