@@ -351,6 +351,8 @@ function buildPrintView(bill) {
       td.right, th.right { text-align:right; }
       .summary { margin-top:6px; width:100%; }
       .summary div { display:flex; justify-content:space-between; padding:2px 0; font-size:12px; }
+      .line-double {border-top:1px dashed #000;margin:4px 0 2px 0;position: relative;}
+      .line-double::after {content: "";display: block;border-top:1px dashed #000;margin-top:2px;}
       .big { font-weight:700; font-size:15px; }
       .footer { text-align:center; margin-top:8px; font-size:11px; }
     </style>
@@ -398,6 +400,7 @@ function buildPrintView(bill) {
 
   html += `</tbody></table>
     <div class="summary">
+      <div class="line-double"></div>
       <div><span>ยอดรวม</span><span class="big">${total.toFixed(2)}</span></div>
       <div><span>รับเงินมา</span><span>${cash.toFixed(2)}</span></div>
       <div><span>เงินทอน</span><span>${change.toFixed(2)}</span></div>
