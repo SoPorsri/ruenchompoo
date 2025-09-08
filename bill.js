@@ -44,12 +44,14 @@ async function loadMenu(){
 
   data.forEach(item=>{
     const row=document.createElement('div');
-    row.className='row grid draggable';
+    row.className='menu-row draggable';   // ใช้ class ใหม่แทน
     row.dataset.id = item.id;
-    row.innerHTML=`<span class="drag-handle">☰</span>
-                   <label>${item.name}</label>
-                   <div class="right muted">฿${item.price}</div>
-                   <input class="num" type="text" data-id="${item.id}" placeholder="เช่น 1+2+3">`;
+    row.innerHTML=`
+      <span class="drag-handle">☰</span>
+      <label class="menu-name">${item.name}</label>
+      <div class="menu-price">฿${item.price}</div>
+      <input class="num menu-qty" type="text" data-id="${item.id}" placeholder="เช่น 1+2+3">
+    `;
     container.appendChild(row);
   });
 
