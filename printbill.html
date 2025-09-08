@@ -3,19 +3,20 @@
 <head>
   <meta charset="utf-8">
   <title>พิมพ์บิล</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<script>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
 const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
-const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const urlParams = new URLSearchParams(window.location.search);
-const billId = urlParams.get('bill_id');
+const urlParams = new URLSearchParams(window.location.search)
+const billId = urlParams.get('bill_id')
 
 if (billId) {
-  loadBillFromHistory(billId);
+  loadBillFromHistory(billId)
 }
 
 async function loadBillFromHistory(billId) {
@@ -24,39 +25,47 @@ async function loadBillFromHistory(billId) {
     .from('bills')
     .select('*')
     .eq('id', billId)
-    .single();
+    .single()
 
   if (billError || !bill) {
-    document.body.innerHTML = "<h3>❌ ไม่พบบิล</h3>";
-    return;
+    document.body.innerHTML = "<h3>❌ ไม่พบบิล</h3>"
+    return
   }
 
-  // ✅ ดึงข้อมูลรายการสินค้าในบิล
+  // ✅ ดึงข้อมูลรายการสินค้า (join menu เอา name มาด้วย)
   const { data: items, error: itemsError } = await client
     .from('bill_items')
-    .select('menu_id, name, price, qty')
-    .eq('bill_id', billId);
+    .select(`
+      qty,
+      price,
+      total,
+      menu:menu_id ( name )
+    `)
+    .eq('bill_id', billId)
 
-  bill.items = items || [];
+  if (itemsError) {
+    console.error(itemsError)
+  }
+
+  bill.items = items || []
 
   // ✅ สร้าง HTML สำหรับพิมพ์
-  const html = buildPrintView(bill);
+  const html = buildPrintView(bill)
 
-  // ✅ เปิดหน้าต่างใหม่เพื่อพิมพ์
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write(html);
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
+  const printWindow = window.open('', '_blank')
+  printWindow.document.write(html)
+  printWindow.document.close()
+  printWindow.focus()
+  printWindow.print()
 }
 
 function buildPrintView(bill) {
   const createdText = bill.created_at 
     ? new Date(bill.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) 
-    : '-';
+    : '-'
   const closedText = bill.closed_at 
     ? new Date(bill.closed_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) 
-    : '-';
+    : '-'
 
   let html = `
   <html>
@@ -98,21 +107,21 @@ function buildPrintView(bill) {
         </tr>
       </thead>
       <tbody>
-  `;
+  `
 
-  // ✅ วน loop รายการสินค้า
+  // ✅ แสดงรายการสินค้า
   bill.items.forEach(item => {
     html += `<tr>
-      <td>${item.name}</td>
+      <td>${item.menu?.name || '-'}</td>
       <td class="right">${Number(item.price).toFixed(2)}</td>
       <td class="right">${item.qty}</td>
-      <td class="right">${(item.qty * item.price).toFixed(2)}</td>
-    </tr>`;
-  });
+      <td class="right">${Number(item.total).toFixed(2)}</td>
+    </tr>`
+  })
 
-  const total = Number(bill.total || 0);
-  const cash = Number(bill.cash || 0);
-  const change = Number(bill.change || 0);
+  const total = Number(bill.total || 0)
+  const cash = Number(bill.cash || 0)
+  const change = Number(bill.change || 0)
 
   html += `</tbody></table>
     <div class="summary">
@@ -125,8 +134,8 @@ function buildPrintView(bill) {
     </div>
   </body>
   </html>
-  `;
-  return html;
+  `
+  return html
 }
 </script>
 </body>
