@@ -41,15 +41,12 @@
       <section class="panel" id="right">
         <h2 style="margin:0 0 10px 0">สรุปบิล</h2>
       
-        <div class="grid-2col" style="margin-bottom:12px">
-          <div>
-            <label class="muted">ชื่อลูกค้า/โต๊ะ</label>
-            <input class="num" id="customer" placeholder="โต๊ะ 3 หรือ ชื่อลูกค้า">
-          </div>
-          <div>
-            <label class="muted">เลขที่บิล</label>
-            <input class="num" id="billno" readonly>
-          </div>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px">
+          <label class="muted">ชื่อโต๊ะ</label>
+          <input class="num" id="customer" placeholder="ซุ้ม1 หรือ A1" style="flex:1">
+        
+          <label class="muted">เลขที่บิล</label>
+          <input class="num" id="billno" readonly style="width:100px">
         </div>
       
         <div class="summary">
