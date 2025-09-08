@@ -589,14 +589,42 @@ window.addEventListener('DOMContentLoaded', async ()=>{
 
   el('btnAddMenu').addEventListener('click',()=>{el('popup').style.display='flex';});
   el('btnAddMenuCancel').addEventListener('click',()=>{el('popup').style.display='none'; el('newMenuName').value=''; el('newMenuPrice').value='';});
-  el('btnAddMenuConfirm').addEventListener('click',async()=>{
-    const name = el('newMenuName').value.trim();
-    const price = parseFloat(el('newMenuPrice').value);
-    if(!name || !price){alert('กรุณากรอกชื่อและราคา'); return;}
-    const { error } = await client.from('menu').insert([{ name, price }]);
-    if(error){alert('บันทึกผิดพลาด'); console.log(error);} 
-    else { el('popup').style.display='none'; el('newMenuName').value=''; el('newMenuPrice').value=''; loadMenu(); }
-  });
+  el('btnAddMenuConfirm').addEventListener('click', async () => {
+  const name = el('newMenuName').value.trim();
+  const price = parseFloat(el('newMenuPrice').value);
+  if (!name || !price) { 
+    alert('กรุณากรอกชื่อและราคา'); 
+    return;
+  }
+
+  // 👉 หาค่า sort_order ล่าสุด
+  const { data: maxData, error: maxError } = await client
+    .from('menu')
+    .select('sort_order')
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .single();
+
+  let nextSortOrder = 1;
+  if (!maxError && maxData) {
+    nextSortOrder = (maxData.sort_order || 0) + 1;
+  }
+
+  // 👉 insert เมนูใหม่พร้อม sort_order
+  const { error } = await client.from('menu').insert([
+    { name, price, sort_order: nextSortOrder }
+  ]);
+
+  if (error) {
+    alert('บันทึกผิดพลาด');
+    console.log(error);
+  } else {
+    el('popup').style.display = 'none';
+    el('newMenuName').value = '';
+    el('newMenuPrice').value = '';
+    loadMenu(); // โหลดใหม่ จะได้เห็นอยู่ล่างสุด
+  }
+});
 
   el('btnPrint').addEventListener('click', () => {
     // แสดง preview modal
