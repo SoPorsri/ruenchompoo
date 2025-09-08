@@ -41,13 +41,15 @@ async function loadBillFromHistory(billId) {
       qty,
       price,
       total,
-      menu (
+      menu_id,
+      menu!inner (
         id,
         name,
         price
       )
     `)
     .eq('bill_id', billId)
+
 
   if (itemsError) {
     console.error("itemsError:", itemsError)
