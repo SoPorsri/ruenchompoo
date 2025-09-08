@@ -72,6 +72,22 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   header .controls, .noprint { display:none !important; }
   main { flex-direction:column; }
   .panel + .panel { border:none; }
+
+  /* ✅ จัดคอลัมน์บิล */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;   /* ปรับตามต้องการ */
+  }
+  th, td {
+    padding: 2px 0;
+  }
+  th.right, td.right { text-align: right; }
+
+  td.name  { max-width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  td.price { width: 35px; text-align: right; }
+  td.qty   { width: 25px; text-align: right; }
+  td.total { width: 40px; text-align: right; }
 }
 
 /* Layout ของแต่ละแถวให้ตรงกับ header */
