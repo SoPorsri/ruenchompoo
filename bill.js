@@ -233,8 +233,6 @@ async function saveNewOrder() {
   console.log('✅ บันทึก sort_order เรียบร้อยแล้ว');
 }
 
-
-
 // โหลด draft ล่าสุดของโต๊ะ
 async function loadDraft() {
   if (!table_id) return; 
