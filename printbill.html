@@ -96,7 +96,17 @@ function buildPrintView(bill) {
       td.right, th.right { text-align:right; }
       .summary { margin-top:6px; width:100%; }
       .summary div { display:flex; justify-content:space-between; padding:2px 0; font-size:12px; }
-      .line-double {border-top:3px double #000; margin:6px 0;}
+      .line-double {
+        border-top:1px dashed #000;
+        margin:4px 0 2px 0;
+        position: relative;
+      }
+      .line-double::after {
+        content: "";
+        display: block;
+        border-top:1px dashed #000;
+        margin-top:2px;
+      }
       .big { font-weight:700; font-size:15px; }
       .footer { text-align:center; margin-top:8px; font-size:11px; }
     </style>
