@@ -266,7 +266,7 @@ async function loadMenu(){
   data.forEach(item=>{
     const row=document.createElement('div');
     row.className='row grid draggable';
-    row.draggable = true;
+    //row.draggable = true;
     row.dataset.id = item.id;
     row.innerHTML=`<label class="drag-handle">${item.name}</label>
                <div class="right muted">฿${item.price}</div>
