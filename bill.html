@@ -78,7 +78,7 @@
         <div style="display:flex; gap:20px; margin-top:18px">
           <div style="flex:1; display:flex; flex-direction:column">
             <label class="muted">รับเงินมา</label>
-            <input class="num" id="cash" placeholder="เช่น 500+500">
+            <input type="text" class="num" id="cash" placeholder="เช่น 500" inputmode="numeric" pattern="[0-9]*">
             <div id="cashWarn" class="danger-text" style="display:none; margin-top:4px">
               ⚠️ รับเงินมาไม่พอ
             </div>
