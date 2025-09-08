@@ -367,7 +367,7 @@ function buildPrintView(bill) {
     <table>
       <thead>
         <tr>
-          <th>สินค้า</th>
+          <th>รายการ</th>
           <th class="right">ราคา</th>
           <th class="right">จำนวน</th>
           <th class="right">รวม</th>
