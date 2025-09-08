@@ -66,7 +66,6 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
 .placeholder { border:2px dashed #00bcd4; background:#e0f7fa; }
 
 /* ✅ ปรับ row ให้ ☰ อยู่หน้าสุด */
-/* Drag & Drop + แถวเมนู */
 .menu-row {
   display: flex;
   align-items: center;
@@ -104,9 +103,6 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
 
 .menu-qty {
   width: 100px;
-  text-align: right;
-  flex-shrink: 0;
-}
   text-align: right;
   flex-shrink: 0;
 }
