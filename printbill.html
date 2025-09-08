@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <title>พิมพ์บิล</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<script>
+const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
+const client = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const urlParams = new URLSearchParams(window.location.search);
+const billId = urlParams.get('bill_id');
+
+if (billId) {
+  loadBillFromHistory(billId);
+}
+
+async function loadBillFromHistory(billId) {
+  // ✅ ดึงข้อมูลบิล
+  const { data: bill, error: billError } = await client
+    .from('bills')
+    .select('*')
+    .eq('id', billId)
+    .single();
+
+  if (billError || !bill) {
+    document.body.innerHTML = "<h3>❌ ไม่พบบิล</h3>";
+    return;
+  }
+
+  // ✅ ดึงข้อมูลรายการสินค้าในบิล
+  const { data: items, error: itemsError } = await client
+    .from('bill_items')
+    .select('menu_id, name, price, qty')
+    .eq('bill_id', billId);
+
+  bill.items = items || [];
+
+  // ✅ สร้าง HTML สำหรับพิมพ์
+  const html = buildPrintView(bill);
+
+  // ✅ เปิดหน้าต่างใหม่เพื่อพิมพ์
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(html);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+}
+
+function buildPrintView(bill) {
+  const createdText = bill.created_at 
+    ? new Date(bill.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) 
+    : '-';
+  const closedText = bill.closed_at 
+    ? new Date(bill.closed_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) 
+    : '-';
+
+  let html = `
+  <html>
+  <head>
+    <title>บิลร้านเรือนชมพูเนื้อย่างเกาหลี</title>
+    <style>
+      @page { size: 57mm auto; margin: 5mm; }
+      body { font-family: "Noto Sans Thai", sans-serif; font-size: 12px; color:#111; }
+      h1,h2,h3,p { margin:0; padding:0; }
+      .header { text-align:center; margin-bottom:10px; }
+      .header h1 { font-size:16px; font-weight:700; }
+      .header p { font-size:11px; margin:2px 0; }
+      table { width:100%; border-collapse: collapse; margin-top:6px; }
+      th { font-size:11px; font-weight:700; text-align:left; border-bottom:1px dashed #000; padding-bottom:2px; }
+      td { padding:2px 0; }
+      td.right, th.right { text-align:right; }
+      .summary { margin-top:6px; width:100%; }
+      .summary div { display:flex; justify-content:space-between; padding:2px 0; }
+      .big { font-weight:700; font-size:13px; }
+      .footer { text-align:center; margin-top:10px; font-size:11px; }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>ร้านเรือนชมพูเนื้อย่างเกาหลี</h1>
+      <p>สาขานาเชือก</p>
+      <p>โทร: 0885305228, 0621392902</p>
+      <p>บิลเลขที่: ${bill.billno}</p>
+      <p>โต๊ะ/ลูกค้า: ${bill.customer || '-'}</p>
+      <p>เวลาเช็คบิล: ${closedText}</p>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>สินค้า</th>
+          <th class="right">ราคา</th>
+          <th class="right">จำนวน</th>
+          <th class="right">รวม</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  // ✅ วน loop รายการสินค้า
+  bill.items.forEach(item => {
+    html += `<tr>
+      <td>${item.name}</td>
+      <td class="right">${Number(item.price).toFixed(2)}</td>
+      <td class="right">${item.qty}</td>
+      <td class="right">${(item.qty * item.price).toFixed(2)}</td>
+    </tr>`;
+  });
+
+  const total = Number(bill.total || 0);
+  const cash = Number(bill.cash || 0);
+  const change = Number(bill.change || 0);
+
+  html += `</tbody></table>
+    <div class="summary">
+      <div><span>ยอดรวม</span><span class="big">${total.toFixed(2)}</span></div>
+      <div><span>รับเงินมา</span><span>${cash.toFixed(2)}</span></div>
+      <div><span>เงินทอน</span><span>${change.toFixed(2)}</span></div>
+    </div>
+    <div class="footer">
+      *** ขอบคุณที่อุดหนุน ***
+    </div>
+  </body>
+  </html>
+  `;
+  return html;
+}
+</script>
+</body>
+</html>
