@@ -7,6 +7,7 @@
   <!-- โหลด Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   
   <style>
     body { font-family: system-ui, "Noto Sans Thai", sans-serif; margin: 0; background-color: #e6fff7; }
@@ -180,6 +181,10 @@
           style="background:#ec4899; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer;">
           <i class="fa-solid fa-clock-rotate-left"></i> ดูประวัติการขาย
         </button>
+        <button onclick="exportToExcel()" 
+          style="background:#10b981; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer;">
+          <i class="fa-solid fa-file-excel"></i> Export Excel
+        </button>
       </div>
   
       <!-- History Table -->
@@ -347,8 +352,8 @@
             label: 'ยอดขาย (บาท)',
             data: totals,
             backgroundColor: 
-              mode === 'daily' ? '#ec4899' :
-              mode === 'monthly' ? '#8b5cf6' : '#3b82f6'
+              mode === 'daily' ? '#24d67a' :
+              mode === 'monthly' ? '#19d3d3' : '#3b82f6'
           }]
         },
         options: {
@@ -359,7 +364,6 @@
       });
     }
 
-  
     async function loadSalesHistory() {
       const { data, error } = await client
         .from('bills')
@@ -383,6 +387,34 @@
         });
       }
     }
+
+    async function exportToExcel() {
+      const { data, error } = await client
+        .from('bills')
+        .select('*')
+        .eq('status','closed')
+        .order('closed_at', { ascending: false });
+    
+      if (error) {
+        alert("ไม่สามารถดึงข้อมูลได้");
+        return;
+      }
+    
+      // แปลงข้อมูลเป็น array สำหรับ Excel
+      const exportData = data.map(bill => ({
+        เลขบิล: bill.billno,
+        ลูกค้า_โต๊ะ: bill.customer || '-',
+        ยอดรวม: bill.total,
+        ปิดบิลเวลา: bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH') : '-'
+      }));
+    
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "SalesHistory");
+    
+      XLSX.writeFile(wb, "sales_history.xlsx");
+    }
+
 
     // เรียงลำดับการทำงาน
     (async () => {
