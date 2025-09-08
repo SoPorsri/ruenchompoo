@@ -61,31 +61,6 @@
     #table-B2 { grid-column: 4; grid-row: 7; }
     #table-B3 { grid-column: 4; grid-row: 6; }
     #table-B4 { grid-column: 4; grid-row: 5; }
-
-    .dog-bg {
-      position: fixed;
-      top: 80px;   /* เปลี่ยนจาก bottom → top */
-      right: 10px;
-      width: 220px;
-      max-width: 35vw;
-      height: auto;
-      z-index: 0; /* อยู่หลังโต๊ะ */
-      opacity: 0.9;
-    }
-  
-    @media (max-width: 768px) {
-      .dog-bg {
-        width: 160px;
-        max-width: 40vw;
-      }
-    }
-  
-    @media (max-width: 480px) {
-      .dog-bg {
-        width: 120px;
-        max-width: 45vw;
-      }
-    }
   
     .layout {
       position: relative;
@@ -102,8 +77,6 @@
       <i class="fa-solid fa-chart-line"></i> ดูรายงาน
     </button>
   </header>
-  
-  <img src="images/Namchok.png" class="dog-bg" alt="Numchok">
   
   <div class="layout" id="tables">
     <!-- fix โต๊ะ -->
