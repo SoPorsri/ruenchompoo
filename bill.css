@@ -98,7 +98,7 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size:22px;    /* ขยายตัวอักษร */
+  font-size:20px;    /* ขยายตัวอักษร */
   font-weight:600;   /* ทำให้หนา */
 }
 
@@ -107,7 +107,7 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   text-align: right;
   color: var(--muted);
   flex-shrink: 0;
-  font-size:22px;    /* ขยายตัวอักษร */
+  font-size:20px;    /* ขยายตัวอักษร */
   font-weight:600;   /* ทำให้หนา */
 }
 
@@ -115,6 +115,5 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   width: 100px;
   text-align: right;
   flex-shrink: 0;
-  font-size:22px;    /* ขยายตัวอักษร */
-  font-weight:600;   /* ทำให้หนา */
+  font-size:20px;    /* ขยายตัวอักษร */
 }
