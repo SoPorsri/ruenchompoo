@@ -37,7 +37,16 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
 .panel { padding:20px 24px; }
 .panel + .panel { border-left:1px solid var(--line); }
 @media (max-width:860px){.panel + .panel{border-left:none;border-top:1px solid var(--line);} }
-.grid.header { font-weight:700; border-bottom:1px solid var(--line); padding-bottom:6px; margin-bottom:8px; }
+.grid.header {
+  display: grid;
+  grid-template-columns: 30px 1fr 100px 120px; /* ☰ | สินค้า | ราคา | จำนวน */
+  gap: 10px;
+  align-items: center;
+  font-weight: 700;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
 .muted { color:var(--muted); }
 .right { text-align:right; }
 .num { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:16px; }
