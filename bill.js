@@ -362,7 +362,6 @@ function buildPrintView(bill) {
       <p>โทร: 0885305228, 0621392902</p>
       <p>บิลเลขที่: ${bill.billno}</p>
       <p>โต๊ะ/ลูกค้า: ${bill.customer || '-'}</p>
-      <p>เวลาเปิดบิล: ${createdText}</p>
       <p>เวลาเช็คบิล: ${closedText}</p>
     </div>
     <table>
