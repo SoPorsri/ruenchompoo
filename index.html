@@ -157,7 +157,21 @@
       </div>
   
       <!-- Chart -->
-      <h3 style="margin-top:0;">📈 กราฟยอดขายรายวัน (30 วันล่าสุด)</h3>
+      <h3 style="margin-top:0;">📈 กราฟยอดขาย</h3>
+      <div style="margin-bottom:12px;">
+        <button onclick="loadSalesChart('daily')" 
+          style="background:#ec4899; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">
+          รายวัน
+        </button>
+        <button onclick="loadSalesChart('monthly')" 
+          style="background:#8b5cf6; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">
+          รายเดือน
+        </button>
+        <button onclick="loadSalesChart('yearly')" 
+          style="background:#3b82f6; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">
+          รายปี
+        </button>
+      </div>
       <canvas id="salesChart" height="120"></canvas>
   
       <!-- Toggle History -->
@@ -264,7 +278,7 @@
     function openReport() {
       document.getElementById('reportModal').style.display = 'flex';
       loadSalesSummary();
-      loadSalesChart();
+      loadSalesChart('daily'); // ค่าเริ่มต้น
     }
     function closeReport() {
       document.getElementById('reportModal').style.display = 'none';
@@ -290,28 +304,41 @@
       document.getElementById('yearlySales').textContent = yearly?.[0]?.total_sales || 0;
     }
   
-    async function loadSalesChart() {
+    async function loadSalesChart(mode = 'daily') {
+      let fromDate;
+      if (mode === 'daily') {
+        fromDate = new Date(Date.now() - 30*24*60*60*1000); // 30 วัน
+      } else if (mode === 'monthly') {
+        fromDate = new Date(new Date().getFullYear(), 0, 1); // ตั้งแต่ต้นปี
+      } else {
+        fromDate = new Date(new Date().getFullYear() - 4, 0, 1); // 4 ปีหลัง
+      }
+    
       const { data, error } = await client
         .from('bills')
         .select('closed_at,total')
         .eq('status','closed')
-        .gte('closed_at', new Date(Date.now() - 30*24*60*60*1000).toISOString()) // 30 วันล่าสุด
+        .gte('closed_at', fromDate.toISOString())
         .order('closed_at',{ascending:true});
-  
+    
       if (error) { console.error(error); return; }
-  
-      const dailyTotals = {};
+    
+      const grouped = {};
       data.forEach(b => {
-        const day = new Date(b.closed_at).toLocaleDateString('th-TH');
-        dailyTotals[day] = (dailyTotals[day] || 0) + Number(b.total);
+        const d = new Date(b.closed_at);
+        let key;
+        if (mode === 'daily') key = d.toLocaleDateString('th-TH');
+        if (mode === 'monthly') key = d.toLocaleString('th-TH', { year:'numeric', month:'short' });
+        if (mode === 'yearly') key = d.getFullYear();
+        grouped[key] = (grouped[key] || 0) + Number(b.total);
       });
-  
-      const labels = Object.keys(dailyTotals);
-      const totals = Object.values(dailyTotals);
-  
+    
+      const labels = Object.keys(grouped);
+      const totals = Object.values(grouped);
+    
       const ctx = document.getElementById('salesChart').getContext('2d');
       if (salesChart) salesChart.destroy();
-  
+    
       salesChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -319,7 +346,9 @@
           datasets: [{
             label: 'ยอดขาย (บาท)',
             data: totals,
-            backgroundColor: '#ec4899'
+            backgroundColor: 
+              mode === 'daily' ? '#ec4899' :
+              mode === 'monthly' ? '#8b5cf6' : '#3b82f6'
           }]
         },
         options: {
@@ -329,6 +358,7 @@
         }
       });
     }
+
   
     async function loadSalesHistory() {
       const { data, error } = await client
