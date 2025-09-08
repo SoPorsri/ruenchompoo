@@ -6,6 +6,18 @@
 <title>ร้านเรือนชมพูเนื้อย่างเกาหลี - ออกบิล</title>
 <script type="module" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"></script>
 <link rel="stylesheet" href="bill.css">
+<!-- ⬇️ เพิ่มโค้ดนี้ -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const version = Date.now();
+    document.querySelectorAll('link[rel="stylesheet"], script[src]').forEach(el => {
+      let attr = el.tagName === "LINK" ? "href" : "src";
+      if (el[attr]) {
+        el[attr] = el[attr] + (el[attr].includes("?") ? "&" : "?") + "v=" + version;
+      }
+    });
+  });
+</script>
 </head>
 <body>
 <div class="container">
