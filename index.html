@@ -196,7 +196,8 @@
               <th>เลขบิล</th>
               <th>ลูกค้า/โต๊ะ</th>
               <th>ยอดรวม</th>
-              <th>ปิดบิลเวลา</th>
+              <th>เวลาเปิดบิล</th>
+              <th>เวลาปิดบิล</th>
             </tr>
           </thead>
           <tbody id="salesHistory"></tbody>
@@ -392,7 +393,7 @@
         .eq('status','closed')
         .order('closed_at', { ascending: false })
         .limit(20);
-  
+    
       const tbody = document.getElementById('salesHistory');
       tbody.innerHTML = '';
       if (!error && data) {
@@ -402,12 +403,14 @@
             <td>${bill.billno}</td>
             <td>${bill.customer || '-'}</td>
             <td>${Number(bill.total).toLocaleString("th-TH")}</td>
+            <td>${bill.created_at ? new Date(bill.created_at).toLocaleString('th-TH') : '-'}</td>
             <td>${bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH') : '-'}</td>
           `;
           tbody.appendChild(tr);
         });
       }
     }
+
 
     async function exportToExcel() {
       const { data, error } = await client
@@ -426,7 +429,8 @@
         เลขบิล: bill.billno,
         ลูกค้า_โต๊ะ: bill.customer || '-',
         ยอดรวม: Number(bill.total).toLocaleString("th-TH"),
-        ปิดบิลเวลา: bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH') : '-'
+        เวลาเปิดบิล: bill.created_at ? new Date(bill.created_at).toLocaleString('th-TH') : '-',
+        เวลาปิดบิล: bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH') : '-'
       }));
           
       const ws = XLSX.utils.json_to_sheet(exportData);
