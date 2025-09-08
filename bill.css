@@ -64,33 +64,42 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   .panel + .panel { border:none; }
 }
 
-/* Drag & Drop */
-.drag-over { border-top:3px solid blue; }
-.drag-over-valid { border-top:3px solid green; }
-.drag-handle { cursor:grab; }
-.drag-handle:active { cursor:grabbing; }
-.placeholder { border:2px dashed #00bcd4; background:#e0f7fa; }
-
-/* ✅ ปรับ row ให้ ☰ อยู่หน้าสุด */
-.menu-row {
-  display: flex;
+/* Layout ของแต่ละแถวให้ตรงกับ header */
+.row {
+  display: grid;
+  grid-template-columns: 30px 1fr 100px 120px; /* ☰ | สินค้า | ราคา | จำนวน */
+  gap: 10px;
   align-items: center;
-  gap: 8px;
   padding: 6px 0;
   border-bottom: 1px dashed var(--line);
+  transition: background 0.2s;
 }
 
+/* drag handle */
 .drag-handle {
   cursor: grab;
   font-size: 18px;
   color: var(--muted);
-  width: 20px;          /* fix ขนาด */
   text-align: center;
-  flex-shrink: 0;
 }
-
 .drag-handle:active {
   cursor: grabbing;
+}
+
+/* 🎨 เอฟเฟกต์ drag&drop */
+.drag-over {
+  background: #e0f2fe;              /* ฟ้าอ่อน */
+  border-top: 3px solid var(--accent); /* เส้นเขียว */
+}
+
+.drag-over-valid {
+  background: #dcfce7;              /* เขียวอ่อน */
+  border-top: 3px solid var(--accent);
+}
+
+.placeholder {
+  border: 2px dashed var(--accent);
+  background: #f0fdf4; /* เขียวจาง */
 }
 
 .menu-name {
