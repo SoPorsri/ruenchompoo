@@ -84,7 +84,7 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   }
   th.right, td.right { text-align: right; }
 
-  td.name  { max-width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  td.name  { max-width: 40px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   td.price { width: 35px; text-align: right; }
   td.qty   { width: 25px; text-align: right; }
   td.total { width: 40px; text-align: right; }
