@@ -33,30 +33,36 @@ async function loadBillFromHistory(billId) {
     return
   }
 
-  // ✅ ดึงข้อมูลรายการสินค้า (join menu เอา name มาด้วย)
+  // ✅ ดึง bill_items (ไม่ join menu)
   const { data: items, error: itemsError } = await client
     .from('bill_items')
-    .select(`
-      id,
-      qty,
-      price,
-      total,
-      menu_id,
-      menu!inner (
-        id,
-        name,
-        price
-      )
-    `)
+    .select('id, qty, price, total, menu_id')
     .eq('bill_id', billId)
-
 
   if (itemsError) {
     console.error("itemsError:", itemsError)
   }
-  console.log("✅ items from supabase:", items)
 
-  bill.items = items || []
+  // ✅ ดึงชื่อเมนูทั้งหมดที่เกี่ยวข้อง
+  let menuNames = {}
+  if (items && items.length > 0) {
+    const menuIds = items.map(i => i.menu_id).filter(Boolean)
+    if (menuIds.length > 0) {
+      const { data: menus } = await client
+        .from('menu')
+        .select('id, name')
+        .in('id', menuIds)
+      menus?.forEach(m => { menuNames[m.id] = m.name })
+    }
+  }
+
+  // ✅ ผูกชื่อเมนูกลับไปที่ items
+  bill.items = (items || []).map(i => ({
+    ...i,
+    menu_name: menuNames[i.menu_id] || "-"
+  }))
+
+  console.log("✅ items with menu:", bill.items)
 
   // ✅ สร้าง HTML สำหรับพิมพ์
   const html = buildPrintView(bill)
@@ -69,9 +75,6 @@ async function loadBillFromHistory(billId) {
 }
 
 function buildPrintView(bill) {
-  const createdText = bill.created_at 
-    ? new Date(bill.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) 
-    : '-'
   const closedText = bill.closed_at 
     ? new Date(bill.closed_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) 
     : '-'
@@ -124,7 +127,7 @@ function buildPrintView(bill) {
   } else {
     bill.items.forEach(item => {
       html += `<tr>
-        <td>${item.menu?.name || '-'}</td>
+        <td>${item.menu_name}</td>
         <td class="right">${Number(item.price).toFixed(2)}</td>
         <td class="right">${item.qty}</td>
         <td class="right">${Number(item.total).toFixed(2)}</td>
