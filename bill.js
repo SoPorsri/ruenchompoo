@@ -45,21 +45,35 @@ async function loadMenu(){
   data.forEach(item=>{
     const row=document.createElement('div');
     row.className='row grid draggable';
-    //row.draggable = true;
     row.dataset.id = item.id;
-    row.innerHTML=`<label class="drag-handle">${item.name}</label>
-               <div class="right muted">฿${item.price}</div>
-               <input class="num" type="text" data-id="${item.id}" placeholder="เช่น 1+2+3">`;
+    row.innerHTML=`<span class="drag-handle">☰</span>
+                   <label>${item.name}</label>
+                   <div class="right muted">฿${item.price}</div>
+                   <input class="num" type="text" data-id="${item.id}" placeholder="เช่น 1+2+3">`;
     container.appendChild(row);
   });
 
   document.querySelectorAll('#menuItems input')
           .forEach(i=>i.addEventListener('input',calc));
 
-  initDragAndDrop();
+  // ✅ ใช้ SortableJS แทน drag เดิม
+  new Sortable(container, {
+    animation: 150,
+    handle: ".drag-handle",
+    onEnd: async function () {
+      const items = [...container.children];
+      for (let i = 0; i < items.length; i++) {
+        const id = items[i].dataset.id;
+        const { error } = await client.from('menu').update({ sort_order: i + 1 }).eq('id', id);
+        if (error) console.error("update sort_order error:", error);
+      }
+      console.log("✅ บันทึก sort_order เรียบร้อยแล้ว");
+    }
+  });
 
-  return true; // ✅ บอกว่าโหลดเมนูเสร็จแล้ว
+  return true;
 }
+
 
 
 function initDragAndDrop() {
