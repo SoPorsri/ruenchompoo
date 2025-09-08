@@ -50,11 +50,10 @@ async function loadMenu(){
       <div class="drag-handle">☰</div>
       <div class="menu-name">${item.name}</div>
       <div class="menu-price right">฿${item.price}</div>
-      <input class="num menu-qty" type="text" data-id="${item.id}" placeholder="เช่น 1+2+3">
+      <div><input class="num menu-qty" type="text" data-id="${item.id}" placeholder="เช่น 1+2+3"></div>
     `;
     container.appendChild(row);
   });
-
 
   document.querySelectorAll('#menuItems input')
           .forEach(i=>i.addEventListener('input',calc));
@@ -547,8 +546,6 @@ async function saveBill(){
   el('cash').value=''; 
   calc();
 }
-
-
 
 window.addEventListener('DOMContentLoaded', async ()=>{
   el('today').textContent = todayText();
