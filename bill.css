@@ -6,7 +6,7 @@ body {
   font-family:system-ui,"Noto Sans Thai",sans-serif; 
   background:var(--bg); 
   color:var(--ink); 
-  font-size:18px;   /* 👈 เพิ่มตรงนี้ */
+  font-size:18px;
 }
 .container { max-width:1000px; margin:24px auto; padding:16px; }
 .app { background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:0 10px 30px rgba(2,8,23,.05); }
