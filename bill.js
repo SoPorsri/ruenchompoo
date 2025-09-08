@@ -82,7 +82,6 @@ async function loadMenu(){
 }
 
 
-
 function initDragAndDrop() {
   const container = el('menuItems');
   let dragging = null;
@@ -340,30 +339,20 @@ function buildPrintView(bill) {
   <head>
     <title>บิลร้านเรือนชมพูเนื้อย่างเกาหลี</title>
     <style>
-      @page {
-        size: 57mm auto;   /* ✅ กำหนดกระดาษความกว้าง 57mm */
-        margin: 0;
-      }
-      body { 
-        font-family: "Noto Sans Thai", sans-serif; 
-        font-size: 12px;   /* ✅ ขนาดเล็กพอดีกับบิล */
-        margin: 0;
-        padding: 4px;
-        color: #000;
-      }
-      h1,h2,h3,p { margin: 0; padding: 0; }
-      .header { text-align: center; margin-bottom: 8px; }
-      .header h1 { font-size: 14px; font-weight: bold; }
-      .header p { font-size: 12px; margin: 2px 0; }
-      table { width: 100%; border-collapse: collapse; font-size: 12px; }
-      th, td { padding: 2px 0; }
-      th { border-bottom: 1px dashed #000; }
-      td { border-bottom: 1px dashed #ccc; }
-      th.right, td.right { text-align: right; }
-      .summary { margin-top: 6px; width: 100%; font-size: 12px; }
-      .summary div { display: flex; justify-content: space-between; }
-      .big { font-weight: bold; font-size: 14px; }
-      .footer { text-align: center; margin-top: 10px; font-size: 11px; }
+      @page { size: 57mm auto; margin: 5mm; }
+      body { font-family: "Noto Sans Thai", sans-serif; font-size: 12px; color:#111; }
+      h1,h2,h3,p { margin:0; padding:0; }
+      .header { text-align:center; margin-bottom:10px; }
+      .header h1 { font-size:16px; font-weight:700; }
+      .header p { font-size:11px; margin:2px 0; }
+      table { width:100%; border-collapse: collapse; margin-top:6px; }
+      th { font-size:11px; font-weight:700; text-align:left; border-bottom:1px dashed #000; padding-bottom:2px; }
+      td { padding:2px 0; }
+      td.right, th.right { text-align:right; }
+      .summary { margin-top:6px; width:100%; }
+      .summary div { display:flex; justify-content:space-between; padding:2px 0; }
+      .big { font-weight:700; font-size:13px; }
+      .footer { text-align:center; margin-top:10px; font-size:11px; }
     </style>
   </head>
   <body>
@@ -373,9 +362,7 @@ function buildPrintView(bill) {
       <p>โทร: 0885305228, 0621392902</p>
       <p>บิลเลขที่: ${bill.billno}</p>
       <p>โต๊ะ/ลูกค้า: ${bill.customer || '-'}</p>
-      <p>เปิดบิล: ${createdText}</p>
-      <p>เช็คบิล: ${closedText}</p>
-      <hr>
+      <p>เวลาเช็คบิล: ${closedText}</p>
     </div>
     <table>
       <thead>
@@ -389,6 +376,7 @@ function buildPrintView(bill) {
       <tbody>
   `;
 
+  // ✅ วนรายการเมนู
   document.querySelectorAll('#menuItems input').forEach(inp => {
     const qty = safeEval(inp.value);
     if (qty <= 0) return;
@@ -411,15 +399,18 @@ function buildPrintView(bill) {
   html += `</tbody></table>
     <div class="summary">
       <div><span>ยอดรวม</span><span class="big">${total.toFixed(2)}</span></div>
-      <div><span>รับเงิน</span><span>${cash.toFixed(2)}</span></div>
+      <div><span>รับเงินมา</span><span>${cash.toFixed(2)}</span></div>
       <div><span>เงินทอน</span><span>${change.toFixed(2)}</span></div>
     </div>
-    <div class="footer">ขอบคุณที่อุดหนุน 🙏</div>
+    <div class="footer">
+      *** ขอบคุณที่อุดหนุน ***
+    </div>
   </body>
   </html>
   `;
   return html;
 }
+
 
 
 async function saveDraft() {
