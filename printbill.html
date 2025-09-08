@@ -34,14 +34,14 @@ async function loadBillFromHistory(billId) {
 
   // ✅ ดึงข้อมูลรายการสินค้า (join menu เอา name มาด้วย)
   const { data: items, error: itemsError } = await client
-    .from('bill_items')
-    .select(`
-      qty,
-      price,
-      total,
-      menu:menu_id ( name )
-    `)
-    .eq('bill_id', billId)
+  .from('bill_items')
+  .select(`
+    qty,
+    price,
+    total,
+    menu:menu_id ( id, name, price )
+  `)
+  .eq('bill_id', billId)
 
   if (itemsError) {
     console.error(itemsError)
