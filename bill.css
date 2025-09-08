@@ -46,6 +46,7 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   border-bottom: 1px solid var(--line);
   padding-bottom: 6px;
   margin-bottom: 8px;
+  color: #808080;
 }
 .muted { color:var(--muted); }
 .right { text-align:right; }
