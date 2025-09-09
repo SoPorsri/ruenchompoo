@@ -2,10 +2,10 @@
 <html lang="th">
 <head>
   <meta charset="utf-8">
-  <title>ทดสอบพิมพ์บิล 57x40</title>
+  <title>ทดสอบพิมพ์บิล 58mm</title>
   <style>
     @page {
-      size: 57mm 40mm; /* ขนาดกระดาษ 57 x 40 mm */
+      size: 58mm auto; /* ความกว้าง 58mm ความยาวยืดตามเนื้อหา */
       margin: 0;
     }
     body {
@@ -13,7 +13,7 @@
       font-size: 10px;
       margin: 0;
       padding: 2mm;
-      width: 57mm;
+      width: 58mm;
     }
     .bill {
       text-align: center;
@@ -38,7 +38,7 @@
       text-align: right;
     }
     .footer {
-      margin-top: 2px;
+      margin-top: 4px;
       font-size: 9px;
     }
   </style>
@@ -64,7 +64,7 @@
     document.getElementById("testDate").textContent =
       new Date().toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" });
 
-    window.print(); // ✅ พิมพ์อัตโนมัติทันที
+    window.print(); // ✅ พิมพ์อัตโนมัติทันทีเมื่อเปิด
   </script>
 </body>
 </html>
