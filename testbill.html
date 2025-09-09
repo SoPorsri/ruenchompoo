@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ทดสอบพิมพ์บิล</title>
+  <style>
+    body { font-family: Tahoma, sans-serif; padding: 20px; }
+    h2 { text-align: center; }
+    .bill {
+      max-width: 300px;
+      margin: auto;
+      border: 1px dashed #999;
+      padding: 10px;
+      font-size: 14px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="bill">
+    <h2>ร้านเรือนชมพู</h2>
+    <p style="text-align:center;">--- ทดสอบเครื่องพิมพ์ ---</p>
+    <p>เลขบิล: TEST001</p>
+    <p>ลูกค้า: ทดสอบระบบ</p>
+    <p>วันที่: <span id="testDate"></span></p>
+    <hr>
+    <table style="width:100%; font-size:13px;">
+      <tr><td>เนื้อหมูย่าง</td><td style="text-align:right;">1</td><td style="text-align:right;">150</td></tr>
+      <tr><td>น้ำอัดลม</td><td style="text-align:right;">2</td><td style="text-align:right;">60</td></tr>
+    </table>
+    <hr>
+    <p style="text-align:right; font-weight:bold;">รวม: 210 บาท</p>
+    <div class="footer">*** ใบนี้ใช้สำหรับทดสอบการพิมพ์ ***</div>
+  </div>
+
+  <script>
+    document.getElementById("testDate").textContent =
+      new Date().toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" });
+
+    window.print(); // สั่งพิมพ์ทันทีเมื่อเปิดหน้านี้
+  </script>
+</body>
+</html>
