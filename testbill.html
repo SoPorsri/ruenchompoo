@@ -5,41 +5,43 @@
   <title>ทดสอบพิมพ์บิล 58mm</title>
   <style>
     @page {
-      size: 58mm auto; /* ความกว้าง 58mm ความยาวยืดตามเนื้อหา */
+      size: 58mm auto;  /* กำหนดขนาดกระดาษ 58mm */
       margin: 0;
     }
     body {
       font-family: Tahoma, sans-serif;
-      font-size: 10px;
+      font-size: 11px;
+      width: 58mm;
       margin: 0;
       padding: 2mm;
-      width: 58mm;
     }
     .bill {
       text-align: center;
     }
     .bill h2 {
-      font-size: 12px;
-      margin: 0 0 2px 0;
+      font-size: 13px;
+      margin: 0 0 3px 0;
     }
     .line {
       border-top: 1px dashed #000;
-      margin: 2px 0;
+      margin: 3px 0;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 10px;
+      font-size: 11px;
     }
     td {
       padding: 1px 0;
     }
-    td:last-child {
+    td:nth-child(2),
+    td:nth-child(3) {
       text-align: right;
     }
     .footer {
-      margin-top: 4px;
-      font-size: 9px;
+      margin-top: 5px;
+      font-size: 10px;
+      text-align: center;
     }
   </style>
 </head>
@@ -64,7 +66,7 @@
     document.getElementById("testDate").textContent =
       new Date().toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" });
 
-    window.print(); // ✅ พิมพ์อัตโนมัติทันทีเมื่อเปิด
+    window.print(); // ✅ สั่งพิมพ์อัตโนมัติทันที
   </script>
 </body>
 </html>
