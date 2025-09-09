@@ -9,11 +9,32 @@ const fmt=n=>new Intl.NumberFormat('th-TH',{style:'currency',currency:'THB'}).fo
 function safeEval(expr){if(!expr)return 0;expr=expr.replace(/\s+/g,'');if(!/^[0-9+\-*/.]+$/.test(expr))return 0;try{return Function('"use strict";return('+expr+')')();}catch{return 0;}}
 
 function todayText(){const d=new Date();return d.toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'});}
-function nextBillNo(){const key='pink-grill-last-bill';let n=parseInt(localStorage.getItem(key)||'0',10)+1;localStorage.setItem(key,String(n));return String(n).padStart(5,'0');}
 
 let menuData = [];
 const params = new URLSearchParams(window.location.search);
 const table_id = params.get('table_id');
+
+
+async function getNextBillNo() {
+  const { data, error } = await client
+    .from('bills')
+    .select('billno')
+    .order('billno', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("ดึงเลขบิลล่าสุดผิดพลาด", error);
+    return "00001"; // fallback
+  }
+
+  let lastNo = 0;
+  if (data && data.billno) {
+    lastNo = parseInt(data.billno, 10) || 0;
+  }
+
+  return String(lastNo + 1).padStart(5, '0');
+}
 
 async function loadTableName() {
   if (!table_id) return;
@@ -244,7 +265,7 @@ async function loadDraft() {
   if(draftError){ console.log('โหลด draft ผิดพลาด', draftError); return; }
   if(!draftData) return;
 
-  el('billno').value = draftData.billno || nextBillNo();
+  el('billno').value = draftData.billno || await getNextBillNo();
   el('customer').value = draftData.customer || '';
   el('cash').value = draftData.cash || '';
 
@@ -413,7 +434,11 @@ function buildPrintView(bill) {
 }
 
 async function saveDraft() {
-  const billno = el('billno').value || nextBillNo();
+  let billno = el('billno').value;
+  if (!billno) {
+    billno = await getNextBillNo();
+    el('billno').value = billno;
+  }
   const customer = el('customer').value;
   const total = safeEval(el('grand').textContent.replace(/[^\d.]/g,''));
   const cash = safeEval(el('cash').value);
@@ -480,7 +505,7 @@ async function saveDraft() {
 }
 
 async function saveBill(){
-  const billno   = el('billno').value;
+  const billno = el('billno').value || await getNextBillNo();
   const customer = el('customer').value;
   const total    = safeEval(el('grand').textContent.replace(/[^\d.]/g,'')); 
   const cash     = safeEval(el('cash').value);
@@ -550,7 +575,7 @@ async function saveBill(){
   w.close();
 
   // 6️⃣ ล้างหน้าบิล
-  el('billno').value = nextBillNo();
+  el('billno').value = await getNextBillNo();
   document.querySelectorAll('#menuItems input').forEach(i=>i.value=''); 
   el('cash').value=''; 
   calc();
@@ -558,7 +583,7 @@ async function saveBill(){
 
 window.addEventListener('DOMContentLoaded', async ()=>{
   el('today').textContent = todayText();
-  el('billno').value = nextBillNo();
+  el('billno').value = await getNextBillNo();
   await loadTableName();
   await loadMenu();
   await loadDraft();
