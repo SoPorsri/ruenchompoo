@@ -2,40 +2,61 @@
 <html lang="th">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ทดสอบพิมพ์บิล</title>
+  <title>ทดสอบพิมพ์บิล 57x40</title>
   <style>
-    body { font-family: Tahoma, sans-serif; padding: 20px; }
-    h2 { text-align: center; }
+    @page {
+      size: 57mm 40mm; /* ขนาดกระดาษ 57 x 40 mm */
+      margin: 0;
+    }
+    body {
+      font-family: Tahoma, sans-serif;
+      font-size: 10px;
+      margin: 0;
+      padding: 2mm;
+      width: 57mm;
+    }
     .bill {
-      max-width: 300px;
-      margin: auto;
-      border: 1px dashed #999;
-      padding: 10px;
-      font-size: 14px;
+      text-align: center;
+    }
+    .bill h2 {
+      font-size: 12px;
+      margin: 0 0 2px 0;
+    }
+    .line {
+      border-top: 1px dashed #000;
+      margin: 2px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+    }
+    td {
+      padding: 1px 0;
+    }
+    td:last-child {
+      text-align: right;
     }
     .footer {
-      text-align: center;
-      margin-top: 15px;
-      font-size: 12px;
-      color: #666;
+      margin-top: 2px;
+      font-size: 9px;
     }
   </style>
 </head>
 <body>
   <div class="bill">
     <h2>ร้านเรือนชมพู</h2>
-    <p style="text-align:center;">--- ทดสอบเครื่องพิมพ์ ---</p>
-    <p>เลขบิล: TEST001</p>
-    <p>ลูกค้า: ทดสอบระบบ</p>
-    <p>วันที่: <span id="testDate"></span></p>
-    <hr>
-    <table style="width:100%; font-size:13px;">
-      <tr><td>เนื้อหมูย่าง</td><td style="text-align:right;">1</td><td style="text-align:right;">150</td></tr>
-      <tr><td>น้ำอัดลม</td><td style="text-align:right;">2</td><td style="text-align:right;">60</td></tr>
+    <div>--- ทดสอบเครื่องพิมพ์ ---</div>
+    <div>เลขบิล: TEST001</div>
+    <div>ลูกค้า: ทดสอบระบบ</div>
+    <div>วันที่: <span id="testDate"></span></div>
+    <div class="line"></div>
+    <table>
+      <tr><td>เนื้อหมูย่าง</td><td>1</td><td>150</td></tr>
+      <tr><td>น้ำอัดลม</td><td>2</td><td>60</td></tr>
     </table>
-    <hr>
-    <p style="text-align:right; font-weight:bold;">รวม: 210 บาท</p>
+    <div class="line"></div>
+    <div style="text-align:right;font-weight:bold;">รวม: 210 บาท</div>
     <div class="footer">*** ใบนี้ใช้สำหรับทดสอบการพิมพ์ ***</div>
   </div>
 
@@ -43,7 +64,7 @@
     document.getElementById("testDate").textContent =
       new Date().toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" });
 
-    window.print(); // สั่งพิมพ์ทันทีเมื่อเปิดหน้านี้
+    window.print(); // ✅ พิมพ์อัตโนมัติทันที
   </script>
 </body>
 </html>
