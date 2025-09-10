@@ -156,20 +156,15 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
 /* action buttons — อยู่ด้านหลัง (right) */
 .action-btns{
   position:absolute;
-  top:0;
-  right:0;
-  bottom:0;
-  height:100%;
+  top:0; right:0; bottom:0;
   display:flex;
-  z-index:1; /* ต่ำกว่า row-content */
   align-items:stretch;
+  z-index:1;
   border-radius:10px;
   overflow:hidden;
-
-  /* ⬇️ ซ่อนก่อน */
-  visibility: hidden;
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  visibility:hidden;
+  opacity:0;
+  transition:opacity .2s ease;
 }
 
 /* แต่ละปุ่ม */
