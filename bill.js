@@ -66,7 +66,7 @@ async function loadMenu(){
 
   data.forEach(item=>{
     const row=document.createElement('div');
-    row.className='grid row draggable';
+    row.className='row draggable';   // ✅ เอา grid ออก เหลือ row
     row.dataset.id = item.id;
     row.innerHTML = `
       <div class="row-content">
@@ -89,7 +89,7 @@ async function loadMenu(){
     `;
     container.appendChild(row);
 
-    // ✅ เรียก enableSwipe ให้จัดการปุ่ม + swipe
+    // ✅ swipe + edit/delete
     enableSwipe(row, item);
   });
 
@@ -99,9 +99,6 @@ async function loadMenu(){
 
   return true;
 }
-
-
-
 
 function initDragAndDrop() {
   const container = el('menuItems');
