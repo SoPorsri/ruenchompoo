@@ -1,6 +1,8 @@
 :root {
-  --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --muted:#475569; --accent:#10b981; --line:#e2e8f0; --danger:#ef4444;
+  --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --muted:#475569; 
+  --accent:#10b981; --line:#e2e8f0; --danger:#ef4444;
 }
+
 body { 
   margin:0; 
   font-family:system-ui,"Noto Sans Thai",sans-serif; 
@@ -8,15 +10,25 @@ body {
   color:var(--ink); 
   font-size:18px;
 }
+
 .container { max-width:1000px; margin:24px auto; padding:16px; }
 .app { background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:0 10px 30px rgba(2,8,23,.05); }
-header { padding:20px 24px; border-bottom:1px solid var(--line); display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+
+header { 
+  padding:20px 24px; border-bottom:1px solid var(--line); 
+  display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; 
+}
 header h1 { margin:0; font-size:clamp(18px,2.6vw,24px); }
 .brand { display:flex; flex-direction:column; }
 .brand .shop { font-weight:800; color:#111827; }
 .brand .branch { color:var(--muted); font-size:.95em; }
+
 .controls { display:flex; gap:8px; flex-wrap:wrap; }
-button { appearance:none; border:none; padding:10px 14px; border-radius:12px; cursor:pointer; background:var(--ink); color:white; font-weight:600; display:flex; align-items:center; gap:4px; }
+button { 
+  appearance:none; border:none; padding:10px 14px; border-radius:12px; 
+  cursor:pointer; background:var(--ink); color:white; font-weight:600; 
+  display:flex; align-items:center; gap:4px; 
+}
 button.accent { background:var(--accent); }
 button.secondary { background:#334155; }
 button.warn { background:var(--danger); }
@@ -37,6 +49,7 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
 .panel { padding:20px 24px; }
 .panel + .panel { border-left:1px solid var(--line); }
 @media (max-width:860px){.panel + .panel{border-left:none;border-top:1px solid var(--line);} }
+
 .grid.header {
   display: grid;
   grid-template-columns: 30px 1fr 100px 120px; /* ☰ | สินค้า | ราคา | จำนวน */
@@ -48,6 +61,7 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   margin-bottom: 8px;
   color: #808080;
 }
+
 .muted { color:var(--muted); }
 .right { text-align:right; }
 .num { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:16px; }
@@ -79,18 +93,15 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
     border-collapse: collapse;
     font-size: 14px;
   }
-  th, td {
-    padding: 2px 0;
-  }
+  th, td { padding: 2px 0; }
   th.right, td.right { text-align: right; }
-
   td.name  { max-width: 40px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   td.price { width: 35px; text-align: right; }
   td.qty   { width: 25px; text-align: right; }
   td.total { width: 40px; text-align: right; }
 }
 
-/* Layout ของแต่ละแถวให้ตรงกับ header */
+/* Layout ของแต่ละแถว */
 .row {
   position: relative;
   background: var(--card);
@@ -103,6 +114,7 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   align-items: center;
   padding: 6px 0;
   border-bottom: 1px dashed var(--line);
+  z-index: 1; /* ต้องอยู่เหนือปุ่ม */
 }
 
 /* drag handle */
@@ -112,23 +124,12 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   color: var(--muted);
   text-align: center;
 }
-.drag-handle:active {
-  cursor: grabbing;
-}
+.drag-handle:active { cursor: grabbing; }
 
 /* 🎨 เอฟเฟกต์ drag&drop */
-.drag-over {
-  background: #e0f2fe;
-  border-top: 3px solid var(--accent);
-}
-.drag-over-valid {
-  background: #dcfce7;
-  border-top: 3px solid var(--accent);
-}
-.placeholder {
-  border: 2px dashed var(--accent);
-  background: #f0fdf4;
-}
+.drag-over { background: #e0f2fe; border-top: 3px solid var(--accent); }
+.drag-over-valid { background: #dcfce7; border-top: 3px solid var(--accent); }
+.placeholder { border: 2px dashed var(--accent); background: #f0fdf4; }
 
 .menu-name {
   flex: 1;
@@ -155,14 +156,14 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   font-size:18px;
 }
 
-/* ✅ container ของปุ่ม action (ซ่อนอยู่ทางขวา) */
+/* ✅ container ของปุ่ม action (อยู่หลัง row) */
 .action-btns {
   position: absolute;
   top: 0;
   right: 0;
-  height: 100%;
+  bottom: 0;
   display: flex;
-  z-index: 0; /* อยู่หลัง row */
+  z-index: 0; /* อยู่ข้างหลัง */
 }
 
 .edit-btn, .delete-btn {
@@ -173,19 +174,11 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   color: white;
   font-weight: 600;
   cursor: pointer;
-  transform: translateX(160px); /* ✅ ซ่อนปุ่มไปทางขวาก่อน */
-  transition: transform 0.25s ease;
 }
-
 .edit-btn { background: orange; }
 .delete-btn { background: var(--danger); }
 
-/* ✅ เมื่อปัดซ้าย → row เลื่อนไปทางซ้าย เผยปุ่ม */
+/* ✅ เวลา row ถูกปัดซ้าย → แสดงปุ่ม */
 .row.show-actions {
-  transform: translateX(-160px); /* = ความกว้างปุ่ม edit+delete */
-  z-index: 1;
-}
-.row.show-actions .edit-btn,
-.row.show-actions .delete-btn {
-  transform: translateX(0);
+  transform: translateX(-160px); /* 80px + 80px */
 }
