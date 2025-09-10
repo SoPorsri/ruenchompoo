@@ -111,99 +111,131 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
    ROW (wrapper) + content
    ========================= */
 
-/* wrapper: มีปุ่มอยู่ด้านหลัง */
 #menuItems{display:block}
-.row{
-  position:relative;
-  background:transparent;
-  border-radius:10px;
-  margin:8px 0;
-  overflow:visible;
+
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  overflow: hidden;
+  touch-action: pan-y; /* ให้ swipe แนวนอนได้ */
 }
 
-/* จริงๆ เป็นกริดที่เราจะเลื่อน */
-.row-content{
-  display:grid;
+/* ก้อนเนื้อหาเลื่อนไปทางซ้ายเพื่อโชว์ปุ่ม */
+.row-content {
+  display: grid;
   grid-template-columns: 30px 1fr 100px 120px;
-  gap:10px;
-  align-items:center;
-  padding:10px 12px;
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:10px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
   transition: transform .22s cubic-bezier(.2,.9,.2,1);
-  z-index:2;
-  min-height:48px;
+  z-index: 2;
+  min-height: 48px;
   box-shadow: 0 1px 0 rgba(2,8,23,.02);
-  width:100%;
-  box-sizing:border-box;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
 }
 
 /* drag handle */
-.drag-handle{cursor:grab;font-size:18px;color:var(--muted);text-align:center;user-select:none}
-.drag-handle:active{cursor:grabbing}
+.drag-handle {
+  cursor: grab;
+  font-size: 18px;
+  color: var(--muted);
+  text-align: center;
+  user-select: none;
+}
+.drag-handle:active { cursor: grabbing }
 
 /* menu text */
-.menu-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px;font-weight:600;padding-right:6px}
-.menu-price{text-align:right;color:var(--muted);font-size:17px;font-weight:600;min-width:80px}
-.menu-qty{width:100%;max-width:100px;border-radius:10px;padding:8px 10px;border:1px solid var(--line);font-size:16px;text-align:right;background:#fff}
+.menu-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 18px;
+  font-weight: 600;
+  padding-right: 6px;
+}
+.menu-price {
+  text-align: right;
+  color: var(--muted);
+  font-size: 17px;
+  font-weight: 600;
+  min-width: 80px;
+}
+.menu-qty {
+  width: 100%;
+  max-width: 100px;
+  border-radius: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  font-size: 16px;
+  text-align: right;
+  background: #fff;
+}
 
 /* placeholder + drag visual */
-.placeholder{border:2px dashed var(--accent);background:#f0fdf4}
-.drag-over{background:#e0f2fe;border-top:3px solid var(--accent)}
-.drag-over-valid{background:#dcfce7;border-top:3px solid var(--accent)}
+.placeholder { border: 2px dashed var(--accent); background:#f0fdf4 }
+.drag-over { background:#e0f2fe; border-top:3px solid var(--accent) }
+.drag-over-valid { background:#dcfce7; border-top:3px solid var(--accent) }
 
-/* action buttons — อยู่ด้านหลัง (right) */
-.action-btns{
-  position:absolute;
-  top:0; right:0; bottom:0;
-  display:flex;
-  align-items:stretch;
-  z-index:1;
-  border-radius:10px;
-  overflow:hidden;
-  visibility:hidden;
-  opacity:0;
-  transition:opacity .2s ease;
-  pointer-events:none; /* 🚀 ปิดคลิกตอนซ่อน */
+/* action buttons — อยู่ข้างหลัง */
+.action-btns {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  background: #f8fafc;
+  min-width: 160px;   /* 🚀 กำหนดพื้นที่จริงของปุ่ม */
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease;
 }
 
 /* แต่ละปุ่ม */
 .action-btns .edit-btn,
-.action-btns .delete-btn{
-  width:80px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  font-weight:700;
-  cursor:pointer;
-  user-select:none;
-  border-left:1px solid rgba(255,255,255,.08);
+.action-btns .delete-btn {
+  flex: 0 0 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
 }
-.action-btns .edit-btn{background:#f59e0b}
-.action-btns .delete-btn{background:var(--danger)}
+.action-btns .edit-btn { background:#f59e0b }
+.action-btns .delete-btn { background: var(--danger) }
 
-/* RWD: ปรับขนาดปุ่มเล็กลงบนหน้าจอแคบ */
-@media (max-width:420px){
+/* RWD: ปรับขนาดปุ่มเล็กลง */
+@media (max-width:420px) {
   .action-btns .edit-btn,
-  .action-btns .delete-btn{
-    width:70px;
-    font-size:14px
+  .action-btns .delete-btn {
+    flex: 0 0 70px;
+    font-size: 14px;
   }
-  .row-content{grid-template-columns: 30px 1fr 80px 90px}
+  .row-content { grid-template-columns: 30px 1fr 80px 90px }
 }
 
-/* ✅ เปิดปุ่มตอน show-actions */
-.row.show-actions .action-btns{
-  visibility: visible;
+/* ✅ เมื่อเปิดแอคชัน */
+.row.show-actions .action-btns {
   opacity: 1;
-  pointer-events:auto; /* 🚀 คลิกได้ตอนเปิด */
+  pointer-events: auto;
+}
+.row.show-actions .row-content {
+  transform: translateX(-160px); /* ต้องตรงกับ min-width action-btns */
 }
 
 /* accessibility */
-.row-content:active{transition-duration:.12s}
-.row-content:focus-within{
-  box-shadow:0 4px 14px rgba(16,185,129,.06);
-  outline:none
+.row-content:active { transition-duration:.12s }
+.row-content:focus-within {
+  box-shadow: 0 4px 14px rgba(16,185,129,.06);
+  outline: none;
 }
