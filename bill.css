@@ -1,184 +1,204 @@
-:root {
-  --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --muted:#475569; 
+:root{
+  --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --muted:#475569;
   --accent:#10b981; --line:#e2e8f0; --danger:#ef4444;
 }
 
-body { 
-  margin:0; 
-  font-family:system-ui,"Noto Sans Thai",sans-serif; 
-  background:var(--bg); 
-  color:var(--ink); 
+/* box-sizing + base */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:system-ui,"Noto Sans Thai",sans-serif;
+  background:var(--bg);
+  color:var(--ink);
   font-size:18px;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
 }
 
-.container { max-width:1000px; margin:24px auto; padding:16px; }
-.app { background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:0 10px 30px rgba(2,8,23,.05); }
-
-header { 
-  padding:20px 24px; border-bottom:1px solid var(--line); 
-  display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; 
-}
-header h1 { margin:0; font-size:clamp(18px,2.6vw,24px); }
-.brand { display:flex; flex-direction:column; }
-.brand .shop { font-weight:800; color:#111827; }
-.brand .branch { color:var(--muted); font-size:.95em; }
-
-.controls { display:flex; gap:8px; flex-wrap:wrap; }
-button { 
-  appearance:none; border:none; padding:10px 14px; border-radius:12px; 
-  cursor:pointer; background:var(--ink); color:white; font-weight:600; 
-  display:flex; align-items:center; gap:4px; 
-}
-button.accent { background:var(--accent); }
-button.secondary { background:#334155; }
-button.warn { background:var(--danger); }
-button.ghost { background:transparent; color:var(--ink); border:1px solid var(--line); }
-.icon { width:16px; height:16px; display:inline-block; vertical-align:middle; }
-
-/* Layout หลัก */
-main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:border-box; }
-#left { flex:0 0 60%; min-width:0; }
-#right { flex:1; min-width:0; display:flex; flex-direction:column; gap:12px; }
-#right input, #right select, #right textarea { width:100%; max-width:100%; box-sizing:border-box; display:block; }
-#right label, #right span, #right div { overflow-wrap:break-word; word-break:break-word; }
-@media screen and (orientation:portrait) {
-  main { flex-direction:column; }
-  #right { order:-1; }
+/* container / app */
+.container{max-width:1000px;margin:24px auto;padding:16px}
+.app{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:0 10px 30px rgba(2,8,23,.05);
+  overflow:hidden;
 }
 
-.panel { padding:20px 24px; }
-.panel + .panel { border-left:1px solid var(--line); }
-@media (max-width:860px){.panel + .panel{border-left:none;border-top:1px solid var(--line);} }
+/* header */
+header{
+  padding:20px 24px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  gap:16px;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+.brand{display:flex;flex-direction:column}
+.brand .shop{font-weight:800;color:#111827}
+.brand .branch{color:var(--muted);font-size:.95em}
 
-.grid.header {
-  display: grid;
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+button{
+  appearance:none;border:none;padding:10px 14px;border-radius:12px;
+  cursor:pointer;background:var(--ink);color:white;font-weight:600;
+  display:flex;align-items:center;gap:8px;
+}
+button.accent{background:var(--accent)}
+button.secondary{background:#334155}
+button.warn{background:var(--danger)}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.icon{width:16px;height:16px;display:inline-block;vertical-align:middle}
+
+/* layout หลัก */
+main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
+#left{flex:0 0 60%;min-width:0}
+#right{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px}
+#right input,#right select,#right textarea{width:100%;max-width:100%;display:block}
+@media screen and (orientation:portrait){main{flex-direction:column}#right{order:-1}}
+
+/* panels */
+.panel{padding:20px 24px}
+.panel + .panel{border-left:1px solid var(--line)}
+@media (max-width:860px){.panel + .panel{border-left:none;border-top:1px solid var(--line)}}
+
+/* header grid (column titles) */
+.grid.header{
+  display:grid;
   grid-template-columns: 30px 1fr 100px 120px; /* ☰ | สินค้า | ราคา | จำนวน */
-  gap: 10px;
-  align-items: center;
-  font-weight: 700;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 6px;
-  margin-bottom: 8px;
-  color: #808080;
+  gap:10px;align-items:center;font-weight:700;
+  border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:8px;color:#808080;
 }
 
-.muted { color:var(--muted); }
-.right { text-align:right; }
-.num { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:16px; }
-.num[readonly] { background:#f5f7fb; }
-.title-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-.summary { display:grid; gap:10px; }
-.summary .line { display:flex; justify-content:space-between; align-items:center; }
-.big { font-size:28px; font-weight:800; }
-.danger-text { color:var(--danger); font-weight:600; margin-top:4px; font-size:.9em; }
+/* small helper */
+.muted{color:var(--muted)}
+.right{text-align:right}
 
-/* popup เพิ่มเมนู */
-#popup { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
-#popup .content { background:white; padding:20px; border-radius:12px; width:300px; }
-#popup input { width:100%; margin-bottom:10px; padding:8px; border:1px solid var(--line); border-radius:8px; }
-#popup button { width:100%; margin-top:6px; }
+/* inputs */
+.num{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:16px}
+.num[readonly]{background:#f5f7fb}
 
-/* print mode */
-@media print {
-  body { background:white; }
-  .container { margin:0; padding:0; }
-  .app { border:none; box-shadow:none; border-radius:0; }
-  header .controls, .noprint { display:none !important; }
-  main { flex-direction:column; }
-  .panel + .panel { border:none; }
+/* summary */
+.title-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.summary{display:grid;gap:10px}
+.summary .line{display:flex;justify-content:space-between;align-items:center}
+.big{font-size:28px;font-weight:800}
+.danger-text{color:var(--danger);font-weight:600;margin-top:4px;font-size:.9em}
 
-  /* ✅ จัดคอลัมน์บิล */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-  th, td { padding: 2px 0; }
-  th.right, td.right { text-align: right; }
-  td.name  { max-width: 40px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  td.price { width: 35px; text-align: right; }
-  td.qty   { width: 25px; text-align: right; }
-  td.total { width: 40px; text-align: right; }
+/* popup */
+#popup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center}
+#popup .content{background:white;padding:20px;border-radius:12px;width:320px;max-width:95%}
+#popup input{width:100%;margin-bottom:10px;padding:8px;border:1px solid var(--line);border-radius:8px}
+#popup button{width:100%;margin-top:6px}
+
+/* print */
+@media print{
+  body{background:white}
+  .container{margin:0;padding:0}
+  .app{border:none;box-shadow:none;border-radius:0}
+  header .controls,.noprint{display:none!important}
+  main{flex-direction:column}
+  .panel + .panel{border:none}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:2px 0}
+  th.right,td.right{text-align:right}
+  .action-btns{display:none!important}
 }
 
-/* Layout ของแต่ละแถว */
-.row {
-  position: relative;
-  background: var(--card);
-  border-radius: 8px;
-  overflow: hidden;
-  transition: transform 0.25s ease;
-  display: grid;
+/* =========================
+   ROW (wrapper) + content
+   ========================= */
+
+/* wrapper: มีปุ่มอยู่ด้านหลัง */
+#menuItems{display:block}
+.row{
+  position:relative;
+  background:transparent; /* content มี bg เอง */
+  border-radius:10px;
+  margin:8px 0;
+  overflow:visible; /* allow action-btns to sit inside visible area */
+}
+
+/* จริงๆ เป็นกริดที่เราจะเลื่อน (มี background, padding) */
+.row-content{
+  display:grid;
   grid-template-columns: 30px 1fr 100px 120px;
-  gap: 10px;
-  align-items: center;
-  padding: 6px 0;
-  border-bottom: 1px dashed var(--line);
-  z-index: 1; /* ต้องอยู่เหนือปุ่ม */
+  gap:10px;
+  align-items:center;
+  padding:10px 12px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  transition: transform .22s cubic-bezier(.2,.9,.2,1);
+  z-index:2; /* อยู่สูงกว่า action-btns */
+  min-height:48px;
+  box-shadow: 0 1px 0 rgba(2,8,23,.02);
+  width:100%;
+  box-sizing:border-box;
 }
 
 /* drag handle */
-.drag-handle {
-  cursor: grab;
-  font-size: 18px;
-  color: var(--muted);
-  text-align: center;
-}
-.drag-handle:active { cursor: grabbing; }
+.drag-handle{cursor:grab;font-size:18px;color:var(--muted);text-align:center;user-select:none}
+.drag-handle:active{cursor:grabbing}
 
-/* 🎨 เอฟเฟกต์ drag&drop */
-.drag-over { background: #e0f2fe; border-top: 3px solid var(--accent); }
-.drag-over-valid { background: #dcfce7; border-top: 3px solid var(--accent); }
-.placeholder { border: 2px dashed var(--accent); background: #f0fdf4; }
+/* menu text */
+.menu-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px;font-weight:600;padding-right:6px}
+.menu-price{text-align:right;color:var(--muted);font-size:17px;font-weight:600;min-width:80px}
+.menu-qty{width:100%;max-width:100px;border-radius:10px;padding:8px 10px;border:1px solid var(--line);font-size:16px;text-align:right;background:#fff}
 
-.menu-name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size:18px;
-  font-weight:600;
-}
+/* placeholder + drag visual */
+.placeholder{border:2px dashed var(--accent);background:#f0fdf4}
+.drag-over{background:#e0f2fe;border-top:3px solid var(--accent)}
+.drag-over-valid{background:#dcfce7;border-top:3px solid var(--accent)}
 
-.menu-price {
-  min-width: 80px;
-  text-align: right;
-  color: var(--muted);
-  flex-shrink: 0;
-  font-size:18px;
-  font-weight:600;
+/* action buttons — อยู่ด้านหลัง (right) */
+.action-btns{
+  position:absolute;
+  top:0;
+  right:0;
+  bottom:0;
+  height:100%;
+  display:flex;
+  z-index:1; /* ต่ำกว่า row-content */
+  align-items:stretch;
+  border-radius:10px;
+  overflow:hidden;
 }
 
-.menu-qty {
-  width: 100px;
-  text-align: right;
-  flex-shrink: 0;
-  font-size:18px;
+/* แต่ละปุ่ม */
+.action-btns .edit-btn,
+.action-btns .delete-btn{
+  width:80px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+  user-select:none;
+  border-left:1px solid rgba(255,255,255,.08);
+}
+.action-btns .edit-btn{background: #f59e0b; /* orange */ border-top-right-radius:10px; border-bottom-right-radius:10px}
+.action-btns .delete-btn{background:var(--danger); border-top-right-radius:10px; border-bottom-right-radius:10px}
+
+/* RWD: ปรับขนาดปุ่มเล็กลงบนหน้าจอแคบ */
+@media (max-width:420px){
+  .action-btns .edit-btn,.action-btns .delete-btn{width:70px;font-size:14px}
+  .row-content{grid-template-columns: 30px 1fr 80px 90px}
 }
 
-/* ✅ container ของปุ่ม action (อยู่หลัง row) */
-.action-btns {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  z-index: 0; /* อยู่ข้างหลัง */
+/* เมื่อปัดซ้าย → เลื่อนแค่ .row-content เท่านั้น (ปุ่มจะถูกเปิดเผยจากขวา) */
+.row.show-actions .row-content{
+  transform: translateX(-160px); /* = 80 + 80 */
 }
 
-.edit-btn, .delete-btn {
-  width: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-}
-.edit-btn { background: orange; }
-.delete-btn { background: var(--danger); }
+/* ถ้าต้องการให้ animation ละมุนมากขึ้น */
+.row-content:active{transition-duration: .12s}
 
-/* ✅ เวลา row ถูกปัดซ้าย → แสดงปุ่ม */
-.row.show-actions {
-  transform: translateX(-160px); /* 80px + 80px */
-}
+/* accessibility: focus */
+.row-content:focus-within{box-shadow:0 4px 14px rgba(16,185,129,.06);outline:none}
+
+/* hide action buttons for print */
+@media print{ .action-btns{display:none} }
