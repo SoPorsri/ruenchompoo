@@ -532,13 +532,10 @@ function enableSwipe(row, menu) {
   const actionBtns = row.querySelector('.action-btns');
   const dragHandle = row.querySelector('.drag-handle');
 
-  // ✅ ให้ SortableJS ใช้ pointerdown บน drag-handle
+  // ✅ ป้องกัน swipe ไปชน drag-handle (ให้ SortableJS ทำงานเอง)
   dragHandle.addEventListener('pointerdown', (e) => {
-    e.stopPropagation(); // กันไม่ให้ไปชน swipe
+    e.stopPropagation();
   });
-
-  // ✅ swipe เฉพาะ content
-  content.addEventListener('pointerdown', onPointerDown);
 
   row.classList.remove('show-actions');
   content.style.transform = 'translateX(0)';
@@ -547,7 +544,7 @@ function enableSwipe(row, menu) {
 
   function onPointerDown(e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    if (e.target.closest('.drag-handle')) return; // ให้ SortableJS ทำงาน
+    if (e.target.closest('.drag-handle')) return; // handle ให้ Sortable ใช้
     if (e.target.closest('input, button, .menu-qty')) return; // ไม่รบกวน input
 
     if (currentlyOpenRow && currentlyOpenRow !== row) closeOpenRow();
@@ -571,7 +568,7 @@ function enableSwipe(row, menu) {
     if (!dragging) return;
     currentX = e.clientX;
     let diff = currentX - startX;
-    if (diff > 0) diff = 0; // swipe ได้เฉพาะซ้าย
+    if (diff > 0) diff = 0; // ✅ swipe ได้เฉพาะซ้าย
     const max = content._maxTranslate || 160;
     const translate = Math.max(diff, -max);
     content.style.transform = `translateX(${translate}px)`;
@@ -583,12 +580,10 @@ function enableSwipe(row, menu) {
 
     const diff = currentX - startX;
     const threshold = 50;
-
     content.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
 
     if (diff < -threshold) {
       row.classList.add('show-actions');
-      content.style.transform = `translateX(-${content._maxTranslate}px)`;
       currentlyOpenRow = row;
     } else {
       row.classList.remove('show-actions');
@@ -602,6 +597,7 @@ function enableSwipe(row, menu) {
     document.removeEventListener('pointercancel', onPointerUp);
   }
 
+  // ✅ ติดแค่ครั้งเดียว
   content.addEventListener('pointerdown', onPointerDown);
 
   document.addEventListener('click', evt => {
@@ -621,6 +617,7 @@ function enableSwipe(row, menu) {
     closeOpenRow();
   });
 }
+
 
 // --- Initialization and Event Listeners ---
 window.addEventListener('DOMContentLoaded', async () => {
