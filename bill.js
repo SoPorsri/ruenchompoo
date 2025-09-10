@@ -607,6 +607,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   });
   
   // ปุ่มบันทึก popup เพิ่มเมนู
+  // ปุ่มบันทึก popup เพิ่มเมนู
   el('btnAddMenuConfirm').addEventListener('click', async () => {
     const name = el('addMenuName').value.trim();
     const price = parseFloat(el('addMenuPrice').value);
@@ -616,19 +617,16 @@ window.addEventListener('DOMContentLoaded', async () => {
       return;
     }
   
-    // โค้ดเพิ่มเมนูใหม่ลงในรายการ
-    // ตัวอย่าง:
-    const newItem = {
-      id: Date.now().toString(),
-      name,
-      price,
-      qty: 1
-    };
+    // เพิ่มเมนูใหม่ลงใน Supabase
+    const { error } = await client.from('menu').insert([{ name, price }]);
+    if (error) {
+      console.error(error);
+      alert('เพิ่มเมนูผิดพลาด');
+      return;
+    }
   
-    // สมมติคุณมีฟังก์ชัน addMenuItem อยู่แล้ว
-    addMenuItem(newItem);
-  
-    // ปิด popup และเคลียร์ค่า
+    // reload เมนูและปิด popup
+    await loadMenu();
     el('addPopup').style.display = 'none';
     el('addMenuName').value = '';
     el('addMenuPrice').value = '';
