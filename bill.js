@@ -625,35 +625,60 @@ async function saveBill(){
   calc();
 }
 
-function enableSwipe(rows) {
-  rows.forEach(row => {
-    const content = row.querySelector('.row-content');
-    const actions = row.querySelector('.action-btns');
-    let startX = 0, currentX = 0, translateX = 0;
-    let isDragging = false;
+function enableSwipe(row, menu) {
+  let startX = 0;
+  let currentX = 0;
+  let threshold = 50;
 
-    row.addEventListener("touchstart", e => {
-      startX = e.touches[0].clientX;
-      isDragging = true;
-    });
+  row.addEventListener("touchstart", e => {
+    startX = e.touches[0].clientX;
+  });
 
-    row.addEventListener("touchmove", e => {
-      if (!isDragging) return;
-      currentX = e.touches[0].clientX;
-      translateX = Math.min(0, currentX - startX); // เลื่อนได้เฉพาะซ้าย
-      content.style.transform = `translateX(${translateX}px)`;
-    });
+  row.addEventListener("touchmove", e => {
+    currentX = e.touches[0].clientX;
+    let diff = currentX - startX;
+    if (diff < -threshold) {
+      row.classList.add("show-actions"); // ปัดซ้าย → โชว์ปุ่ม
+    }
+    if (diff > threshold) {
+      row.classList.remove("show-actions"); // ปัดขวา → ปิดปุ่ม
+    }
+  });
 
-    row.addEventListener("touchend", () => {
-      isDragging = false;
-      // ถ้าปัดเกินครึ่ง → เปิดปุ่ม
-      if (translateX < -70) {
-        row.classList.add("show-actions");
-      } else {
-        row.classList.remove("show-actions");
-      }
-      content.style.transform = ""; // reset → ใช้ CSS transition
+  // ปุ่มแก้ไข
+  row.querySelector(".edit-btn").addEventListener("click", () => {
+    const popup = document.getElementById("popup");
+    const nameInput = document.getElementById("newMenuName");
+    const priceInput = document.getElementById("newMenuPrice");
+
+    // ✅ ใส่ค่าเดิมลงไปใน input
+    nameInput.value = menu.name;
+    priceInput.value = menu.price;
+
+    popup.style.display = "flex";
+
+    // ป้องกันการผูก event ซ้ำ → เคลียร์ handler เดิมก่อน
+    const confirmBtn = document.getElementById("btnAddMenuConfirm");
+    const newConfirm = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+
+    // ✅ อัปเดตค่ากลับไป
+    newConfirm.addEventListener("click", () => {
+      menu.name = nameInput.value.trim();
+      menu.price = parseFloat(priceInput.value) || 0;
+      saveData(); // บันทึกลง localStorage หรือ DB
+      loadMenu(); // โหลดใหม่
+      popup.style.display = "none";
     });
+  });
+
+  // ปุ่มลบ
+  row.querySelector(".delete-btn").addEventListener("click", () => {
+    if (confirm("ลบเมนูนี้ใช่ไหม?")) {
+      menuItems = menuItems.filter(m => m !== menu);
+      saveData();
+      loadMenu();
+    }
   });
 }
 
