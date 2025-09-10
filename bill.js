@@ -47,6 +47,7 @@ async function loadTableName() {
   }
 }
 
+// loadMenu.js
 async function loadMenu(){
   const { data, error } = await client
     .from('menu')
@@ -65,7 +66,7 @@ async function loadMenu(){
 
   data.forEach(item=>{
     const row=document.createElement('div');
-    row.className='grid row draggable';   // ✅ ใช้ grid เหมือน header
+    row.className='grid row draggable';
     row.dataset.id = item.id;
     row.innerHTML = `
       <div class="row-content">
@@ -87,63 +88,18 @@ async function loadMenu(){
       </div>
     `;
     container.appendChild(row);
+
+    // ✅ เรียก enableSwipe ให้จัดการปุ่ม + swipe
+    enableSwipe(row, item);
   });
 
   // ✅ input คำนวณอัตโนมัติ
   document.querySelectorAll('#menuItems input')
           .forEach(i=>i.addEventListener('input',calc));
 
-  // ✅ ใช้ SortableJS แทน drag เดิม
-  new Sortable(container, {
-    animation: 150,
-    handle: ".drag-handle",
-    onEnd: async function () {
-      const items = [...container.children];
-      for (let i = 0; i < items.length; i++) {
-        const id = items[i].dataset.id;
-        const { error } = await client.from('menu').update({ sort_order: i + 1 }).eq('id', id);
-        if (error) console.error("update sort_order error:", error);
-      }
-      console.log("✅ บันทึก sort_order เรียบร้อยแล้ว");
-    }
-  });
-
-  // ✅ เปิดใช้งาน swipe left/right
-  enableSwipe(container.querySelectorAll('.row'));
-
-  // ✅ set event ให้ปุ่มลบ
-  container.querySelectorAll('.delete-btn').forEach(btn=>{
-    btn.addEventListener('click', async e=>{
-      const row = e.target.closest('.row');
-      if(confirm("ลบเมนูนี้ออกจากระบบ?")){
-        const id = row.dataset.id;
-        await client.from('menu').delete().eq('id', id);
-        row.remove();
-      }
-    });
-  });
-
-  // ✅ set event ให้ปุ่มแก้ไข
-  container.querySelectorAll('.edit-btn').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      const row = e.target.closest('.row');
-      const id = row.dataset.id;
-      const menuItem = menuData.find(m=>m.id==id);
-      if(menuItem){
-        const newName = prompt("แก้ไขชื่อเมนู:", menuItem.name);
-        const newPrice = prompt("แก้ไขราคา:", menuItem.price);
-        if(newName && newPrice){
-          client.from('menu').update({
-            name:newName,
-            price:parseFloat(newPrice)
-          }).eq('id', id).then(()=>loadMenu());
-        }
-      }
-    });
-  });
-
   return true;
 }
+
 
 
 
@@ -637,53 +593,53 @@ function enableSwipe(row, menu) {
   row.addEventListener("touchmove", e => {
     currentX = e.touches[0].clientX;
     let diff = currentX - startX;
-    if (diff < -threshold) {
-      row.classList.add("show-actions"); // ปัดซ้าย → โชว์ปุ่ม
-    }
-    if (diff > threshold) {
-      row.classList.remove("show-actions"); // ปัดขวา → ปิดปุ่ม
-    }
+    if (diff < -threshold) row.classList.add("show-actions");
+    if (diff > threshold) row.classList.remove("show-actions");
   });
 
-  // ปุ่มแก้ไข
-  row.querySelector(".edit-btn").addEventListener("click", () => {
+  // ปุ่มแก้ไข → ใช้ popup
+  row.querySelector(".edit-btn").addEventListener("click", async () => {
     const popup = document.getElementById("popup");
     const nameInput = document.getElementById("newMenuName");
     const priceInput = document.getElementById("newMenuPrice");
 
-    // ✅ ใส่ค่าเดิมลงไปใน input
     nameInput.value = menu.name;
     priceInput.value = menu.price;
 
     popup.style.display = "flex";
 
-    // ป้องกันการผูก event ซ้ำ → เคลียร์ handler เดิมก่อน
+    // ป้องกัน event ซ้ำ
     const confirmBtn = document.getElementById("btnAddMenuConfirm");
     const newConfirm = confirmBtn.cloneNode(true);
     confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
 
-    // ✅ อัปเดตค่ากลับไป
-    newConfirm.addEventListener("click", () => {
-      menu.name = nameInput.value.trim();
-      menu.price = parseFloat(priceInput.value) || 0;
-      saveData(); // บันทึกลง localStorage หรือ DB
-      loadMenu(); // โหลดใหม่
+    newConfirm.addEventListener("click", async () => {
+      const newName = nameInput.value.trim();
+      const newPrice = parseFloat(priceInput.value) || 0;
+
+      if (!newName || !newPrice) {
+        alert("กรุณากรอกชื่อและราคา");
+        return;
+      }
+
+      await client.from("menu").update({
+        name: newName,
+        price: newPrice
+      }).eq("id", menu.id);
+
       popup.style.display = "none";
+      await loadMenu();
     });
   });
 
-  // ปุ่มลบ
-  row.querySelector(".delete-btn").addEventListener("click", () => {
+  // ปุ่มลบ → ลบจาก Supabase
+  row.querySelector(".delete-btn").addEventListener("click", async () => {
     if (confirm("ลบเมนูนี้ใช่ไหม?")) {
-      menuItems = menuItems.filter(m => m !== menu);
-      saveData();
-      loadMenu();
+      await client.from("menu").delete().eq("id", menu.id);
+      row.remove();
     }
   });
 }
-
-
-
 
 window.addEventListener('DOMContentLoaded', async ()=>{
   el('today').textContent = todayText();
