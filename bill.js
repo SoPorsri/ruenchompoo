@@ -583,6 +583,24 @@ function enableSwipe(row, menu) {
   let currentX = 0;
   let threshold = 50;
 
+  // 🖱️ Mouse
+  row.addEventListener("mousedown", e => {
+    startX = e.clientX;
+  });
+
+  row.addEventListener("mousemove", e => {
+    if (startX === 0) return;
+    currentX = e.clientX;
+    let diff = currentX - startX;
+    if (diff < -threshold) row.classList.add("show-actions");
+    if (diff > threshold) row.classList.remove("show-actions");
+  });
+
+  row.addEventListener("mouseup", () => {
+    startX = 0;
+  });
+
+  // 📱 Touch
   row.addEventListener("touchstart", e => {
     startX = e.touches[0].clientX;
   });
@@ -594,6 +612,10 @@ function enableSwipe(row, menu) {
     if (diff > threshold) row.classList.remove("show-actions");
   });
 
+  row.addEventListener("touchend", () => {
+    startX = 0;
+  });
+
   // ปุ่มแก้ไข → ใช้ popup
   row.querySelector(".edit-btn").addEventListener("click", async () => {
     const popup = document.getElementById("popup");
@@ -602,7 +624,6 @@ function enableSwipe(row, menu) {
 
     nameInput.value = menu.name;
     priceInput.value = menu.price;
-
     popup.style.display = "flex";
 
     // ป้องกัน event ซ้ำ
@@ -619,10 +640,9 @@ function enableSwipe(row, menu) {
         return;
       }
 
-      await client.from("menu").update({
-        name: newName,
-        price: newPrice
-      }).eq("id", menu.id);
+      await client.from("menu")
+        .update({ name: newName, price: newPrice })
+        .eq("id", menu.id);
 
       popup.style.display = "none";
       await loadMenu();
@@ -637,6 +657,7 @@ function enableSwipe(row, menu) {
     }
   });
 }
+
 
 window.addEventListener('DOMContentLoaded', async ()=>{
   el('today').textContent = todayText();
