@@ -59,18 +59,6 @@ function escapeHtml(s) {
   })[c]);
 }
 
-/**
- * Closes any currently open swipe row.
- */
-function closeOpenRow() {
-  if (currentlyOpenRow) {
-    const c = currentlyOpenRow.querySelector('.row-content');
-    currentlyOpenRow.classList.remove('show-actions');
-    c.style.transform = 'translateX(0)';
-    currentlyOpenRow = null;
-  }
-}
-
 // --- Supabase Database Helpers ---
 /**
  * Fetches the next available bill number.
@@ -527,9 +515,6 @@ function buildPrintView(bill) {
   return html;
 }
 
-// ==== ตัวแปร global ====
-let currentlyOpenRow = null;
-
 // ==== helper ปิดแถวที่เปิดอยู่ ====
 function closeOpenRow() {
   if (currentlyOpenRow) {
@@ -546,27 +531,17 @@ function enableSwipe(row, menu) {
   const content = row.querySelector('.row-content');
   const actionBtns = row.querySelector('.action-btns');
 
-  // reset state
   row.classList.remove('show-actions');
   content.style.transform = 'translateX(0)';
 
-  let startX = 0;
-  let currentX = 0;
-  let dragging = false;
-  let pointerId = null;
+  let startX = 0, currentX = 0, dragging = false, pointerId = null;
 
   function onPointerDown(e) {
-    // mouse: เฉพาะปุ่มซ้าย
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    // ถ้าจับที่ drag-handle → ให้ drag&drop ทำงาน
-    if (e.target.closest('.drag-handle')) return;
-    // ถ้าไปกด input หรือปุ่ม → ไม่ต้อง swipe
-    if (e.target.closest('input, button, .menu-qty')) return;
+    if (e.target.closest('.drag-handle')) return; // ให้ SortableJS ทำงาน
+    if (e.target.closest('input, button, .menu-qty')) return; // ไม่รบกวน input
 
-    // ปิด row อื่นที่เปิดอยู่
-    if (currentlyOpenRow && currentlyOpenRow !== row) {
-      closeOpenRow();
-    }
+    if (currentlyOpenRow && currentlyOpenRow !== row) closeOpenRow();
 
     pointerId = e.pointerId;
     startX = e.clientX;
@@ -574,7 +549,6 @@ function enableSwipe(row, menu) {
     dragging = true;
     content.style.transition = 'none';
 
-    // คำนวณความกว้างปุ่ม action
     const rect = actionBtns.getBoundingClientRect();
     content._maxTranslate = Math.max(80, Math.round(rect.width || 160));
 
@@ -588,7 +562,7 @@ function enableSwipe(row, menu) {
     if (!dragging) return;
     currentX = e.clientX;
     let diff = currentX - startX;
-    if (diff > 0) diff = 0; // swipe เฉพาะซ้าย
+    if (diff > 0) diff = 0; // swipe ได้เฉพาะซ้าย
     const max = content._maxTranslate || 160;
     const translate = Math.max(diff, -max);
     content.style.transform = `translateX(${translate}px)`;
@@ -599,41 +573,32 @@ function enableSwipe(row, menu) {
     dragging = false;
 
     const diff = currentX - startX;
-    const threshold = 50; // เกิน 50px ถึงจะเปิด
+    const threshold = 50;
 
     content.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
 
     if (diff < -threshold) {
-      // เปิดปุ่ม
       row.classList.add('show-actions');
       content.style.transform = `translateX(-${content._maxTranslate}px)`;
       currentlyOpenRow = row;
     } else {
-      // ปิด
       row.classList.remove('show-actions');
       content.style.transform = 'translateX(0)';
       if (currentlyOpenRow === row) currentlyOpenRow = null;
     }
 
-    try {
-      row.releasePointerCapture?.(pointerId);
-    } catch (_) {}
+    try { row.releasePointerCapture?.(pointerId); } catch {}
     document.removeEventListener('pointermove', onPointerMove);
     document.removeEventListener('pointerup', onPointerUp);
     document.removeEventListener('pointercancel', onPointerUp);
   }
 
-  // เริ่มฟัง pointerdown
   content.addEventListener('pointerdown', onPointerDown);
 
-  // ปิดเมื่อคลิกนอก row
-  document.addEventListener('click', (evt) => {
-    if (!row.contains(evt.target) && currentlyOpenRow) {
-      closeOpenRow();
-    }
+  document.addEventListener('click', evt => {
+    if (!row.contains(evt.target) && currentlyOpenRow) closeOpenRow();
   }, { capture: true });
 
-  // ปุ่ม action
   row.querySelector('.edit-btn').addEventListener('click', () => {
     alert(`Edit: ${menu.name}`);
     closeOpenRow();
