@@ -47,7 +47,6 @@ async function loadTableName() {
   }
 }
 
-// loadMenu.js
 async function loadMenu(){
   const { data, error } = await client
     .from('menu')
@@ -66,7 +65,7 @@ async function loadMenu(){
 
   data.forEach(item=>{
     const row=document.createElement('div');
-    row.className='row draggable';   // ✅ เอา grid ออก เหลือ row
+    row.className='row draggable';
     row.dataset.id = item.id;
     row.innerHTML = `
       <div class="row-content">
@@ -89,13 +88,15 @@ async function loadMenu(){
     `;
     container.appendChild(row);
 
-    // ✅ swipe + edit/delete
-    enableSwipe(row, item);
+    enableSwipe(row, item); // ✅ swipe
   });
 
   // ✅ input คำนวณอัตโนมัติ
   document.querySelectorAll('#menuItems input')
           .forEach(i=>i.addEventListener('input',calc));
+
+  // ✅ สำคัญ: init drag&drop ใหม่ หลังจาก loadMenu เสร็จ
+  initDragAndDrop();  
 
   return true;
 }
