@@ -67,16 +67,20 @@ async function loadMenu(){
     const row=document.createElement('div');
     row.className='grid row draggable';   // ✅ ใช้ grid เหมือน header
     row.dataset.id = item.id;
-    row.innerHTML=`
-      <div class="drag-handle">☰</div>
-      <div class="menu-name">${item.name}</div>
-      <div class="menu-price right">฿${item.price}</div>
-      <div><input class="num menu-qty" 
-         type="text" 
-         data-id="${item.id}" 
-         placeholder="เช่น 1+2"
-         inputmode="decimal" 
-         pattern="[0-9.+]*"></div>
+    row.innerHTML = `
+      <div class="row-content">
+        <div class="drag-handle">☰</div>
+        <div class="menu-name">${item.name}</div>
+        <div class="menu-price right">฿${item.price}</div>
+        <div>
+          <input class="num menu-qty" 
+            type="text" 
+            data-id="${item.id}" 
+            placeholder="เช่น 1+2"
+            inputmode="decimal" 
+            pattern="[0-9.+]*">
+        </div>
+      </div>
       <div class="action-btns">
         <div class="edit-btn">✏️</div>
         <div class="delete-btn">🗑️</div>
