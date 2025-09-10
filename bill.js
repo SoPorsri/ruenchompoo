@@ -402,16 +402,15 @@ function enableSwipe(row, menu) {
     const c = r.querySelector('.row-content');
     r.classList.add('show-actions');
     c.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
-    c.style.transform = ''; // rely on CSS .row.show-actions
+    c.style.transform = ''; // ใช้ CSS .row.show-actions
     currentlyOpenRow = r;
   }
 
   function onPointerDown(e) {
-    // only left mouse button or touch
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
-    // if started on drag-handle -> ignore (let Sortable handle it)
+    // ถ้าเริ่มจาก drag-handle → ปล่อยให้ Sortable ใช้งาน
     if (e.target.closest('.drag-handle')) return;
-    // if started on input/button -> ignore
+
+    // ถ้าเริ่มจาก input หรือปุ่ม → ไม่ทำ swipe
     if (e.target.closest('input,button')) return;
 
     pointerId = e.pointerId;
@@ -420,10 +419,11 @@ function enableSwipe(row, menu) {
     dragging = true;
     content.style.transition = 'none';
 
-    // compute max translate (width of action buttons)
+    // ความกว้างของปุ่ม action
     const rect = actionBtns.getBoundingClientRect();
-    content._maxTranslate = Math.max(80, Math.round(rect.width || 160)); // fallback 160
-    // close other open row
+    content._maxTranslate = Math.max(80, Math.round(rect.width || 160));
+
+    // ปิด row อื่นที่เปิดอยู่
     if (currentlyOpenRow && currentlyOpenRow !== row) closeRow(currentlyOpenRow);
 
     row.setPointerCapture && row.setPointerCapture(pointerId);
@@ -437,18 +437,17 @@ function enableSwipe(row, menu) {
     if (!dragging) return;
     currentX = e.clientX;
     let diff = currentX - startX;
-    if (diff > 0) diff = 0; // only allow left swipe
+    if (diff > 0) diff = 0; // swipe only left
     const max = content._maxTranslate || 160;
     const translate = Math.max(diff, -max);
     content.style.transform = `translateX(${translate}px)`;
   }
 
-  function onPointerUp(e) {
+  function onPointerUp() {
     if (!dragging) return;
     dragging = false;
     const diff = currentX - startX;
-    const max = content._maxTranslate || 160;
-    const threshold = 50; // ต้องปัดเกิน 50px ถึงจะเปิด
+    const threshold = 50;
     content.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
 
     if (diff < -threshold) {
@@ -459,32 +458,26 @@ function enableSwipe(row, menu) {
 
     try {
       row.releasePointerCapture && row.releasePointerCapture(pointerId);
-    } catch (_) { /* ignore */ }
+    } catch (_) {}
     document.removeEventListener('pointermove', onPointerMove);
     document.removeEventListener('pointerup', onPointerUp);
     document.removeEventListener('pointercancel', onPointerUp);
   }
 
-  // bind pointerdown on the content (not handle)
+  // bind swipe ทั้ง mouse & touch
   content.addEventListener('pointerdown', onPointerDown);
 
-  // also allow clicking edit/delete
-  const editBtn = row.querySelector('.edit-btn');
-  const deleteBtn = row.querySelector('.delete-btn');
-
   // edit
+  const editBtn = row.querySelector('.edit-btn');
   if (editBtn) {
     editBtn.addEventListener('click', () => {
       const popup = document.getElementById('popup');
       const nameInput = document.getElementById('newMenuName');
       const priceInput = document.getElementById('newMenuPrice');
-
       nameInput.value = menu.name;
       priceInput.value = menu.price;
-
       popup.style.display = 'flex';
 
-      // prevent duplicate handlers by cloning
       const confirmBtn = document.getElementById('btnAddMenuConfirm');
       const newConfirm = confirmBtn.cloneNode(true);
       confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
@@ -504,6 +497,7 @@ function enableSwipe(row, menu) {
   }
 
   // delete
+  const deleteBtn = row.querySelector('.delete-btn');
   if (deleteBtn) {
     deleteBtn.addEventListener('click', async () => {
       if (!confirm("ลบเมนูนี้ใช่ไหม?")) return;
@@ -513,14 +507,12 @@ function enableSwipe(row, menu) {
         console.error(error);
         return;
       }
-      // remove row from DOM
       row.remove();
-      // also update sort order
       await saveNewOrder();
     });
   }
 
-  // close open row when clicking outside
+  // ปิดถ้ามีการคลิกข้างนอก
   document.addEventListener('click', (evt) => {
     if (!row.contains(evt.target) && currentlyOpenRow) {
       closeRow(currentlyOpenRow);
