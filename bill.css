@@ -207,9 +207,9 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
 }
 
 /* เมื่อปัดซ้าย → เลื่อนแค่ .row-content เท่านั้น (ปุ่มจะถูกเปิดเผยจากขวา) */
-/*.row.show-actions .row-content{
+.row.show-actions .row-content{
   transform: translateX(-160px);
-}*/
+}
 /* และแสดงปุ่ม */
 .row.show-actions .action-btns{
   visibility: visible;
