@@ -530,6 +530,15 @@ function closeOpenRow() {
 function enableSwipe(row, menu) {
   const content = row.querySelector('.row-content');
   const actionBtns = row.querySelector('.action-btns');
+  const dragHandle = row.querySelector('.drag-handle');
+
+  // ✅ ให้ SortableJS ใช้ pointerdown บน drag-handle
+  dragHandle.addEventListener('pointerdown', (e) => {
+    e.stopPropagation(); // กันไม่ให้ไปชน swipe
+  });
+
+  // ✅ swipe เฉพาะ content
+  content.addEventListener('pointerdown', onPointerDown);
 
   row.classList.remove('show-actions');
   content.style.transform = 'translateX(0)';
