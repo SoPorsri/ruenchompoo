@@ -1,3 +1,4 @@
+// bill.js (replace your existing file)
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
 const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
@@ -6,18 +7,12 @@ const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const el = id => document.getElementById(id);
 const fmt = n => new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(n || 0);
-
 function safeEval(expr) {
   if (!expr) return 0;
-  expr = expr.replace(/\s+/g, '');
+  expr = String(expr).replace(/\s+/g, '');
   if (!/^[0-9+\-*/.]+$/.test(expr)) return 0;
-  try {
-    return Function('"use strict";return(' + expr + ')')();
-  } catch {
-    return 0;
-  }
+  try { return Function('"use strict";return(' + expr + ')')(); } catch { return 0; }
 }
-
 function todayText() {
   const d = new Date();
   return d.toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
@@ -27,34 +22,21 @@ let menuData = [];
 const params = new URLSearchParams(window.location.search);
 const table_id = params.get('table_id');
 
+let sortableInstance = null;      // store Sortable instance
+let currentlyOpenRow = null;      // track open swipe row (so we can close others)
+
+/* --- DB helpers --- (unchanged from yours) */
 async function getNextBillNo() {
-  const { data, error } = await client
-    .from('bills')
-    .select('billno')
-    .order('billno', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    console.error("ดึงเลขบิลล่าสุดผิดพลาด", error);
-    return "00001"; // fallback
-  }
-
+  const { data, error } = await client.from('bills').select('billno').order('billno', { ascending: false }).limit(1).maybeSingle();
+  if (error) { console.error("ดึงเลขบิลล่าสุดผิดพลาด", error); return "00001"; }
   let lastNo = 0;
-  if (data && data.billno) {
-    lastNo = parseInt(data.billno, 10) || 0;
-  }
-
+  if (data && data.billno) lastNo = parseInt(data.billno, 10) || 0;
   return String(lastNo + 1).padStart(5, '0');
 }
-
 async function loadTableName() {
   if (!table_id) return;
   const { data, error } = await client.from('tables').select('*').eq('id', table_id).single();
-  if (error) {
-    console.log(error);
-    return;
-  }
+  if (error) { console.log(error); return; }
   if (data) {
     el('customer').value = data.name;
     const { error: updateError } = await client.from('tables').update({ status: 'ไม่ว่าง' }).eq('id', table_id);
@@ -62,31 +44,27 @@ async function loadTableName() {
   }
 }
 
-async function loadMenu(){
-  const { data, error } = await client
-    .from('menu')
-    .select('*')
-    .order('sort_order', { ascending: true });
+/* ---------------------------
+   Load menu: build DOM rows
+   --------------------------- */
+async function loadMenu() {
+  const { data, error } = await client.from('menu').select('*').order('sort_order', { ascending: true });
+  if (error) { alert('โหลดเมนูผิดพลาด'); console.log(error); return; }
 
-  if(error){
-    alert('โหลดเมนูผิดพลาด');
-    console.log(error);
-    return;
-  }
+  menuData = data || [];
+  const container = el('menuItems');
+  container.innerHTML = '';
 
-  menuData = data;
-  const container = el('menuItems'); 
-  container.innerHTML='';
-
-  data.forEach(item=>{
-    const row=document.createElement('div');
-    row.className='row draggable';   // ✅ เหลือ row draggable เท่านั้น
+  // create rows
+  menuData.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'row draggable';
     row.dataset.id = item.id;
     row.innerHTML = `
-      <div class="row-content">
+      <div class="row-content" tabindex="0">
         <div class="drag-handle">☰</div>
-        <div class="menu-name">${item.name}</div>
-        <div class="menu-price right">฿${item.price}</div>
+        <div class="menu-name">${escapeHtml(item.name)}</div>
+        <div class="menu-price right">฿${Number(item.price).toFixed(2)}</div>
         <div>
           <input class="num menu-qty" 
             type="text" 
@@ -96,273 +74,77 @@ async function loadMenu(){
             pattern="[0-9.+]*">
         </div>
       </div>
-      <div class="action-btns">
-        <div class="edit-btn">✏️</div>
-        <div class="delete-btn">🗑️</div>
+      <div class="action-btns" aria-hidden="true">
+        <div class="edit-btn" role="button" tabindex="0">✏️</div>
+        <div class="delete-btn" role="button" tabindex="0">🗑️</div>
       </div>
     `;
     container.appendChild(row);
 
-    // ✅ swipe + edit/delete
+    // attach swipe + edit/delete handlers
     enableSwipe(row, item);
   });
 
-  // ✅ input คำนวณอัตโนมัติ
-  document.querySelectorAll('#menuItems input')
-          .forEach(i=>i.addEventListener('input',calc));
+  // inputs -> calc
+  container.querySelectorAll('.menu-qty').forEach(i => i.addEventListener('input', calc));
 
+  // init or re-init Sortable (drag-reorder)
+  if (sortableInstance) {
+    try { sortableInstance.destroy(); } catch (e) { /* ignore */ }
+    sortableInstance = null;
+  }
+  if (window.Sortable) {
+    sortableInstance = new Sortable(container, {
+      handle: '.drag-handle',
+      animation: 150,
+      ghostClass: 'dragging-ghost',
+      onEnd: async (evt) => {
+        // reorder saved to DB
+        await saveNewOrder();
+      }
+    });
+  } else {
+    console.warn('SortableJS not found. Reordering disabled.');
+  }
+
+  // ensure no rows left open
+  closeOpenRow();
   return true;
 }
 
-function enableSwipe(row, item) {
-  const content = row.querySelector('.row-content');
-  let startX = 0, currentX = 0, swiping = false;
-
-  row.addEventListener('touchstart', e => {
-    startX = e.touches[0].clientX;
-    swiping = true;
-  });
-
-  row.addEventListener('touchmove', e => {
-    if (!swiping) return;
-    currentX = e.touches[0].clientX;
-    let deltaX = currentX - startX;
-    if (deltaX < 0) {
-      content.style.transform = `translateX(${deltaX}px)`;
-    }
-  });
-
-  row.addEventListener('touchend', e => {
-    swiping = false;
-    let deltaX = currentX - startX;
-    if (deltaX < -80) {
-      row.classList.add('show-actions');
-    } else {
-      row.classList.remove('show-actions');
-      content.style.transform = '';
-    }
-  });
-
-  // ปุ่มแก้ไข
-  row.querySelector(".edit-btn").addEventListener("click", async () => {
-    const popup = document.getElementById("popup");
-    const nameInput = document.getElementById("newMenuName");
-    const priceInput = document.getElementById("newMenuPrice");
-  
-    nameInput.value = menu.name;
-    priceInput.value = menu.price;
-  
-    popup.dataset.mode = "edit";
-    popup.dataset.menuId = menu.id;
-    popup.style.display = "flex";
-  });
-  
-  // ปุ่มยืนยัน (ใช้ปุ่มเดียวกันได้)
-  el("btnAddMenuConfirm").addEventListener("click", async () => {
-    const popup = document.getElementById("popup");
-    const mode = popup.dataset.mode || "add";
-    const name = el("newMenuName").value.trim();
-    const price = parseFloat(el("newMenuPrice").value);
-  
-    if (!name || !price) {
-      alert("กรุณากรอกชื่อและราคา");
-      return;
-    }
-  
-    if (mode === "add") {
-      // 👉 insert
-      await client.from("menu").insert([{ name, price }]);
-    } else if (mode === "edit") {
-      // 👉 update
-      const id = popup.dataset.menuId;
-      await client.from("menu").update({ name, price }).eq("id", id);
-    }
-  
-    popup.style.display = "none";
-    el("newMenuName").value = "";
-    el("newMenuPrice").value = "";
-    await loadMenu();
-  });
-
-}
-
-function initDragAndDrop() {
-  const container = el('menuItems');
-  let dragging = null;
-  let placeholder = null;
-
-  // -------------------
-  // 🖥️ Desktop Drag & Drop (ลากเฉพาะ .drag-handle)
-  // -------------------
-  container.querySelectorAll('.draggable').forEach(item => {
-    const handle = item.querySelector('.drag-handle');
-    if (!handle) return;
-
-    handle.setAttribute("draggable", true);
-    handle.addEventListener('dragstart', e => {
-      dragging = item;
-      item.classList.add('dragging');
-      item.style.opacity = '0.5';
-      e.dataTransfer.effectAllowed = "move";
-    });
-
-    handle.addEventListener('dragend', e => {
-      finishDrag();
-    });
-  });
-
-  container.addEventListener('dragover', e => {
-    e.preventDefault();
-    const afterElement = getDragAfterElement(container, e.clientY);
-    if (afterElement == null) {
-      container.appendChild(dragging);
-    } else {
-      container.insertBefore(dragging, afterElement);
-    }
-
-    container.querySelectorAll('.draggable').forEach(el => {
-      el.classList.remove('drag-over', 'drag-over-valid');
-    });
-    if (afterElement) {
-      afterElement.classList.add('drag-over-valid');
-    }
-  });
-
-  container.addEventListener('dragleave', e => {
-    e.target.classList.remove('drag-over', 'drag-over-valid');
-  });
-
-  // -------------------
-  // 📱 Mobile Touch Drag (ลากเฉพาะ .drag-handle)
-  // -------------------
-  container.querySelectorAll('.draggable').forEach(item => {
-    const handle = item.querySelector('.drag-handle');
-    if (!handle) return;
-
-    handle.addEventListener('touchstart', e => {
-      dragging = item;
-
-      placeholder = document.createElement("div");
-      placeholder.className = "row grid placeholder";
-      placeholder.style.height = dragging.offsetHeight + "px";
-      dragging.parentNode.insertBefore(placeholder, dragging.nextSibling);
-
-      dragging.style.position = "absolute";
-      dragging.style.zIndex = "1000";
-      dragging.style.width = placeholder.offsetWidth + "px";
-      moveAt(e.touches[0].pageX, e.touches[0].pageY);
-
-      e.preventDefault();
-    });
-
-    handle.addEventListener('touchmove', e => {
-      if (!dragging) return;
-      moveAt(e.touches[0].pageX, e.touches[0].pageY);
-
-      const afterElement = getDragAfterElement(container, e.touches[0].clientY);
-      if (afterElement == null) {
-        container.appendChild(placeholder);
-      } else {
-        container.insertBefore(placeholder, afterElement);
-      }
-    });
-
-    handle.addEventListener('touchend', e => {
-      if (!dragging) return;
-
-      dragging.style.position = "static";
-      dragging.style.zIndex = "";
-      placeholder.parentNode.insertBefore(dragging, placeholder);
-      placeholder.remove();
-
-      finishDrag();
-    });
-  });
-
-  // -------------------
-  // ฟังก์ชันย่อย
-  // -------------------
-  function moveAt(x, y) {
-    dragging.style.left = x - dragging.offsetWidth / 2 + "px";
-    dragging.style.top = y - dragging.offsetHeight / 2 + "px";
-  }
-
-  function finishDrag() {
-    if (dragging) {
-      dragging.classList.remove('dragging');
-      dragging.style.opacity = '1';
-      dragging.style.position = "static";
-      dragging.style.zIndex = "";
-      dragging = null;
-      if (placeholder) placeholder.remove();
-
-      saveNewOrder();
-    }
-  }
-}
-
-function getDragAfterElement(container, y) {
-  const draggableElements = [...container.querySelectorAll('.draggable:not(.dragging)')];
-  return draggableElements.reduce((closest, child) => {
-    const box = child.getBoundingClientRect();
-    const offset = y - box.top - box.height / 2;
-    if (offset < 0 && offset > closest.offset) {
-      return { offset: offset, element: child };
-    } else {
-      return closest;
-    }
-  }, { offset: Number.NEGATIVE_INFINITY }).element;
-}
-
+/* ---------------------------
+   Save new sort_order -> DB
+   --------------------------- */
 async function saveNewOrder() {
-  const rows = document.querySelectorAll('#menuItems .draggable');
-
+  const rows = document.querySelectorAll('#menuItems .row');
   for (let i = 0; i < rows.length; i++) {
     const id = parseInt(rows[i].dataset.id);
     const sort_order = i + 1;
-    const { error } = await client.from('menu')
-      .update({ sort_order })
-      .eq('id', id);
-
-    if (error) {
-      console.error('❌ update sort_order ผิดพลาด', error);
-    }
+    const { error } = await client.from('menu').update({ sort_order }).eq('id', id);
+    if (error) console.error('update sort_order ผิดพลาด', error);
   }
   console.log('✅ บันทึก sort_order เรียบร้อยแล้ว');
 }
 
-// โหลด draft ล่าสุดของโต๊ะ
+/* ---------------------------
+   Drafts / calc / print etc.
+   (unchanged except minor sanitization)
+   --------------------------- */
 async function loadDraft() {
   if (!table_id) return;
-
-  // 1️⃣ ดึง draft ล่าสุดของโต๊ะ
-  const { data: draftData, error: draftError } = await client.from('drafts')
-    .select('*').eq('table_id', table_id).single();
-
-  if (draftError) {
-    console.log('โหลด draft ผิดพลาด', draftError);
-    return;
-  }
+  const { data: draftData, error: draftError } = await client.from('drafts').select('*').eq('table_id', table_id).single();
+  if (draftError) { console.log('โหลด draft ผิดพลาด', draftError); return; }
   if (!draftData) return;
-
   el('billno').value = draftData.billno || await getNextBillNo();
   el('customer').value = draftData.customer || '';
   el('cash').value = draftData.cash || '';
 
-  // 2️⃣ ดึงรายการสินค้า
-  const { data: items, error: itemsError } = await client.from('draft_items')
-    .select('*').eq('draft_id', draftData.id);
-
-  if (itemsError) {
-    console.log('โหลด draft_items ผิดพลาด', itemsError);
-    return;
-  }
-
+  const { data: items, error: itemsError } = await client.from('draft_items').select('*').eq('draft_id', draftData.id);
+  if (itemsError) { console.log('โหลด draft_items ผิดพลาด', itemsError); return; }
   items.forEach(item => {
     const input = document.querySelector(`#menuItems input[data-id="${item.menu_id}"]`);
     if (input) input.value = item.qty;
   });
-
   calc();
 }
 
@@ -409,186 +191,123 @@ function buildPreviewView() {
     if (menuItem) {
       html += `
         <tr>
-          <td style="border:1px solid #000; padding:6px;">${menuItem.name}</td>
+          <td style="border:1px solid #000; padding:6px;">${escapeHtml(menuItem.name)}</td>
           <td style="border:1px solid #000; padding:6px; text-align:right;">${menuItem.price.toFixed(2)}</td>
           <td style="border:1px solid #000; padding:6px; text-align:right;">${qty}</td>
           <td style="border:1px solid #000; padding:6px; text-align:right;">${(qty * menuItem.price).toFixed(2)}</td>
-        </tr>
-      `;
+        </tr>`;
     }
   });
-
   const total = safeEval(el('grand').textContent.replace(/[^\d.]/g, ''));
   const cash = safeEval(el('cash').value);
   const change = safeEval(el('change').value.replace(/[^\d.]/g, ''));
-
-  html += `
-      </tbody>
-    </table>
+  html += `</tbody></table>
     <div style="margin-top:12px; text-align:right;">
       <div><strong>ยอดรวม:</strong> ${total.toFixed(2)}</div>
       <div><strong>รับเงินมา:</strong> ${cash.toFixed(2)}</div>
       <div><strong>เงินทอน:</strong> ${change.toFixed(2)}</div>
-    </div>
-  `;
+    </div>`;
   return html;
 }
 
+// buildPrintView, saveDraft, saveBill left mostly unchanged from your original code
+// (I kept them intact but sanitized some minor bits for safety)
 function buildPrintView(bill) {
-  const createdText = bill.created_at ?
-    new Date(bill.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) :
-    '-';
-  const closedText = bill.closed_at ?
-    new Date(bill.closed_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) :
-    '-';
-
+  const createdText = bill.created_at ? new Date(bill.created_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+  const closedText = bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) : '-';
   let html = `
-    <html>
-    <head>
-      <title>บิลร้านเรือนชมพูเนื้อย่างเกาหลี</title>
-      <style>
-        @page { size: 57mm auto; margin: 4mm; }
-        body { font-family: "Tahoma", "Noto Sans Thai", sans-serif; font-size: 12px; color:#111; }
-        h1,h2,h3,p { margin:0; padding:0; }
-        .header { text-align:center; margin-bottom:8px; }
-        .header h1 { font-size:18px; font-weight:700; }
-        .header p { font-size:11px; margin:2px 0; }
-        table { width:100%; border-collapse: collapse; margin-top:4px; }
-        th { font-size:11px; font-weight:700; text-align:left; border-bottom:1px dashed #000; padding-bottom:2px; }
-        td { padding:2px 0; font-size:12px; }
-        td.right, th.right { text-align:right; }
-        .summary { margin-top:6px; width:100%; }
-        .summary div { display:flex; justify-content:space-between; padding:2px 0; font-size:12px; }
-        .line-double {border-top:1px dashed #000;margin:4px 0 2px 0;position: relative;}
-        .line-double::after {content: "";display: block;border-top:1px dashed #000;margin-top:2px;}
-        .big { font-weight:700; font-size:15px; }
-        .footer { text-align:center; margin-top:8px; font-size:11px; }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <h1>ร้านเรือนชมพูเนื้อย่างเกาหลี</h1>
-        <p>สาขานาเชือก</p>
-        <p>โทร: 0885305228, 0621392902</p>
-        <p>บิลเลขที่: ${bill.billno}</p>
-        <p>โต๊ะ/ลูกค้า: ${bill.customer || '-'}</p>
-        <p>เวลาเช็คบิล: ${closedText}</p>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>รายการ</th>
-            <th class="right">ราคา</th>
-            <th class="right">จำนวน</th>
-            <th class="right">รวม</th>
-          </tr>
-        </thead>
-        <tbody>
+  <html><head><title>บิลร้านเรือนชมพูเนื้อย่างเกาหลี</title>
+    <style>
+      @page { size: 57mm auto; margin: 4mm; }
+      body { font-family: "Tahoma", "Noto Sans Thai", sans-serif; font-size: 12px; color:#111; }
+      h1,h2,h3,p { margin:0; padding:0; }
+      .header { text-align:center; margin-bottom:8px; }
+      .header h1 { font-size:18px; font-weight:700; }
+      .header p { font-size:11px; margin:2px 0; }
+      table { width:100%; border-collapse: collapse; margin-top:4px; }
+      th { font-size:11px; font-weight:700; text-align:left; border-bottom:1px dashed #000; padding-bottom:2px; }
+      td { padding:2px 0; font-size:12px; }
+      td.right, th.right { text-align:right; }
+      .summary { margin-top:6px; width:100%; }
+      .summary div { display:flex; justify-content:space-between; padding:2px 0; font-size:12px; }
+      .big { font-weight:700; font-size:15px; }
+      .footer { text-align:center; margin-top:8px; font-size:11px; }
+    </style>
+  </head><body>
+    <div class="header">
+      <h1>ร้านเรือนชมพูเนื้อย่างเกาหลี</h1>
+      <p>สาขานาเชือก</p>
+      <p>โทร: 0885305228, 0621392902</p>
+      <p>บิลเลขที่: ${escapeHtml(bill.billno)}</p>
+      <p>โต๊ะ/ลูกค้า: ${escapeHtml(bill.customer || '-')}</p>
+      <p>เวลาเช็คบิล: ${closedText}</p>
+    </div>
+    <table><thead><tr><th>รายการ</th><th class="right">ราคา</th><th class="right">จำนวน</th><th class="right">รวม</th></tr></thead><tbody>
   `;
+
   document.querySelectorAll('#menuItems input').forEach(inp => {
     const qty = safeEval(inp.value);
     if (qty <= 0) return;
     const menu_id = parseInt(inp.dataset.id);
     const menuItem = menuData.find(m => m.id === menu_id);
     if (menuItem) {
-      html += `
-        <tr>
-          <td>${menuItem.name}</td>
-          <td class="right">${menuItem.price.toFixed(2)}</td>
-          <td class="right">${qty}</td>
-          <td class="right">${(qty * menuItem.price).toFixed(2)}</td>
-        </tr>
-      `;
+      html += `<tr><td>${escapeHtml(menuItem.name)}</td><td class="right">${menuItem.price.toFixed(2)}</td><td class="right">${qty}</td><td class="right">${(qty * menuItem.price).toFixed(2)}</td></tr>`;
     }
   });
 
   const total = safeEval(el('grand').textContent.replace(/[^\d.]/g, ''));
   const cash = safeEval(el('cash').value);
   const change = safeEval(el('change').value.replace(/[^\d.]/g, ''));
-
-  html += `
-      </tbody>
-    </table>
-    <div class="summary">
-      <div class="line-double"></div>
+  html += `</tbody></table>
+    <div class="summary"><div class="line-double"></div>
       <div><span>ยอดรวม</span><span class="big">${total.toFixed(2)}</span></div>
       <div><span>รับเงินมา</span><span>${cash.toFixed(2)}</span></div>
       <div><span>เงินทอน</span><span>${change.toFixed(2)}</span></div>
     </div>
-    <div class="footer">
-      *** ขอบคุณที่อุดหนุน ***
-    </div>
-  </body>
-  </html>
-  `;
+    <div class="footer">*** ขอบคุณที่อุดหนุน ***</div>
+  </body></html>`;
   return html;
 }
 
 async function saveDraft() {
   let billno = el('billno').value;
-  if (!billno) {
-    billno = await getNextBillNo();
-    el('billno').value = billno;
-  }
+  if (!billno) { billno = await getNextBillNo(); el('billno').value = billno; }
   const customer = el('customer').value;
   const total = safeEval(el('grand').textContent.replace(/[^\d.]/g, ''));
   const cash = safeEval(el('cash').value);
   const change = safeEval(el('change').value);
 
   try {
-    // 1️⃣ ตรวจสอบว่ามี draft เดิมหรือยัง
-    let { data: existingDraft } = await client.from('drafts')
-      .select('*')
-      .eq('billno', billno)
-      .single();
-
+    let { data: existingDraft } = await client.from('drafts').select('*').eq('billno', billno).single();
     let draftId;
     if (existingDraft) {
-      // update draft
-      const { data: updatedDraft, error: updateError } = await client.from('drafts')
-        .update({ customer, table_id, total, cash, change, updated_at: new Date().toISOString() })
-        .eq('id', existingDraft.id)
-        .select()
-        .single();
+      const { data: updatedDraft, error: updateError } = await client.from('drafts').update({ customer, table_id, total, cash, change, updated_at: new Date().toISOString() }).eq('id', existingDraft.id).select().single();
       if (updateError) throw updateError;
       draftId = updatedDraft.id;
     } else {
-      // insert draft ใหม่
-      const { data: newDraft, error: insertError } = await client.from('drafts')
-        .insert([{ billno, customer, table_id, total, cash, change }])
-        .select()
-        .single();
+      const { data: newDraft, error: insertError } = await client.from('drafts').insert([{ billno, customer, table_id, total, cash, change }]).select().single();
       if (insertError) throw insertError;
       draftId = newDraft.id;
     }
 
-    // 2️⃣ ลบรายการเก่าใน draft_items
     await client.from('draft_items').delete().eq('draft_id', draftId);
 
-    // 3️⃣ เตรียมรายการใหม่
     const items = [];
     document.querySelectorAll('#menuItems input').forEach(inp => {
       const qty = safeEval(inp.value);
-      if (qty > 0) items.push({
-        draft_id: draftId,
-        menu_id: parseInt(inp.dataset.id),
-        qty
-      });
+      if (qty > 0) items.push({ draft_id: draftId, menu_id: parseInt(inp.dataset.id), qty });
     });
 
-    // 4️⃣ insert รายการใหม่
     if (items.length > 0) {
       const { error: itemError } = await client.from('draft_items').insert(items);
       if (itemError) throw itemError;
     }
 
-    // 5️⃣ อัปเดตโต๊ะ
     if (table_id) {
       await client.from('tables').update({ status: 'ไม่ว่าง' }).eq('id', table_id);
     }
 
     alert('บันทึกฉบับร่างเรียบร้อย');
-
   } catch (err) {
     console.log('saveDraft error:', err);
     alert('บันทึกฉบับร่างผิดพลาด');
@@ -602,36 +321,21 @@ async function saveBill() {
   const cash = safeEval(el('cash').value);
   const change = safeEval(el('change').value.replace(/[^\d.]/g, ''));
 
-  // 🔹 ดึง draft ก่อน (เพื่อตามหา created_at ของ draft)
   let draftData = null;
   if (billno) {
-    const { data, error } = await client.from('drafts')
-      .select('*')
-      .eq('billno', billno)
-      .single();
+    const { data, error } = await client.from('drafts').select('*').eq('billno', billno).single();
     if (!error && data) draftData = data;
   }
 
-  // 1️⃣ บันทึกบิลหลัก
   const { data: bill, error: billError } = await client.from('bills').insert([{
-    billno,
-    customer,
-    table_id,
-    total,
-    cash,
-    change,
+    billno, customer, table_id, total, cash, change,
     status: 'closed',
     created_at: draftData ? draftData.created_at : new Date(),
     closed_at: new Date()
   }]).select().single();
 
-  if (billError) {
-    alert('บันทึกบิลผิดพลาด');
-    console.log(billError);
-    return;
-  }
+  if (billError) { alert('บันทึกบิลผิดพลาด'); console.log(billError); return; }
 
-  // 2️⃣ บันทึกรายการ bill_items
   const items = [];
   document.querySelectorAll('#menuItems input').forEach(inp => {
     const qty = safeEval(inp.value);
@@ -646,21 +350,17 @@ async function saveBill() {
     if (itemError) console.log('บันทึกรายการ bill_items ผิดพลาด', itemError);
   }
 
-  // 3️⃣ อัปเดตโต๊ะเป็นว่าง
   if (table_id) {
-    const { error: updateError } = await client.from('tables')
-      .update({ status: 'ว่าง' })
-      .eq('id', table_id);
+    const { error: updateError } = await client.from('tables').update({ status: 'ว่าง' }).eq('id', table_id);
     if (updateError) console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
   }
 
-  // 4️⃣ ลบ draft + draft_items
   if (draftData) {
     await client.from('draft_items').delete().eq('draft_id', draftData.id);
     await client.from('drafts').delete().eq('id', draftData.id);
   }
 
-  // 5️⃣ พิมพ์บิล
+  // print
   const w = window.open('', 'PRINT', 'height=600,width=800');
   w.document.write('<html><head><title>พิมพ์บิล</title></head><body>');
   w.document.write(buildPrintView(bill));
@@ -670,13 +370,191 @@ async function saveBill() {
   w.print();
   w.close();
 
-  // 6️⃣ ล้างหน้าบิล
+  // clear
   el('billno').value = await getNextBillNo();
   document.querySelectorAll('#menuItems input').forEach(i => i.value = '');
   el('cash').value = '';
   calc();
 }
 
+/* ---------------------------
+   Swipe / show action buttons
+   - Uses pointer events (works for mouse & touch)
+   - Does NOT interfere with Sortable (we ignore events that start on .drag-handle)
+   - Closes any other open row when opening a new one
+   --------------------------- */
+function enableSwipe(row, menu) {
+  const content = row.querySelector('.row-content');
+  const handle = row.querySelector('.drag-handle');
+  const actionBtns = row.querySelector('.action-btns');
+
+  // ensure closed initially
+  row.classList.remove('show-actions');
+  content.style.transform = 'translateX(0)';
+
+  let startX = 0;
+  let currentX = 0;
+  let dragging = false;
+  let pointerId = null;
+
+  function closeRow(r = row) {
+    const c = r.querySelector('.row-content');
+    r.classList.remove('show-actions');
+    c.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
+    c.style.transform = 'translateX(0)';
+    if (currentlyOpenRow === r) currentlyOpenRow = null;
+  }
+
+  function openRow(r = row, width) {
+    const c = r.querySelector('.row-content');
+    r.classList.add('show-actions');
+    c.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
+    c.style.transform = `translateX(-${width}px)`;
+    currentlyOpenRow = r;
+  }
+
+  function onPointerDown(e) {
+    // only left mouse button or touch
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    // if started on drag-handle -> ignore (let Sortable handle it)
+    if (e.target.closest('.drag-handle')) return;
+    // if started on input/button -> ignore
+    if (e.target.closest('input,button')) return;
+
+    pointerId = e.pointerId;
+    startX = e.clientX;
+    currentX = startX;
+    dragging = true;
+    content.style.transition = 'none';
+
+    // compute max translate (width of action buttons)
+    const rect = actionBtns.getBoundingClientRect();
+    content._maxTranslate = Math.max(80, Math.round(rect.width || 160)); // fallback 160
+    // close other open row
+    if (currentlyOpenRow && currentlyOpenRow !== row) closeRow(currentlyOpenRow);
+
+    row.setPointerCapture && row.setPointerCapture(pointerId);
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
+    document.addEventListener('pointercancel', onPointerUp);
+    e.preventDefault();
+  }
+
+  function onPointerMove(e) {
+    if (!dragging) return;
+    currentX = e.clientX;
+    let diff = currentX - startX;
+    if (diff > 0) diff = 0; // only allow left swipe
+    const max = content._maxTranslate || 160;
+    const translate = Math.max(diff, -max);
+    content.style.transform = `translateX(${translate}px)`;
+  }
+
+  function onPointerUp(e) {
+    if (!dragging) return;
+    dragging = false;
+    const diff = currentX - startX;
+    const max = content._maxTranslate || 160;
+    const threshold = Math.round(max * 0.35); // need swipe beyond 35% to open
+    content.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
+
+    if (diff < -threshold) {
+      openRow(row, max);
+    } else {
+      closeRow(row);
+    }
+
+    try {
+      row.releasePointerCapture && row.releasePointerCapture(pointerId);
+    } catch (_) { /* ignore */ }
+    document.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', onPointerUp);
+    document.removeEventListener('pointercancel', onPointerUp);
+  }
+
+  // bind pointerdown on the content (not handle)
+  content.addEventListener('pointerdown', onPointerDown);
+
+  // also allow clicking edit/delete
+  const editBtn = row.querySelector('.edit-btn');
+  const deleteBtn = row.querySelector('.delete-btn');
+
+  // edit
+  if (editBtn) {
+    editBtn.addEventListener('click', () => {
+      const popup = document.getElementById('popup');
+      const nameInput = document.getElementById('newMenuName');
+      const priceInput = document.getElementById('newMenuPrice');
+
+      nameInput.value = menu.name;
+      priceInput.value = menu.price;
+
+      popup.style.display = 'flex';
+
+      // prevent duplicate handlers by cloning
+      const confirmBtn = document.getElementById('btnAddMenuConfirm');
+      const newConfirm = confirmBtn.cloneNode(true);
+      confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+
+      newConfirm.addEventListener('click', async () => {
+        const newName = nameInput.value.trim();
+        const newPrice = parseFloat(priceInput.value) || 0;
+        if (!newName || !newPrice) {
+          alert("กรุณากรอกชื่อและราคา");
+          return;
+        }
+        await client.from("menu").update({ name: newName, price: newPrice }).eq("id", menu.id);
+        popup.style.display = 'none';
+        await loadMenu();
+      });
+    });
+  }
+
+  // delete
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', async () => {
+      if (!confirm("ลบเมนูนี้ใช่ไหม?")) return;
+      const { error } = await client.from('menu').delete().eq('id', menu.id);
+      if (error) {
+        alert('ลบเมนูผิดพลาด');
+        console.error(error);
+        return;
+      }
+      // remove row from DOM
+      row.remove();
+      // also update sort order
+      await saveNewOrder();
+    });
+  }
+
+  // close open row when clicking outside
+  document.addEventListener('click', (evt) => {
+    if (!row.contains(evt.target) && currentlyOpenRow) {
+      closeRow(currentlyOpenRow);
+    }
+  }, { capture: true });
+}
+
+/* ============================
+   Utility helpers
+   ============================ */
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"'`]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#x60;' }[c]));
+}
+
+function closeOpenRow() {
+  if (currentlyOpenRow) {
+    const c = currentlyOpenRow.querySelector('.row-content');
+    currentlyOpenRow.classList.remove('show-actions');
+    c.style.transform = 'translateX(0)';
+    currentlyOpenRow = null;
+  }
+}
+
+/* ============================
+   Init - wire up buttons
+   ============================ */
 window.addEventListener('DOMContentLoaded', async () => {
   el('today').textContent = todayText();
   el('billno').value = await getNextBillNo();
@@ -686,150 +564,74 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   el('btnHome').addEventListener('click', async () => {
     if (table_id) {
-      const hasOrder = Array.from(document.querySelectorAll('#menuItems input'))
-        .some(inp => safeEval(inp.value) > 0);
-
+      const hasOrder = Array.from(document.querySelectorAll('#menuItems input')).some(inp => safeEval(inp.value) > 0);
       if (!hasOrder) {
-        const { error: updateError } = await client.from('tables')
-          .update({ status: 'ว่าง' })
-          .eq('id', table_id);
-
-        if (updateError) {
-          console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
-          return;
-        }
-
+        const { error: updateError } = await client.from('tables').update({ status: 'ว่าง' }).eq('id', table_id);
+        if (updateError) { console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError); return; }
         window.location.href = 'index.html';
         return;
       }
-
-      const { data: draftData } = await client.from('drafts')
-        .select('id')
-        .eq('table_id', table_id)
-        .maybeSingle();
-
+      const { data: draftData } = await client.from('drafts').select('id').eq('table_id', table_id).maybeSingle();
       const hasUnsavedData = hasOrder || el('customer').value.trim() !== '';
-
       if (!draftData && hasUnsavedData) {
         const confirmReset = confirm("คุณยังไม่ได้บันทึกข้อมูล\nต้องการเปลี่ยนสถานะโต๊ะเป็น 'ว่าง' ใช่หรือไม่?");
-
-        if (!confirmReset) {
-          return;
-        }
-
-        const { error: updateError } = await client.from('tables')
-          .update({ status: 'ว่าง' })
-          .eq('id', table_id);
-
-        if (updateError) {
-          console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
-          alert('บันทึกสถานะโต๊ะผิดพลาด กรุณาลองใหม่อีกครั้ง');
-          return;
-        }
-
+        if (!confirmReset) return;
+        const { error: updateError } = await client.from('tables').update({ status: 'ว่าง' }).eq('id', table_id);
+        if (updateError) { console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError); alert('บันทึกสถานะโต๊ะผิดพลาด กรุณาลองใหม่อีกครั้ง'); return; }
         window.location.href = 'index.html';
         return;
       }
-
-      if (draftData) {
-        window.location.href = 'index.html';
-        return;
-      }
-
+      if (draftData) { window.location.href = 'index.html'; return; }
       return;
     }
-
     window.location.href = 'index.html';
   });
 
-  el('btnAddMenu').addEventListener('click', () => {
-    el('popup').style.display = 'flex';
-  });
-  el('btnAddMenuCancel').addEventListener('click', () => {
-    el('popup').style.display = 'none';
-    el('newMenuName').value = '';
-    el('newMenuPrice').value = '';
-  });
+  el('btnAddMenu').addEventListener('click', () => { el('popup').style.display = 'flex'; });
+  el('btnAddMenuCancel').addEventListener('click', () => { el('popup').style.display = 'none'; el('newMenuName').value = ''; el('newMenuPrice').value = ''; });
+
   el('btnAddMenuConfirm').addEventListener('click', async () => {
     const name = el('newMenuName').value.trim();
     const price = parseFloat(el('newMenuPrice').value);
-    if (!name || !price) {
-      alert('กรุณากรอกชื่อและราคา');
-      return;
-    }
-
+    if (!name || !price) { alert('กรุณากรอกชื่อและราคา'); return; }
     try {
-      const { data: maxData, error: maxError } = await client
-        .from('menu')
-        .select('sort_order')
-        .order('sort_order', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
+      const { data: maxData } = await client.from('menu').select('sort_order').order('sort_order', { ascending: false }).limit(1).maybeSingle();
       let nextSortOrder = 1;
-      if (maxData && maxData.sort_order !== null) {
-        nextSortOrder = maxData.sort_order + 1;
-      }
-
-      const { error } = await client.from('menu').insert([
-        { name, price, sort_order: nextSortOrder }
-      ]);
-
-      if (error) {
-        alert('บันทึกผิดพลาด');
-        console.error(error);
-      } else {
+      if (maxData && maxData.sort_order !== null) nextSortOrder = maxData.sort_order + 1;
+      const { error } = await client.from('menu').insert([{ name, price, sort_order: nextSortOrder }]);
+      if (error) { alert('บันทึกผิดพลาด'); console.error(error); } else {
         el('popup').style.display = 'none';
         el('newMenuName').value = '';
         el('newMenuPrice').value = '';
         await loadMenu();
       }
-    } catch (err) {
-      console.error('เพิ่มเมนูใหม่ผิดพลาด', err);
-      alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
-    }
+    } catch (err) { console.error('เพิ่มเมนูใหม่ผิดพลาด', err); alert('เกิดข้อผิดพลาด กรุณาลองใหม่'); }
   });
 
+  el('btnPrint').addEventListener('click', () => { el('previewContent').innerHTML = buildPreviewView(); el('previewModal').style.display = 'flex'; });
+  el('btnCancelPreview').addEventListener('click', () => { el('previewModal').style.display = 'none'; });
+  el('btnConfirmPrint').addEventListener('click', () => { el('previewModal').style.display = 'none'; saveBill(); });
 
-  el('btnPrint').addEventListener('click', () => {
-    el('previewContent').innerHTML = buildPreviewView();
-    el('previewModal').style.display = 'flex';
-  });
-
-  el('btnCancelPreview').addEventListener('click', () => {
-    el('previewModal').style.display = 'none';
-  });
-
-  el('btnConfirmPrint').addEventListener('click', () => {
-    el('previewModal').style.display = 'none';
-    saveBill();
-  });
   el('btnSave').addEventListener('click', saveDraft);
 
   el('btnClear').addEventListener('click', async () => {
-    if (confirm('ยืนยันการยกเลิกบิลนี้หรือไม่?')) {
-      if (table_id) {
-        const { error: updateError } = await client.from('tables').update({ status: 'ว่าง' }).eq('id', table_id);
-        if (updateError) {
-          console.log('อัปเดตสถานะโต๊ะผิดพลาด', updateError);
-        }
-      }
-
-      if (table_id) {
-        const { data: draftData, error: draftError } = await client.from('drafts')
-          .select('id').eq('table_id', table_id).single();
-        if (draftData) {
-          await client.from('draft_items').delete().eq('draft_id', draftData.id);
-          await client.from('drafts').delete().eq('id', draftData.id);
-        }
-      }
-
-      document.querySelectorAll('#menuItems input').forEach(i => i.value = '');
-      el('customer').value = '';
-      el('cash').value = '';
-      calc();
-      alert('ยกเลิกบิลเรียบร้อยแล้ว');
+    if (!confirm('ยืนยันการยกเลิกบิลนี้หรือไม่?')) return;
+    if (table_id) {
+      const { error: updateError } = await client.from('tables').update({ status: 'ว่าง' }).eq('id', table_id);
+      if (updateError) console.log('อัปเดตสถานะโต๊ะผิดพลาด', updateError);
     }
+    if (table_id) {
+      const { data: draftData } = await client.from('drafts').select('id').eq('table_id', table_id).single();
+      if (draftData) {
+        await client.from('draft_items').delete().eq('draft_id', draftData.id);
+        await client.from('drafts').delete().eq('id', draftData.id);
+      }
+    }
+    document.querySelectorAll('#menuItems input').forEach(i => i.value = '');
+    el('customer').value = '';
+    el('cash').value = '';
+    calc();
+    alert('ยกเลิกบิลเรียบร้อยแล้ว');
   });
 
   el('cash').addEventListener('input', calc);
