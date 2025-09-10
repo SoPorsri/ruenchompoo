@@ -27,12 +27,29 @@ let currentlyOpenRow = null;      // track open swipe row (so we can close other
 
 /* --- DB helpers --- (unchanged from yours) */
 async function getNextBillNo() {
-  const { data, error } = await client.from('bills').select('billno').order('billno', { ascending: false }).limit(1).maybeSingle();
-  if (error) { console.error("ดึงเลขบิลล่าสุดผิดพลาด", error); return "00001"; }
-  let lastNo = 0;
-  if (data && data.billno) lastNo = parseInt(data.billno, 10) || 0;
-  return String(lastNo + 1).padStart(5, '0');
+  // ดึงเลขสูงสุดจาก bills
+  const { data: b, error: e1 } = await client
+    .from('bills')
+    .select('billno')
+    .order('billno', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // ดึงเลขสูงสุดจาก drafts
+  const { data: d, error: e2 } = await client
+    .from('drafts')
+    .select('billno')
+    .order('billno', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let maxBill = 0;
+  if (b && b.billno) maxBill = Math.max(maxBill, parseInt(b.billno, 10) || 0);
+  if (d && d.billno) maxBill = Math.max(maxBill, parseInt(d.billno, 10) || 0);
+
+  return String(maxBill + 1).padStart(5, '0');
 }
+
 async function loadTableName() {
   if (!table_id) return;
   const { data, error } = await client.from('tables').select('*').eq('id', table_id).single();
