@@ -62,25 +62,25 @@ async function loadTableName() {
   }
 }
 
-async function loadMenu() {
+async function loadMenu(){
   const { data, error } = await client
     .from('menu')
     .select('*')
     .order('sort_order', { ascending: true });
 
-  if (error) {
+  if(error){
     alert('โหลดเมนูผิดพลาด');
     console.log(error);
     return;
   }
 
   menuData = data;
-  const container = el('menuItems');
-  container.innerHTML = '';
+  const container = el('menuItems'); 
+  container.innerHTML='';
 
-  data.forEach(item => {
-    const row = document.createElement('div');
-    row.className = 'grid row draggable';
+  data.forEach(item=>{
+    const row=document.createElement('div');
+    row.className='row draggable';   // ✅ เหลือ row draggable เท่านั้น
     row.dataset.id = item.id;
     row.innerHTML = `
       <div class="row-content">
@@ -102,85 +102,89 @@ async function loadMenu() {
       </div>
     `;
     container.appendChild(row);
+
+    // ✅ swipe + edit/delete
+    enableSwipe(row, item);
   });
 
+  // ✅ input คำนวณอัตโนมัติ
   document.querySelectorAll('#menuItems input')
-    .forEach(i => i.addEventListener('input', calc));
-
-  new Sortable(container, {
-    animation: 150,
-    handle: ".drag-handle",
-    onEnd: async function () {
-      const items = [...container.children];
-      for (let i = 0; i < items.length; i++) {
-        const id = items[i].dataset.id;
-        const { error } = await client.from('menu').update({ sort_order: i + 1 }).eq('id', id);
-        if (error) console.error("update sort_order error:", error);
-      }
-      console.log("✅ บันทึก sort_order เรียบร้อยแล้ว");
-    }
-  });
+          .forEach(i=>i.addEventListener('input',calc));
 
   return true;
 }
 
-function enableSwipe(row, menu) {
-  let startX = 0;
-  let currentX = 0;
-  let threshold = 50;
+function enableSwipe(row, item) {
+  const content = row.querySelector('.row-content');
+  let startX = 0, currentX = 0, swiping = false;
 
-  row.addEventListener("touchstart", e => {
+  row.addEventListener('touchstart', e => {
     startX = e.touches[0].clientX;
+    swiping = true;
   });
 
-  row.addEventListener("touchmove", e => {
+  row.addEventListener('touchmove', e => {
+    if (!swiping) return;
     currentX = e.touches[0].clientX;
-    let diff = currentX - startX;
-    if (diff < -threshold) {
-      row.classList.add("show-actions"); // ปัดซ้าย → โชว์ปุ่ม
+    let deltaX = currentX - startX;
+    if (deltaX < 0) {
+      content.style.transform = `translateX(${deltaX}px)`;
     }
-    if (diff > threshold) {
-      row.classList.remove("show-actions"); // ปัดขวา → ปิดปุ่ม
+  });
+
+  row.addEventListener('touchend', e => {
+    swiping = false;
+    let deltaX = currentX - startX;
+    if (deltaX < -80) {
+      row.classList.add('show-actions');
+    } else {
+      row.classList.remove('show-actions');
+      content.style.transform = '';
     }
   });
 
   // ปุ่มแก้ไข
-  row.querySelector(".edit-btn").addEventListener("click", () => {
+  row.querySelector(".edit-btn").addEventListener("click", async () => {
     const popup = document.getElementById("popup");
     const nameInput = document.getElementById("newMenuName");
     const priceInput = document.getElementById("newMenuPrice");
-
-    // ✅ ใส่ค่าเดิมลงไปใน input
+  
     nameInput.value = menu.name;
     priceInput.value = menu.price;
-
+  
+    popup.dataset.mode = "edit";
+    popup.dataset.menuId = menu.id;
     popup.style.display = "flex";
-
-    // ป้องกันการผูก event ซ้ำ → เคลียร์ handler เดิมก่อน
-    const confirmBtn = document.getElementById("btnAddMenuConfirm");
-    const newConfirm = confirmBtn.cloneNode(true);
-    confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
-
-    // ✅ อัปเดตค่ากลับไป
-    newConfirm.addEventListener("click", () => {
-      menu.name = nameInput.value.trim();
-      menu.price = parseFloat(priceInput.value) || 0;
-      saveData(); // บันทึกลง localStorage หรือ DB
-      loadMenu(); // โหลดใหม่
-      popup.style.display = "none";
-    });
   });
-
-  // ปุ่มลบ
-  row.querySelector(".delete-btn").addEventListener("click", () => {
-    if (confirm("ลบเมนูนี้ใช่ไหม?")) {
-      menuItems = menuItems.filter(m => m !== menu);
-      saveData();
-      loadMenu();
+  
+  // ปุ่มยืนยัน (ใช้ปุ่มเดียวกันได้)
+  el("btnAddMenuConfirm").addEventListener("click", async () => {
+    const popup = document.getElementById("popup");
+    const mode = popup.dataset.mode || "add";
+    const name = el("newMenuName").value.trim();
+    const price = parseFloat(el("newMenuPrice").value);
+  
+    if (!name || !price) {
+      alert("กรุณากรอกชื่อและราคา");
+      return;
     }
+  
+    if (mode === "add") {
+      // 👉 insert
+      await client.from("menu").insert([{ name, price }]);
+    } else if (mode === "edit") {
+      // 👉 update
+      const id = popup.dataset.menuId;
+      await client.from("menu").update({ name, price }).eq("id", id);
+    }
+  
+    popup.style.display = "none";
+    el("newMenuName").value = "";
+    el("newMenuPrice").value = "";
+    await loadMenu();
   });
-}
 
+}
 
 function initDragAndDrop() {
   const container = el('menuItems');
