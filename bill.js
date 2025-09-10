@@ -98,8 +98,9 @@ async function loadMenu() {
       handle: '.drag-handle',
       animation: 150,
       ghostClass: 'dragging-ghost',
+      filter: '.row-content',      // 👈 ไม่ให้ลากส่วนนี้
+      preventOnFilter: false,      // 👈 ปล่อย event ให้ swipe ทำงาน
       onEnd: async (evt) => {
-        // reorder saved to DB
         await saveNewOrder();
       }
     });
@@ -378,20 +379,22 @@ async function saveBill() {
 
 function enableSwipe(row, menu) {
   const content = row.querySelector('.row-content');
+  const handle = row.querySelector('.drag-handle');
   const actionBtns = row.querySelector('.action-btns');
 
-  // reset
+  // เริ่มต้นปิดเสมอ
   row.classList.remove('show-actions');
   content.style.transform = '';
 
   let startX = 0;
   let currentX = 0;
   let dragging = false;
+  let pointerId = null;
 
   function closeRow(r = row) {
     const c = r.querySelector('.row-content');
     r.classList.remove('show-actions');
-    c.style.transition = 'transform .25s ease';
+    c.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
     c.style.transform = '';
     if (currentlyOpenRow === r) currentlyOpenRow = null;
   }
@@ -399,87 +402,87 @@ function enableSwipe(row, menu) {
   function openRow(r = row) {
     const c = r.querySelector('.row-content');
     r.classList.add('show-actions');
-    c.style.transition = 'transform .25s ease';
-    c.style.transform = `translateX(-${actionBtns.offsetWidth}px)`;
+    c.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
+    c.style.transform = ''; // ใช้ CSS .row.show-actions
     currentlyOpenRow = r;
   }
 
-  // ---- Drag / Swipe Start ----
-  function onDown(clientX, target) {
-    if (target.closest('.drag-handle')) return; // drag&drop ใช้ handle อย่างเดียว
-    if (target.closest('input,button')) return;
+  function onPointerDown(e) {
+    // mouse ต้องเป็นปุ่มซ้ายเท่านั้น
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    // ถ้าเริ่มจาก drag-handle → ให้ SortableJS จัดการ
+    if (e.target.closest('.drag-handle')) return;
+    // ถ้าเริ่มจาก input/button → ไม่ใช่ swipe
+    if (e.target.closest('input,button')) return;
 
-    startX = clientX;
+    // ป้องกันไม่ให้ SortableJS intercept (สำคัญมากสำหรับคอม)
+    e.preventDefault();
+
+    pointerId = e.pointerId;
+    startX = e.clientX;
     currentX = startX;
     dragging = true;
     content.style.transition = 'none';
 
+    // คำนวณระยะที่เลื่อนได้ (กว้างเท่ากับปุ่ม action)
+    const rect = actionBtns.getBoundingClientRect();
+    content._maxTranslate = Math.max(80, Math.round(rect.width || 160));
+
+    // ถ้ามี row อื่นเปิดอยู่ → ปิดก่อน
     if (currentlyOpenRow && currentlyOpenRow !== row) closeRow(currentlyOpenRow);
+
+    row.setPointerCapture && row.setPointerCapture(pointerId);
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
+    document.addEventListener('pointercancel', onPointerUp);
   }
 
-  function onMove(clientX) {
+  function onPointerMove(e) {
     if (!dragging) return;
-    currentX = clientX;
+    currentX = e.clientX;
     let diff = currentX - startX;
-    if (diff > 0) diff = 0; // swipe left only
-    const max = actionBtns.offsetWidth || 160;
+    if (diff > 0) diff = 0; // swipe ได้แค่ทางซ้าย
+    const max = content._maxTranslate || 160;
     const translate = Math.max(diff, -max);
     content.style.transform = `translateX(${translate}px)`;
   }
 
-  function onUp() {
+  function onPointerUp(e) {
     if (!dragging) return;
     dragging = false;
     const diff = currentX - startX;
-    const max = actionBtns.offsetWidth || 160;
-    const threshold = max * 0.35;
-
-    content.style.transition = 'transform .25s ease';
+    const max = content._maxTranslate || 160;
+    const threshold = 50; // ต้องปัดเกิน 50px ถึงจะเปิด
+    content.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
 
     if (diff < -threshold) {
       openRow(row);
     } else {
       closeRow(row);
     }
+
+    try {
+      row.releasePointerCapture && row.releasePointerCapture(pointerId);
+    } catch (_) {}
+    document.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', onPointerUp);
+    document.removeEventListener('pointercancel', onPointerUp);
   }
 
-  // ---- Mouse Events ----
-  content.addEventListener('mousedown', (e) => {
-    if (e.button !== 0) return; // only left mouse
-    onDown(e.clientX, e.target);
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-  });
+  // bind pointerdown บน row-content
+  content.addEventListener('pointerdown', onPointerDown);
 
-  function onMouseMove(e) { onMove(e.clientX); }
-  function onMouseUp(e) {
-    onUp();
-    document.removeEventListener('mousemove', onMouseMove);
-    document.removeEventListener('mouseup', onMouseUp);
-  }
-
-  // ---- Touch Events ----
-  content.addEventListener('touchstart', (e) => {
-    const t = e.touches[0];
-    onDown(t.clientX, e.target);
-  });
-  content.addEventListener('touchmove', (e) => {
-    if (!dragging) return;
-    const t = e.touches[0];
-    onMove(t.clientX);
-  });
-  content.addEventListener('touchend', onUp);
-  content.addEventListener('touchcancel', onUp);
-
-  // ---- edit ----
+  // === ปุ่มแก้ไข ===
   const editBtn = row.querySelector('.edit-btn');
   if (editBtn) {
     editBtn.addEventListener('click', () => {
       const popup = document.getElementById('popup');
       const nameInput = document.getElementById('newMenuName');
       const priceInput = document.getElementById('newMenuPrice');
+
       nameInput.value = menu.name;
       priceInput.value = menu.price;
+
       popup.style.display = 'flex';
 
       const confirmBtn = document.getElementById('btnAddMenuConfirm');
@@ -500,7 +503,7 @@ function enableSwipe(row, menu) {
     });
   }
 
-  // ---- delete ----
+  // === ปุ่มลบ ===
   const deleteBtn = row.querySelector('.delete-btn');
   if (deleteBtn) {
     deleteBtn.addEventListener('click', async () => {
@@ -516,7 +519,7 @@ function enableSwipe(row, menu) {
     });
   }
 
-  // ---- click outside ----
+  // ถ้าคลิกนอก row → ปิด action
   document.addEventListener('click', (evt) => {
     if (!row.contains(evt.target) && currentlyOpenRow) {
       closeRow(currentlyOpenRow);
