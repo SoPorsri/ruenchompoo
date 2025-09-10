@@ -152,3 +152,48 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   flex-shrink: 0;
   font-size:18px;    /* ขยายตัวอักษร */
 }
+
+/* ✅ ปรับโครงสร้างของ row ให้เลื่อนได้ */
+.row {
+  position: relative;
+  background: var(--card);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.25s ease;
+  display: grid;
+  grid-template-columns: 30px 1fr 100px 120px;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+/* ✅ container ของปุ่ม action (ซ่อนอยู่ทางขวา) */
+.action-btns {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  z-index: 0; /* อยู่หลัง row */
+}
+
+.edit-btn, .delete-btn {
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.edit-btn { background: orange; }
+.delete-btn { background: var(--danger); }
+
+/* ✅ เมื่อปัดซ้าย → row เลื่อนไปทางซ้าย เผยปุ่ม */
+.row.show-actions {
+  transform: translateX(-160px); /* = ความกว้างปุ่ม edit+delete */
+  z-index: 1; /* ให้อยู่บนปุ่ม */
+}
+
