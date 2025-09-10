@@ -149,13 +149,14 @@ async function loadMenu() {
     sortableInstance = null;
   }
 
+  // --- Drag & Drop Init ---
   if (window.Sortable) {
     sortableInstance = new Sortable(container, {
       handle: '.drag-handle',
       animation: 150,
       ghostClass: 'dragging-ghost',
-      filter: '.row-content',
-      preventOnFilter: false,
+      filter: '.row-content',     // กันไม่ให้ลากตรง content
+      preventOnFilter: true,      // block จริงๆ
       onEnd: async () => {
         await saveNewOrder();
       }
@@ -517,13 +518,12 @@ function buildPrintView(bill) {
 
 // ==== helper ปิดแถวที่เปิดอยู่ ====
 function closeOpenRow() {
-  if (currentlyOpenRow) {
-    const c = currentlyOpenRow.querySelector('.row-content');
-    currentlyOpenRow.classList.remove('show-actions');
-    c.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
-    c.style.transform = 'translateX(0)';
-    currentlyOpenRow = null;
-  }
+  if (!currentlyOpenRow) return;
+  const c = currentlyOpenRow.querySelector('.row-content');
+  currentlyOpenRow.classList.remove('show-actions');
+  c.style.transition = 'transform .2s ease-out';
+  c.style.transform = 'translateX(0)';
+  currentlyOpenRow = null;
 }
 
 // ===== Swipe Support =====
@@ -535,7 +535,7 @@ function enableSwipe(row, menu) {
   // กัน pointerdown ของ drag-handle ไม่ไปชน swipe
   dragHandle.addEventListener("pointerdown", (e) => e.stopPropagation());
 
-  let startX = 0, currentX = 0, dragging = false, pointerId = null;
+  let startX = 0, startY = 0, currentX = 0, dragging = false, pointerId = null;
 
   function onPointerDown(e) {
     if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -546,6 +546,7 @@ function enableSwipe(row, menu) {
 
     pointerId = e.pointerId;
     startX = e.clientX;
+    startY = e.clientY;
     currentX = startX;
     dragging = true;
     content.style.transition = "none";
@@ -561,8 +562,19 @@ function enableSwipe(row, menu) {
 
   function onPointerMove(e) {
     if (!dragging) return;
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    // direction lock: ถ้าเลื่อนไปทางตั้งมากกว่าแนวนอน → ให้ scroll ธรรมดา
+    if (Math.abs(dy) > Math.abs(dx)) return;
+
     currentX = e.clientX;
     let diff = currentX - startX;
+
+    // dead zone กัน swipe เกิดจากคลิกเบาๆ
+    if (Math.abs(diff) < 5) diff = 0;
+
     if (diff > 0) diff = 0; // swipe เฉพาะซ้าย
     const max = content._maxTranslate || 160;
     const translate = Math.max(diff, -max);
@@ -611,7 +623,7 @@ function enableSwipe(row, menu) {
     if (confirm(`Delete ${menu.name}?`)) {
       await client.from("menu").delete().eq("id", menu.id);
       row.remove();
-      updateSummary();
+      calc(); // อัปเดตยอดรวมแทน updateSummary()
     }
     closeOpenRow();
   });
