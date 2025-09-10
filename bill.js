@@ -395,15 +395,16 @@ function enableSwipe(row, menu) {
     const c = r.querySelector('.row-content');
     r.classList.remove('show-actions');
     c.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
-    c.style.transform = '';
+    c.style.transform = 'translateX(0)';
     if (currentlyOpenRow === r) currentlyOpenRow = null;
   }
-
+  
   function openRow(r = row) {
     const c = r.querySelector('.row-content');
     r.classList.add('show-actions');
     c.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
-    c.style.transform = ''; // ใช้ CSS .row.show-actions
+    const max = c._maxTranslate || 160;
+    c.style.transform = `translateX(${-max}px)`;   // 👈 กำหนดให้เลื่อนไปทางซ้ายชัดเจน
     currentlyOpenRow = r;
   }
 
