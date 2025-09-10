@@ -627,32 +627,32 @@ async function saveBill(){
 
 function enableSwipe(rows) {
   rows.forEach(row => {
-    let startX = 0;
-    let currentX = 0;
-    let isSwiping = false;
+    const content = row.querySelector('.row-content');
+    const actions = row.querySelector('.action-btns');
+    let startX = 0, currentX = 0, translateX = 0;
+    let isDragging = false;
 
     row.addEventListener("touchstart", e => {
       startX = e.touches[0].clientX;
-      isSwiping = true;
+      isDragging = true;
     });
 
     row.addEventListener("touchmove", e => {
-      if (!isSwiping) return;
+      if (!isDragging) return;
       currentX = e.touches[0].clientX;
-      let diff = currentX - startX;
-
-      // ปัดซ้าย
-      if (diff < -30) {
-        row.classList.add("show-actions");
-      }
-      // ปัดขวา
-      if (diff > 30) {
-        row.classList.remove("show-actions");
-      }
+      translateX = Math.min(0, currentX - startX); // เลื่อนได้เฉพาะซ้าย
+      content.style.transform = `translateX(${translateX}px)`;
     });
 
     row.addEventListener("touchend", () => {
-      isSwiping = false;
+      isDragging = false;
+      // ถ้าปัดเกินครึ่ง → เปิดปุ่ม
+      if (translateX < -70) {
+        row.classList.add("show-actions");
+      } else {
+        row.classList.remove("show-actions");
+      }
+      content.style.transform = ""; // reset → ใช้ CSS transition
     });
   });
 }
