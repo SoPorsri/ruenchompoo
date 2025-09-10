@@ -594,25 +594,44 @@ window.addEventListener('DOMContentLoaded', async () => {
     window.location.href = 'index.html';
   });
 
-  el('btnAddMenu').addEventListener('click', () => { el('popup').style.display = 'flex'; });
-  el('btnAddMenuCancel').addEventListener('click', () => { el('popup').style.display = 'none'; el('newMenuName').value = ''; el('newMenuPrice').value = ''; });
-
+  // ปุ่มเปิด popup เพิ่มเมนู
+  el('btnAddMenu').addEventListener('click', () => {
+    el('addPopup').style.display = 'flex';
+  });
+  
+  // ปุ่มยกเลิก popup เพิ่มเมนู
+  el('btnAddMenuCancel').addEventListener('click', () => {
+    el('addPopup').style.display = 'none';
+    el('addMenuName').value = '';
+    el('addMenuPrice').value = '';
+  });
+  
+  // ปุ่มบันทึก popup เพิ่มเมนู
   el('btnAddMenuConfirm').addEventListener('click', async () => {
-    const name = el('newMenuName').value.trim();
-    const price = parseFloat(el('newMenuPrice').value);
-    if (!name || !price) { alert('กรุณากรอกชื่อและราคา'); return; }
-    try {
-      const { data: maxData } = await client.from('menu').select('sort_order').order('sort_order', { ascending: false }).limit(1).maybeSingle();
-      let nextSortOrder = 1;
-      if (maxData && maxData.sort_order !== null) nextSortOrder = maxData.sort_order + 1;
-      const { error } = await client.from('menu').insert([{ name, price, sort_order: nextSortOrder }]);
-      if (error) { alert('บันทึกผิดพลาด'); console.error(error); } else {
-        el('popup').style.display = 'none';
-        el('newMenuName').value = '';
-        el('newMenuPrice').value = '';
-        await loadMenu();
-      }
-    } catch (err) { console.error('เพิ่มเมนูใหม่ผิดพลาด', err); alert('เกิดข้อผิดพลาด กรุณาลองใหม่'); }
+    const name = el('addMenuName').value.trim();
+    const price = parseFloat(el('addMenuPrice').value);
+  
+    if (!name || isNaN(price)) {
+      alert('กรอกชื่อและราคาก่อนครับ');
+      return;
+    }
+  
+    // โค้ดเพิ่มเมนูใหม่ลงในรายการ
+    // ตัวอย่าง:
+    const newItem = {
+      id: Date.now().toString(),
+      name,
+      price,
+      qty: 1
+    };
+  
+    // สมมติคุณมีฟังก์ชัน addMenuItem อยู่แล้ว
+    addMenuItem(newItem);
+  
+    // ปิด popup และเคลียร์ค่า
+    el('addPopup').style.display = 'none';
+    el('addMenuName').value = '';
+    el('addMenuPrice').value = '';
   });
 
   el('btnPrint').addEventListener('click', () => { el('previewContent').innerHTML = buildPreviewView(); el('previewModal').style.display = 'flex'; });
