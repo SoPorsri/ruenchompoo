@@ -581,23 +581,25 @@ async function saveBill(){
 function enableSwipe(row, menu) {
   let startX = 0;
   let currentX = 0;
+  let isDragging = false;
   let threshold = 50;
 
   // 🖱️ Mouse
   row.addEventListener("mousedown", e => {
     startX = e.clientX;
+    isDragging = true;
   });
 
-  row.addEventListener("mousemove", e => {
-    if (startX === 0) return;
+  document.addEventListener("mousemove", e => {
+    if (!isDragging) return;
     currentX = e.clientX;
     let diff = currentX - startX;
     if (diff < -threshold) row.classList.add("show-actions");
     if (diff > threshold) row.classList.remove("show-actions");
   });
 
-  row.addEventListener("mouseup", () => {
-    startX = 0;
+  document.addEventListener("mouseup", () => {
+    isDragging = false;
   });
 
   // 📱 Touch
@@ -616,7 +618,7 @@ function enableSwipe(row, menu) {
     startX = 0;
   });
 
-  // ปุ่มแก้ไข → ใช้ popup
+  // ปุ่มแก้ไข
   row.querySelector(".edit-btn").addEventListener("click", async () => {
     const popup = document.getElementById("popup");
     const nameInput = document.getElementById("newMenuName");
@@ -626,7 +628,6 @@ function enableSwipe(row, menu) {
     priceInput.value = menu.price;
     popup.style.display = "flex";
 
-    // ป้องกัน event ซ้ำ
     const confirmBtn = document.getElementById("btnAddMenuConfirm");
     const newConfirm = confirmBtn.cloneNode(true);
     confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
@@ -649,7 +650,7 @@ function enableSwipe(row, menu) {
     });
   });
 
-  // ปุ่มลบ → ลบจาก Supabase
+  // ปุ่มลบ
   row.querySelector(".delete-btn").addEventListener("click", async () => {
     if (confirm("ลบเมนูนี้ใช่ไหม?")) {
       await client.from("menu").delete().eq("id", menu.id);
@@ -657,7 +658,6 @@ function enableSwipe(row, menu) {
     }
   });
 }
-
 
 window.addEventListener('DOMContentLoaded', async ()=>{
   el('today').textContent = todayText();
