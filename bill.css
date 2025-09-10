@@ -77,7 +77,7 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;   /* ปรับตามต้องการ */
+    font-size: 14px;
   }
   th, td {
     padding: 2px 0;
@@ -92,13 +92,17 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
 
 /* Layout ของแต่ละแถวให้ตรงกับ header */
 .row {
+  position: relative;
+  background: var(--card);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.25s ease;
   display: grid;
-  grid-template-columns: 30px 1fr 100px 120px; /* ☰ | สินค้า | ราคา | จำนวน */
+  grid-template-columns: 30px 1fr 100px 120px;
   gap: 10px;
   align-items: center;
   padding: 6px 0;
   border-bottom: 1px dashed var(--line);
-  transition: background 0.2s;
 }
 
 /* drag handle */
@@ -114,18 +118,16 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
 
 /* 🎨 เอฟเฟกต์ drag&drop */
 .drag-over {
-  background: #e0f2fe;              /* ฟ้าอ่อน */
-  border-top: 3px solid var(--accent); /* เส้นเขียว */
-}
-
-.drag-over-valid {
-  background: #dcfce7;              /* เขียวอ่อน */
+  background: #e0f2fe;
   border-top: 3px solid var(--accent);
 }
-
+.drag-over-valid {
+  background: #dcfce7;
+  border-top: 3px solid var(--accent);
+}
 .placeholder {
   border: 2px dashed var(--accent);
-  background: #f0fdf4; /* เขียวจาง */
+  background: #f0fdf4;
 }
 
 .menu-name {
@@ -133,8 +135,8 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size:18px;    /* ขยายตัวอักษร */
-  font-weight:600;   /* ทำให้หนา */
+  font-size:18px;
+  font-weight:600;
 }
 
 .menu-price {
@@ -142,30 +144,15 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   text-align: right;
   color: var(--muted);
   flex-shrink: 0;
-  font-size:18px;    /* ขยายตัวอักษร */
-  font-weight:600;   /* ทำให้หนา */
+  font-size:18px;
+  font-weight:600;
 }
 
 .menu-qty {
   width: 100px;
   text-align: right;
   flex-shrink: 0;
-  font-size:18px;    /* ขยายตัวอักษร */
-}
-
-/* ✅ ปรับโครงสร้างของ row ให้เลื่อนได้ */
-.row {
-  position: relative;
-  background: var(--card);
-  border-radius: 8px;
-  overflow: hidden;
-  transition: transform 0.25s ease;
-  display: grid;
-  grid-template-columns: 30px 1fr 100px 120px;
-  gap: 10px;
-  align-items: center;
-  padding: 6px 0;
-  border-bottom: 1px dashed var(--line);
+  font-size:18px;
 }
 
 /* ✅ container ของปุ่ม action (ซ่อนอยู่ทางขวา) */
@@ -186,6 +173,8 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   color: white;
   font-weight: 600;
   cursor: pointer;
+  transform: translateX(160px); /* ✅ ซ่อนปุ่มไปทางขวาก่อน */
+  transition: transform 0.25s ease;
 }
 
 .edit-btn { background: orange; }
@@ -194,6 +183,9 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
 /* ✅ เมื่อปัดซ้าย → row เลื่อนไปทางซ้าย เผยปุ่ม */
 .row.show-actions {
   transform: translateX(-160px); /* = ความกว้างปุ่ม edit+delete */
-  z-index: 1; /* ให้อยู่บนปุ่ม */
+  z-index: 1;
 }
-
+.row.show-actions .edit-btn,
+.row.show-actions .delete-btn {
+  transform: translateX(0);
+}
