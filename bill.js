@@ -607,7 +607,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   });
   
   // ปุ่มบันทึก popup เพิ่มเมนู
-  // ปุ่มบันทึก popup เพิ่มเมนู
   el('btnAddMenuConfirm').addEventListener('click', async () => {
     const name = el('addMenuName').value.trim();
     const price = parseFloat(el('addMenuPrice').value);
@@ -617,16 +616,37 @@ window.addEventListener('DOMContentLoaded', async () => {
       return;
     }
   
-    // เพิ่มเมนูใหม่ลงใน Supabase
-    const { error } = await client.from('menu').insert([{ name, price }]);
-    if (error) {
-      console.error(error);
+    // 1. หาค่า sort_order สูงสุดปัจจุบัน
+    const { data: maxData, error: maxErr } = await client
+      .from('menu')
+      .select('sort_order')
+      .order('sort_order', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+  
+    if (maxErr) {
+      console.error('หา sort_order ผิดพลาด', maxErr);
+      alert('ไม่สามารถเพิ่มเมนูได้');
+      return;
+    }
+  
+    const nextSortOrder = maxData?.sort_order ? maxData.sort_order + 1 : 1;
+  
+    // 2. insert เมนูใหม่ลง DB
+    const { error: insertErr } = await client
+      .from('menu')
+      .insert([{ name, price, sort_order: nextSortOrder }]);
+  
+    if (insertErr) {
+      console.error('insert menu ผิดพลาด', insertErr);
       alert('เพิ่มเมนูผิดพลาด');
       return;
     }
   
-    // reload เมนูและปิด popup
+    // 3. โหลดเมนูใหม่
     await loadMenu();
+  
+    // 4. ปิด popup และเคลียร์ค่า
     el('addPopup').style.display = 'none';
     el('addMenuName').value = '';
     el('addMenuPrice').value = '';
