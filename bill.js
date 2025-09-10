@@ -62,7 +62,7 @@ async function loadMenu() {
     row.dataset.id = item.id;
     row.innerHTML = `
       <div class="row-content" tabindex="0">
-        <div class="drag-handle">☰</div>
+        <div class="drag-handle" draggable="true">☰</div>
         <div class="menu-name">${escapeHtml(item.name)}</div>
         <div class="menu-price right">฿${Number(item.price).toFixed(2)}</div>
         <div>
