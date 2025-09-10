@@ -111,7 +111,6 @@ async function loadMenu() {
   closeOpenRow();
   return true;
 }
-
 /* ---------------------------
    Save new sort_order -> DB
    --------------------------- */
