@@ -582,79 +582,62 @@ function enableSwipe(row, menu) {
   let startX = 0;
   let currentX = 0;
   let isDragging = false;
-  let threshold = 50;
+  let threshold = 60; // ระยะที่ต้องลากถึงจะโชว์ปุ่ม
+  const content = row.querySelector(".row-content");
 
   // 🖱️ Mouse
   row.addEventListener("mousedown", e => {
     startX = e.clientX;
     isDragging = true;
+    content.style.transition = "none"; // ปิด transition ตอนลาก
   });
 
   document.addEventListener("mousemove", e => {
     if (!isDragging) return;
     currentX = e.clientX;
     let diff = currentX - startX;
-    if (diff < -threshold) row.classList.add("show-actions");
-    if (diff > threshold) row.classList.remove("show-actions");
+
+    if (diff < 0) {
+      // ลากไปทางซ้าย
+      content.style.transform = `translateX(${diff}px)`;
+    }
   });
 
   document.addEventListener("mouseup", () => {
+    if (!isDragging) return;
     isDragging = false;
+    content.style.transition = "transform .25s ease";
+
+    // เช็กว่าลากพอหรือยัง
+    if (currentX - startX < -threshold) {
+      row.classList.add("show-actions");
+      content.style.transform = "translateX(-160px)";
+    } else {
+      row.classList.remove("show-actions");
+      content.style.transform = "translateX(0)";
+    }
   });
 
-  // 📱 Touch
+  // 📱 Touch (เหมือนเดิม)
   row.addEventListener("touchstart", e => {
     startX = e.touches[0].clientX;
+    content.style.transition = "none";
   });
 
   row.addEventListener("touchmove", e => {
     currentX = e.touches[0].clientX;
     let diff = currentX - startX;
-    if (diff < -threshold) row.classList.add("show-actions");
-    if (diff > threshold) row.classList.remove("show-actions");
+    if (diff < 0) content.style.transform = `translateX(${diff}px)`;
   });
 
   row.addEventListener("touchend", () => {
-    startX = 0;
-  });
-
-  // ปุ่มแก้ไข
-  row.querySelector(".edit-btn").addEventListener("click", async () => {
-    const popup = document.getElementById("popup");
-    const nameInput = document.getElementById("newMenuName");
-    const priceInput = document.getElementById("newMenuPrice");
-
-    nameInput.value = menu.name;
-    priceInput.value = menu.price;
-    popup.style.display = "flex";
-
-    const confirmBtn = document.getElementById("btnAddMenuConfirm");
-    const newConfirm = confirmBtn.cloneNode(true);
-    confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
-
-    newConfirm.addEventListener("click", async () => {
-      const newName = nameInput.value.trim();
-      const newPrice = parseFloat(priceInput.value) || 0;
-
-      if (!newName || !newPrice) {
-        alert("กรุณากรอกชื่อและราคา");
-        return;
-      }
-
-      await client.from("menu")
-        .update({ name: newName, price: newPrice })
-        .eq("id", menu.id);
-
-      popup.style.display = "none";
-      await loadMenu();
-    });
-  });
-
-  // ปุ่มลบ
-  row.querySelector(".delete-btn").addEventListener("click", async () => {
-    if (confirm("ลบเมนูนี้ใช่ไหม?")) {
-      await client.from("menu").delete().eq("id", menu.id);
-      row.remove();
+    content.style.transition = "transform .25s ease";
+    if (currentX - startX < -threshold) {
+      row.classList.add("show-actions");
+      content.style.transform = "translateX(-160px)";
+    } else {
+      row.classList.remove("show-actions");
+      content.style.transform = "translateX(0)";
     }
   });
 }
