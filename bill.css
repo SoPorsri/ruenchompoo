@@ -182,13 +182,9 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
 }
 .action-btns .edit-btn{
   background:#f59e0b; /* orange */
-  border-top-right-radius:10px;
-  border-bottom-right-radius:10px;
 }
 .action-btns .delete-btn{
   background:var(--danger);
-  border-top-right-radius:10px;
-  border-bottom-right-radius:10px;
 }
 
 /* RWD: ปรับขนาดปุ่มเล็กลงบนหน้าจอแคบ */
@@ -201,10 +197,11 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
   .row-content{grid-template-columns: 30px 1fr 80px 90px}
 }
 
-/* เมื่อปัดซ้าย → เลื่อนแค่ .row-content เท่านั้น (ปุ่มจะถูกเปิดเผยจากขวา) */
-/*.row.show-actions .row-content{
-  transform: translateX(-160px);
-}*/
+/* ✅ ส่วนที่แก้ไข: เมื่อปัดซ้าย → เลื่อนแค่ .row-content เพื่อเผยปุ่ม */
+.row.show-actions .row-content{
+  transform: translateX(-160px); /* เลื่อนไปทางซ้ายเท่ากับความกว้างรวมของ 2 ปุ่ม */
+}
+
 /* และแสดงปุ่ม */
 .row.show-actions .action-btns{
   visibility: visible;
@@ -219,7 +216,6 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
   box-shadow:0 4px 14px rgba(16,185,129,.06);
   outline:none
 }
-
 
 /* hide action buttons for print */
 @media print{ .action-btns{display:none} }
