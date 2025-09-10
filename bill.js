@@ -83,16 +83,22 @@ async function loadMenu() {
     row.className = 'grid row draggable';
     row.dataset.id = item.id;
     row.innerHTML = `
-      <div class="drag-handle">☰</div>
-      <div class="menu-name">${item.name}</div>
-      <div class="menu-price right">฿${item.price}</div>
-      <div>
-        <input class="num menu-qty"
-          type="text"
-          data-id="${item.id}"
-          placeholder="เช่น 1+2"
-          inputmode="decimal"
-          pattern="[0-9.+]*">
+      <div class="row-content">
+        <div class="drag-handle">☰</div>
+        <div class="menu-name">${item.name}</div>
+        <div class="menu-price right">฿${item.price}</div>
+        <div>
+          <input class="num menu-qty" 
+            type="text" 
+            data-id="${item.id}" 
+            placeholder="เช่น 1+2"
+            inputmode="decimal" 
+            pattern="[0-9.+]*">
+        </div>
+      </div>
+      <div class="action-btns">
+        <div class="edit-btn">✏️</div>
+        <div class="delete-btn">🗑️</div>
       </div>
     `;
     container.appendChild(row);
@@ -120,35 +126,35 @@ async function loadMenu() {
 
 function enableSwipe(rows) {
   rows.forEach(row => {
-    let startX = 0, currentX = 0, swiped = false;
+    const content = row.querySelector('.row-content');
+    const actions = row.querySelector('.action-btns');
+    let startX = 0, currentX = 0, translateX = 0;
+    let isDragging = false;
 
     row.addEventListener("touchstart", e => {
       startX = e.touches[0].clientX;
+      isDragging = true;
     });
 
     row.addEventListener("touchmove", e => {
+      if (!isDragging) return;
       currentX = e.touches[0].clientX;
-      let diff = currentX - startX;
-
-      if (diff < -30) { // ปัดซ้าย
-        row.classList.add("show-actions");
-        swiped = true;
-      }
-      if (diff > 30 && swiped) { // ปัดขวา = ปิด
-        row.classList.remove("show-actions");
-        swiped = false;
-      }
+      translateX = Math.min(0, currentX - startX); // เลื่อนได้เฉพาะซ้าย
+      content.style.transform = `translateX(${translateX}px)`;
     });
 
-    // คลิกที่ row จะปิดปุ่ม
-    row.addEventListener("click", () => {
-      if (row.classList.contains("show-actions")) {
+    row.addEventListener("touchend", () => {
+      isDragging = false;
+      // ถ้าปัดเกินครึ่ง → เปิดปุ่ม
+      if (translateX < -70) {
+        row.classList.add("show-actions");
+      } else {
         row.classList.remove("show-actions");
       }
+      content.style.transform = ""; // reset → ใช้ CSS transition
     });
   });
 }
-
 
 function initDragAndDrop() {
   const container = el('menuItems');
