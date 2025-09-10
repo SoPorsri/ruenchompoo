@@ -378,22 +378,20 @@ async function saveBill() {
 
 function enableSwipe(row, menu) {
   const content = row.querySelector('.row-content');
-  const handle = row.querySelector('.drag-handle');
   const actionBtns = row.querySelector('.action-btns');
 
-  // ensure closed initially
+  // reset
   row.classList.remove('show-actions');
   content.style.transform = '';
 
   let startX = 0;
   let currentX = 0;
   let dragging = false;
-  let pointerId = null;
 
   function closeRow(r = row) {
     const c = r.querySelector('.row-content');
     r.classList.remove('show-actions');
-    c.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
+    c.style.transition = 'transform .25s ease';
     c.style.transform = '';
     if (currentlyOpenRow === r) currentlyOpenRow = null;
   }
@@ -401,73 +399,79 @@ function enableSwipe(row, menu) {
   function openRow(r = row) {
     const c = r.querySelector('.row-content');
     r.classList.add('show-actions');
-    c.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
-    c.style.transform = ''; // ใช้ CSS .row.show-actions
+    c.style.transition = 'transform .25s ease';
+    c.style.transform = `translateX(-${actionBtns.offsetWidth}px)`;
     currentlyOpenRow = r;
   }
 
-  function onPointerDown(e) {
-    // ถ้าเริ่มจาก drag-handle → ปล่อยให้ Sortable ใช้งาน
-    if (e.target.closest('.drag-handle')) return;
+  // ---- Drag / Swipe Start ----
+  function onDown(clientX, target) {
+    if (target.closest('.drag-handle')) return; // drag&drop ใช้ handle อย่างเดียว
+    if (target.closest('input,button')) return;
 
-    // ถ้าเริ่มจาก input หรือปุ่ม → ไม่ทำ swipe
-    if (e.target.closest('input,button')) return;
-
-    pointerId = e.pointerId;
-    startX = e.clientX;
+    startX = clientX;
     currentX = startX;
     dragging = true;
     content.style.transition = 'none';
 
-    // ความกว้างของปุ่ม action
-    const rect = actionBtns.getBoundingClientRect();
-    content._maxTranslate = Math.max(80, Math.round(rect.width || 160));
-
-    // ปิด row อื่นที่เปิดอยู่
     if (currentlyOpenRow && currentlyOpenRow !== row) closeRow(currentlyOpenRow);
-
-    row.setPointerCapture && row.setPointerCapture(pointerId);
-    document.addEventListener('pointermove', onPointerMove);
-    document.addEventListener('pointerup', onPointerUp);
-    document.addEventListener('pointercancel', onPointerUp);
-    e.preventDefault();
   }
 
-  function onPointerMove(e) {
+  function onMove(clientX) {
     if (!dragging) return;
-    currentX = e.clientX;
+    currentX = clientX;
     let diff = currentX - startX;
-    if (diff > 0) diff = 0; // swipe only left
-    const max = content._maxTranslate || 160;
+    if (diff > 0) diff = 0; // swipe left only
+    const max = actionBtns.offsetWidth || 160;
     const translate = Math.max(diff, -max);
     content.style.transform = `translateX(${translate}px)`;
   }
 
-  function onPointerUp() {
+  function onUp() {
     if (!dragging) return;
     dragging = false;
     const diff = currentX - startX;
-    const threshold = 50;
-    content.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
+    const max = actionBtns.offsetWidth || 160;
+    const threshold = max * 0.35;
+
+    content.style.transition = 'transform .25s ease';
 
     if (diff < -threshold) {
       openRow(row);
     } else {
       closeRow(row);
     }
-
-    try {
-      row.releasePointerCapture && row.releasePointerCapture(pointerId);
-    } catch (_) {}
-    document.removeEventListener('pointermove', onPointerMove);
-    document.removeEventListener('pointerup', onPointerUp);
-    document.removeEventListener('pointercancel', onPointerUp);
   }
 
-  // bind swipe ทั้ง mouse & touch
-  content.addEventListener('pointerdown', onPointerDown);
+  // ---- Mouse Events ----
+  content.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return; // only left mouse
+    onDown(e.clientX, e.target);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
 
-  // edit
+  function onMouseMove(e) { onMove(e.clientX); }
+  function onMouseUp(e) {
+    onUp();
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+
+  // ---- Touch Events ----
+  content.addEventListener('touchstart', (e) => {
+    const t = e.touches[0];
+    onDown(t.clientX, e.target);
+  });
+  content.addEventListener('touchmove', (e) => {
+    if (!dragging) return;
+    const t = e.touches[0];
+    onMove(t.clientX);
+  });
+  content.addEventListener('touchend', onUp);
+  content.addEventListener('touchcancel', onUp);
+
+  // ---- edit ----
   const editBtn = row.querySelector('.edit-btn');
   if (editBtn) {
     editBtn.addEventListener('click', () => {
@@ -496,7 +500,7 @@ function enableSwipe(row, menu) {
     });
   }
 
-  // delete
+  // ---- delete ----
   const deleteBtn = row.querySelector('.delete-btn');
   if (deleteBtn) {
     deleteBtn.addEventListener('click', async () => {
@@ -512,7 +516,7 @@ function enableSwipe(row, menu) {
     });
   }
 
-  // ปิดถ้ามีการคลิกข้างนอก
+  // ---- click outside ----
   document.addEventListener('click', (evt) => {
     if (!row.contains(evt.target) && currentlyOpenRow) {
       closeRow(currentlyOpenRow);
