@@ -118,6 +118,38 @@ async function loadMenu() {
   return true;
 }
 
+function enableSwipe(rows) {
+  rows.forEach(row => {
+    let startX = 0, currentX = 0, swiped = false;
+
+    row.addEventListener("touchstart", e => {
+      startX = e.touches[0].clientX;
+    });
+
+    row.addEventListener("touchmove", e => {
+      currentX = e.touches[0].clientX;
+      let diff = currentX - startX;
+
+      if (diff < -30) { // ปัดซ้าย
+        row.classList.add("show-actions");
+        swiped = true;
+      }
+      if (diff > 30 && swiped) { // ปัดขวา = ปิด
+        row.classList.remove("show-actions");
+        swiped = false;
+      }
+    });
+
+    // คลิกที่ row จะปิดปุ่ม
+    row.addEventListener("click", () => {
+      if (row.classList.contains("show-actions")) {
+        row.classList.remove("show-actions");
+      }
+    });
+  });
+}
+
+
 function initDragAndDrop() {
   const container = el('menuItems');
   let dragging = null;
