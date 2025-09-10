@@ -141,7 +141,9 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   background: #fff;
   border-bottom: 1px solid #ddd;
   overflow: hidden;
-  touch-action: pan-y; /* ให้ swipe แนวนอนได้ */
+  touch-action: pan-y; /* ✅ รองรับ swipe แนวนอน */
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* ก้อนเนื้อหาเลื่อนไปทางซ้ายเพื่อโชว์ปุ่ม */
@@ -161,6 +163,7 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   width: 100%;
   box-sizing: border-box;
   position: relative;
+  will-change: transform; /* ✅ เร่ง animation */
 }
 
 /* drag handle */
@@ -249,22 +252,10 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
 .row.show-actions .action-btns {
   opacity: 1;
   pointer-events: auto;
+  background: #f1f5f9; /* เทาอ่อนให้เห็นชัด */
 }
 .row.show-actions .row-content {
   transform: translateX(-160px); /* ต้องตรงกับ min-width action-btns */
-}
-
-.row-content {
-  will-change: transform;
-}
-
-.row {
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-}
-
-.row.show-actions .action-btns {
-  background: #f1f5f9; /* เทาอ่อน ๆ */
 }
 
 /* accessibility */
