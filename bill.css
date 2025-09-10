@@ -165,6 +165,11 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
   align-items:stretch;
   border-radius:10px;
   overflow:hidden;
+
+  /* ⬇️ ซ่อนก่อน */
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
 /* แต่ละปุ่ม */
@@ -180,12 +185,24 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
   user-select:none;
   border-left:1px solid rgba(255,255,255,.08);
 }
-.action-btns .edit-btn{background: #f59e0b; /* orange */ border-top-right-radius:10px; border-bottom-right-radius:10px}
-.action-btns .delete-btn{background:var(--danger); border-top-right-radius:10px; border-bottom-right-radius:10px}
+.action-btns .edit-btn{
+  background:#f59e0b; /* orange */
+  border-top-right-radius:10px;
+  border-bottom-right-radius:10px;
+}
+.action-btns .delete-btn{
+  background:var(--danger);
+  border-top-right-radius:10px;
+  border-bottom-right-radius:10px;
+}
 
 /* RWD: ปรับขนาดปุ่มเล็กลงบนหน้าจอแคบ */
 @media (max-width:420px){
-  .action-btns .edit-btn,.action-btns .delete-btn{width:70px;font-size:14px}
+  .action-btns .edit-btn,
+  .action-btns .delete-btn{
+    width:70px;
+    font-size:14px
+  }
   .row-content{grid-template-columns: 30px 1fr 80px 90px}
 }
 
@@ -193,12 +210,21 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
 .row.show-actions .row-content{
   transform: translateX(-160px); /* = 80 + 80 */
 }
+/* และแสดงปุ่ม */
+.row.show-actions .action-btns{
+  visibility: visible;
+  opacity: 1;
+}
 
 /* ถ้าต้องการให้ animation ละมุนมากขึ้น */
-.row-content:active{transition-duration: .12s}
+.row-content:active{transition-duration:.12s}
 
 /* accessibility: focus */
-.row-content:focus-within{box-shadow:0 4px 14px rgba(16,185,129,.06);outline:none}
+.row-content:focus-within{
+  box-shadow:0 4px 14px rgba(16,185,129,.06);
+  outline:none
+}
+
 
 /* hide action buttons for print */
 @media print{ .action-btns{display:none} }
