@@ -582,14 +582,18 @@ function enableSwipe(row, menu) {
   let startX = 0;
   let currentX = 0;
   let isDragging = false;
-  let threshold = 60; // ระยะที่ต้องลากถึงจะโชว์ปุ่ม
+  let threshold = 60;
   const content = row.querySelector(".row-content");
+  const handle = row.querySelector(".drag-handle");
 
   // 🖱️ Mouse
   row.addEventListener("mousedown", e => {
+    // 👉 ถ้าเริ่มกดที่ drag-handle → ข้าม ไม่ทำ swipe
+    if (e.target.closest(".drag-handle")) return;
+
     startX = e.clientX;
     isDragging = true;
-    content.style.transition = "none"; // ปิด transition ตอนลาก
+    content.style.transition = "none";
   });
 
   document.addEventListener("mousemove", e => {
@@ -598,7 +602,6 @@ function enableSwipe(row, menu) {
     let diff = currentX - startX;
 
     if (diff < 0) {
-      // ลากไปทางซ้าย
       content.style.transform = `translateX(${diff}px)`;
     }
   });
@@ -608,7 +611,6 @@ function enableSwipe(row, menu) {
     isDragging = false;
     content.style.transition = "transform .25s ease";
 
-    // เช็กว่าลากพอหรือยัง
     if (currentX - startX < -threshold) {
       row.classList.add("show-actions");
       content.style.transform = "translateX(-160px)";
@@ -618,19 +620,25 @@ function enableSwipe(row, menu) {
     }
   });
 
-  // 📱 Touch (เหมือนเดิม)
+  // 📱 Touch
   row.addEventListener("touchstart", e => {
+    if (e.target.closest(".drag-handle")) return;
+
     startX = e.touches[0].clientX;
     content.style.transition = "none";
   });
 
   row.addEventListener("touchmove", e => {
+    if (e.target.closest(".drag-handle")) return;
+
     currentX = e.touches[0].clientX;
     let diff = currentX - startX;
     if (diff < 0) content.style.transform = `translateX(${diff}px)`;
   });
 
-  row.addEventListener("touchend", () => {
+  row.addEventListener("touchend", e => {
+    if (e.target.closest(".drag-handle")) return;
+
     content.style.transition = "transform .25s ease";
     if (currentX - startX < -threshold) {
       row.classList.add("show-actions");
