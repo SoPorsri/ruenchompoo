@@ -77,10 +77,15 @@ async function loadMenu(){
          placeholder="เช่น 1+2"
          inputmode="decimal" 
          pattern="[0-9.+]*"></div>
+      <div class="action-btns">
+        <div class="edit-btn">✏️</div>
+        <div class="delete-btn">🗑️</div>
+      </div>
     `;
     container.appendChild(row);
   });
 
+  // ✅ input คำนวณอัตโนมัติ
   document.querySelectorAll('#menuItems input')
           .forEach(i=>i.addEventListener('input',calc));
 
@@ -99,8 +104,43 @@ async function loadMenu(){
     }
   });
 
+  // ✅ เปิดใช้งาน swipe left/right
+  enableSwipe(container.querySelectorAll('.row'));
+
+  // ✅ set event ให้ปุ่มลบ
+  container.querySelectorAll('.delete-btn').forEach(btn=>{
+    btn.addEventListener('click', async e=>{
+      const row = e.target.closest('.row');
+      if(confirm("ลบเมนูนี้ออกจากระบบ?")){
+        const id = row.dataset.id;
+        await client.from('menu').delete().eq('id', id);
+        row.remove();
+      }
+    });
+  });
+
+  // ✅ set event ให้ปุ่มแก้ไข
+  container.querySelectorAll('.edit-btn').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const row = e.target.closest('.row');
+      const id = row.dataset.id;
+      const menuItem = menuData.find(m=>m.id==id);
+      if(menuItem){
+        const newName = prompt("แก้ไขชื่อเมนู:", menuItem.name);
+        const newPrice = prompt("แก้ไขราคา:", menuItem.price);
+        if(newName && newPrice){
+          client.from('menu').update({
+            name:newName,
+            price:parseFloat(newPrice)
+          }).eq('id', id).then(()=>loadMenu());
+        }
+      }
+    });
+  });
+
   return true;
 }
+
 
 
 function initDragAndDrop() {
@@ -580,6 +620,41 @@ async function saveBill(){
   el('cash').value=''; 
   calc();
 }
+
+function enableSwipe(rows) {
+  rows.forEach(row => {
+    let startX = 0;
+    let currentX = 0;
+    let isSwiping = false;
+
+    row.addEventListener("touchstart", e => {
+      startX = e.touches[0].clientX;
+      isSwiping = true;
+    });
+
+    row.addEventListener("touchmove", e => {
+      if (!isSwiping) return;
+      currentX = e.touches[0].clientX;
+      let diff = currentX - startX;
+
+      // ปัดซ้าย
+      if (diff < -30) {
+        row.classList.add("show-actions");
+      }
+      // ปัดขวา
+      if (diff > 30) {
+        row.classList.remove("show-actions");
+      }
+    });
+
+    row.addEventListener("touchend", () => {
+      isSwiping = false;
+    });
+  });
+}
+
+
+
 
 window.addEventListener('DOMContentLoaded', async ()=>{
   el('today').textContent = todayText();
