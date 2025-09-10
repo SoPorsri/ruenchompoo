@@ -376,12 +376,6 @@ async function saveBill() {
   calc();
 }
 
-/* ---------------------------
-   Swipe / show action buttons
-   - Uses pointer events (works for mouse & touch)
-   - Does NOT interfere with Sortable (we ignore events that start on .drag-handle)
-   - Closes any other open row when opening a new one
-   --------------------------- */
 function enableSwipe(row, menu) {
   const content = row.querySelector('.row-content');
   const handle = row.querySelector('.drag-handle');
@@ -389,7 +383,7 @@ function enableSwipe(row, menu) {
 
   // ensure closed initially
   row.classList.remove('show-actions');
-  content.style.transform = 'translateX(0)';
+  content.style.transform = '';
 
   let startX = 0;
   let currentX = 0;
@@ -400,15 +394,15 @@ function enableSwipe(row, menu) {
     const c = r.querySelector('.row-content');
     r.classList.remove('show-actions');
     c.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
-    c.style.transform = 'translateX(0)';
+    c.style.transform = '';
     if (currentlyOpenRow === r) currentlyOpenRow = null;
   }
 
-  function openRow(r = row, width) {
+  function openRow(r = row) {
     const c = r.querySelector('.row-content');
     r.classList.add('show-actions');
     c.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
-    c.style.transform = `translateX(-${width}px)`;
+    c.style.transform = ''; // rely on CSS .row.show-actions
     currentlyOpenRow = r;
   }
 
@@ -454,11 +448,11 @@ function enableSwipe(row, menu) {
     dragging = false;
     const diff = currentX - startX;
     const max = content._maxTranslate || 160;
-    const threshold = Math.round(max * 0.35); // need swipe beyond 35% to open
+    const threshold = 50; // ต้องปัดเกิน 50px ถึงจะเปิด
     content.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
 
     if (diff < -threshold) {
-      openRow(row, max);
+      openRow(row);
     } else {
       closeRow(row);
     }
