@@ -527,12 +527,21 @@ function buildPrintView(bill) {
   return html;
 }
 
-// --- Swipe Logic and Event Handlers ---
-/**
- * Enables swipe-to-reveal functionality and attaches edit/delete handlers to a row.
- * @param {HTMLElement} row The row element.
- * @param {object} menu The menu item data associated with the row.
- */
+// ==== ตัวแปร global ====
+let currentlyOpenRow = null;
+
+// ==== helper ปิดแถวที่เปิดอยู่ ====
+function closeOpenRow() {
+  if (currentlyOpenRow) {
+    const c = currentlyOpenRow.querySelector('.row-content');
+    currentlyOpenRow.classList.remove('show-actions');
+    c.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
+    c.style.transform = 'translateX(0)';
+    currentlyOpenRow = null;
+  }
+}
+
+// ==== ฟังก์ชันหลัก ====
 function enableSwipe(row, menu) {
   const content = row.querySelector('.row-content');
   const actionBtns = row.querySelector('.action-btns');
@@ -547,9 +556,12 @@ function enableSwipe(row, menu) {
   let pointerId = null;
 
   function onPointerDown(e) {
-    if (e.pointerType === 'mouse' && e.button !== 0) return; // คลิกขวา/กลาง = skip
-    if (e.target.closest('.drag-handle')) return; // ให้ drag&drop ทำงาน
-    if (e.target.closest('input, button, .menu-qty')) return; // ไม่รบกวน input
+    // mouse: เฉพาะปุ่มซ้าย
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    // ถ้าจับที่ drag-handle → ให้ drag&drop ทำงาน
+    if (e.target.closest('.drag-handle')) return;
+    // ถ้าไปกด input หรือปุ่ม → ไม่ต้อง swipe
+    if (e.target.closest('input, button, .menu-qty')) return;
 
     // ปิด row อื่นที่เปิดอยู่
     if (currentlyOpenRow && currentlyOpenRow !== row) {
@@ -566,7 +578,7 @@ function enableSwipe(row, menu) {
     const rect = actionBtns.getBoundingClientRect();
     content._maxTranslate = Math.max(80, Math.round(rect.width || 160));
 
-    row.setPointerCapture && row.setPointerCapture(pointerId);
+    row.setPointerCapture?.(pointerId);
     document.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerup', onPointerUp);
     document.addEventListener('pointercancel', onPointerUp);
@@ -576,18 +588,18 @@ function enableSwipe(row, menu) {
     if (!dragging) return;
     currentX = e.clientX;
     let diff = currentX - startX;
-    if (diff > 0) diff = 0; // swipe ได้เฉพาะซ้าย
+    if (diff > 0) diff = 0; // swipe เฉพาะซ้าย
     const max = content._maxTranslate || 160;
     const translate = Math.max(diff, -max);
     content.style.transform = `translateX(${translate}px)`;
   }
 
-  function onPointerUp(e) {
+  function onPointerUp() {
     if (!dragging) return;
     dragging = false;
 
     const diff = currentX - startX;
-    const threshold = 50; // ต้องเกิน 50px ถึงเปิด
+    const threshold = 50; // เกิน 50px ถึงจะเปิด
 
     content.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
 
@@ -604,13 +616,14 @@ function enableSwipe(row, menu) {
     }
 
     try {
-      row.releasePointerCapture && row.releasePointerCapture(pointerId);
+      row.releasePointerCapture?.(pointerId);
     } catch (_) {}
     document.removeEventListener('pointermove', onPointerMove);
     document.removeEventListener('pointerup', onPointerUp);
     document.removeEventListener('pointercancel', onPointerUp);
   }
 
+  // เริ่มฟัง pointerdown
   content.addEventListener('pointerdown', onPointerDown);
 
   // ปิดเมื่อคลิกนอก row
@@ -620,11 +633,12 @@ function enableSwipe(row, menu) {
     }
   }, { capture: true });
 
-  // ✅ Attach handlers ให้ปุ่ม
+  // ปุ่ม action
   row.querySelector('.edit-btn').addEventListener('click', () => {
     alert(`Edit: ${menu.name}`);
     closeOpenRow();
   });
+
   row.querySelector('.delete-btn').addEventListener('click', async () => {
     if (confirm(`Delete ${menu.name}?`)) {
       await client.from('menu').delete().eq('id', menu.id);
