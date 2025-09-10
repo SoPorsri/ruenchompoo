@@ -1,5 +1,3 @@
-// bill.js
-
 // --- Imports and Global Constants ---
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
@@ -539,9 +537,9 @@ function enableSwipe(row, menu) {
   const content = row.querySelector('.row-content');
   const actionBtns = row.querySelector('.action-btns');
 
-  // เริ่มต้นปิดเสมอ
+  // reset state
   row.classList.remove('show-actions');
-  content.style.transform = '';
+  content.style.transform = 'translateX(0)';
 
   let startX = 0;
   let currentX = 0;
@@ -549,11 +547,11 @@ function enableSwipe(row, menu) {
   let pointerId = null;
 
   function onPointerDown(e) {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
-    if (e.target.closest('.drag-handle')) return;
-    if (e.target.closest('input, button, .menu-qty')) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return; // คลิกขวา/กลาง = skip
+    if (e.target.closest('.drag-handle')) return; // ให้ drag&drop ทำงาน
+    if (e.target.closest('input, button, .menu-qty')) return; // ไม่รบกวน input
 
-    // ถ้ามี row อื่นเปิดอยู่ → ปิดก่อน
+    // ปิด row อื่นที่เปิดอยู่
     if (currentlyOpenRow && currentlyOpenRow !== row) {
       closeOpenRow();
     }
@@ -564,12 +562,10 @@ function enableSwipe(row, menu) {
     dragging = true;
     content.style.transition = 'none';
 
-    // คำนวณระยะที่เลื่อนได้
+    // คำนวณความกว้างปุ่ม action
     const rect = actionBtns.getBoundingClientRect();
     content._maxTranslate = Math.max(80, Math.round(rect.width || 160));
 
-    // Fix: Prevent SortableJS from interfering with mouse events
-    // This is the key fix for desktop behavior.
     row.setPointerCapture && row.setPointerCapture(pointerId);
     document.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerup', onPointerUp);
@@ -580,7 +576,7 @@ function enableSwipe(row, menu) {
     if (!dragging) return;
     currentX = e.clientX;
     let diff = currentX - startX;
-    if (diff > 0) diff = 0; // swipe ได้แค่ทางซ้าย
+    if (diff > 0) diff = 0; // swipe ได้เฉพาะซ้าย
     const max = content._maxTranslate || 160;
     const translate = Math.max(diff, -max);
     content.style.transform = `translateX(${translate}px)`;
@@ -589,24 +585,22 @@ function enableSwipe(row, menu) {
   function onPointerUp(e) {
     if (!dragging) return;
     dragging = false;
-    const diff = currentX - startX;
-    const threshold = 50; // ต้องปัดเกิน 50px ถึงจะเปิด
 
-    // กำหนด transition
+    const diff = currentX - startX;
+    const threshold = 50; // ต้องเกิน 50px ถึงเปิด
+
     content.style.transition = 'transform .22s cubic-bezier(.2,.9,.2,1)';
 
     if (diff < -threshold) {
-      // Swipe left beyond threshold, open the row
+      // เปิดปุ่ม
       row.classList.add('show-actions');
       content.style.transform = `translateX(-${content._maxTranslate}px)`;
       currentlyOpenRow = row;
     } else {
-      // Swipe not enough or swipe right, close the row
+      // ปิด
       row.classList.remove('show-actions');
       content.style.transform = 'translateX(0)';
-      if (currentlyOpenRow === row) {
-        currentlyOpenRow = null;
-      }
+      if (currentlyOpenRow === row) currentlyOpenRow = null;
     }
 
     try {
@@ -619,15 +613,24 @@ function enableSwipe(row, menu) {
 
   content.addEventListener('pointerdown', onPointerDown);
 
-  // ... (โค้ดสำหรับปุ่ม Edit และ Delete ที่ไม่ได้แก้ไข) ...
-
-  // ถ้าคลิกนอก row → ปิด action
+  // ปิดเมื่อคลิกนอก row
   document.addEventListener('click', (evt) => {
     if (!row.contains(evt.target) && currentlyOpenRow) {
       closeOpenRow();
     }
-  }, {
-    capture: true
+  }, { capture: true });
+
+  // ✅ Attach handlers ให้ปุ่ม
+  row.querySelector('.edit-btn').addEventListener('click', () => {
+    alert(`Edit: ${menu.name}`);
+    closeOpenRow();
+  });
+  row.querySelector('.delete-btn').addEventListener('click', async () => {
+    if (confirm(`Delete ${menu.name}?`)) {
+      await client.from('menu').delete().eq('id', menu.id);
+      row.remove();
+    }
+    closeOpenRow();
   });
 }
 
