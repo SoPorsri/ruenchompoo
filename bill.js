@@ -480,35 +480,42 @@ function enableSwipe(row, menu) {
   const deleteBtn = row.querySelector('.delete-btn');
 
   // edit
-  if (editBtn) {
-    editBtn.addEventListener('click', () => {
-      const popup = document.getElementById('popup');
-      const nameInput = document.getElementById('newMenuName');
-      const priceInput = document.getElementById('newMenuPrice');
+  // edit
+if (editBtn) {
+  editBtn.addEventListener('click', () => {
+    const popup = document.getElementById('editPopup');
+    const nameInput = document.getElementById('editMenuName');
+    const priceInput = document.getElementById('editMenuPrice');
 
-      nameInput.value = menu.name;
-      priceInput.value = menu.price;
+    nameInput.value = menu.name;
+    priceInput.value = menu.price;
 
-      popup.style.display = 'flex';
+    popup.style.display = 'flex';
 
-      // prevent duplicate handlers by cloning
-      const confirmBtn = document.getElementById('btnAddMenuConfirm');
-      const newConfirm = confirmBtn.cloneNode(true);
-      confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+    // ป้องกัน handler ซ้อน
+    const confirmBtn = document.getElementById('btnEditMenuConfirm');
+    const newConfirm = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
 
-      newConfirm.addEventListener('click', async () => {
-        const newName = nameInput.value.trim();
-        const newPrice = parseFloat(priceInput.value) || 0;
-        if (!newName || !newPrice) {
-          alert("กรุณากรอกชื่อและราคา");
-          return;
-        }
-        await client.from("menu").update({ name: newName, price: newPrice }).eq("id", menu.id);
-        popup.style.display = 'none';
-        await loadMenu();
-      });
+    newConfirm.addEventListener('click', async () => {
+      const newName = nameInput.value.trim();
+      const newPrice = parseFloat(priceInput.value) || 0;
+      if (!newName || !newPrice) {
+        alert("กรุณากรอกชื่อและราคา");
+        return;
+      }
+      await client.from("menu").update({ name: newName, price: newPrice }).eq("id", menu.id);
+      popup.style.display = 'none';
+      await loadMenu();
     });
-  }
+
+    // ปุ่มยกเลิก
+    const cancelBtn = document.getElementById('btnEditMenuCancel');
+    const newCancel = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+    newCancel.addEventListener('click', () => { popup.style.display = 'none'; });
+  });
+}
 
   // delete
   if (deleteBtn) {
