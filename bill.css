@@ -254,6 +254,19 @@ main { display:flex; flex-direction:row; height:100%; gap:10px; box-sizing:borde
   transform: translateX(-160px); /* ต้องตรงกับ min-width action-btns */
 }
 
+.row-content {
+  will-change: transform;
+}
+
+.row {
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.row.show-actions .action-btns {
+  background: #f1f5f9; /* เทาอ่อน ๆ */
+}
+
 /* accessibility */
 .row-content:active { transition-duration:.12s }
 .row-content:focus-within {
