@@ -83,8 +83,8 @@ async function loadMenu(){
         </div>
       </div>
       <div class="action-btns">
-        <div class="edit-btn">✏️</div>
-        <div class="delete-btn">🗑️</div>
+        <div class="edit-btn">แก้ไข</div>
+        <div class="delete-btn">ลบ</div>
       </div>
     `;
     container.appendChild(row);
