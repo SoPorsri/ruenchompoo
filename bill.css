@@ -228,26 +228,76 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
 /* hide action buttons for print */
 @media print{ .action-btns{display:none} }
 
+/* ปรับ popup ทั่วไป */
 .popup {
   display: none;
   position: fixed;
   top: 0; left: 0;
   width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.55); /* มืดขึ้นนิดนึง */
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 16px; /* เว้นขอบรอบๆ */
 }
+
+/* กล่องด้านใน */
 .popup-content {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 280px;
-  max-width: 90%;
+  background: #fff;
+  padding: 32px 28px;
+  border-radius: 16px;
+  width: 400px;        /* กว้างขึ้น */
+  max-width: 95%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  animation: popup-fade .25s ease; /* effect ตอนขึ้น */
 }
+
+.popup-content h3 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.popup-content input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 1rem;
+  margin-bottom: 14px;
+  box-sizing: border-box;
+}
+
+/* ปุ่ม */
 .popup-actions {
-  margin-top: 10px;
+  margin-top: 20px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.popup-actions button {
+  padding: 10px 16px;
+  font-size: 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+  font-weight: 600;
+}
+.popup-actions #btnEditMenuConfirm {
+  background: var(--accent);
+  color: #fff;
+}
+.popup-actions #btnEditMenuCancel {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* effect ตอน popup โผล่ขึ้น */
+@keyframes popup-fade {
+  from {opacity:0; transform: translateY(-10px);}
+  to {opacity:1; transform: translateY(0);}
 }
 
