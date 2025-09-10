@@ -75,8 +75,8 @@ async function loadMenu() {
         </div>
       </div>
       <div class="action-btns" aria-hidden="true">
-        <div class="edit-btn" role="button" tabindex="0">✏️</div>
-        <div class="delete-btn" role="button" tabindex="0">🗑️</div>
+        <div class="edit-btn" role="button" tabindex="0">แก้ไข</div>
+        <div class="delete-btn" role="button" tabindex="0">ลบ</div>
       </div>
     `;
     container.appendChild(row);
