@@ -272,7 +272,7 @@ function buildPrintView(bill) {
 async function saveDraft() {
   let billno = el('billno').value;
   if (!billno) { 
-    billno = 'DRAFT-' + (table_id || '') + '-' + Date.now(); 
+    billno = 'DRAFT-' + (table_id || ''); 
     el('billno').value = billno; 
   }
   const customer = el('customer').value;
