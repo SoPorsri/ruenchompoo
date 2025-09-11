@@ -271,7 +271,10 @@ function buildPrintView(bill) {
 
 async function saveDraft() {
   let billno = el('billno').value;
-  if (!billno) { billno = await getNextBillNo(); el('billno').value = billno; }
+  if (!billno) { 
+    billno = 'DRAFT-' + (table_id || '') + '-' + Date.now(); 
+    el('billno').value = billno; 
+  }
   const customer = el('customer').value;
   const total = safeEval(el('grand').textContent.replace(/[^\d.]/g, ''));
   const cash = safeEval(el('cash').value);
@@ -315,7 +318,7 @@ async function saveDraft() {
 }
 
 async function saveBill() {
-  const billno = el('billno').value || await getNextBillNo();
+  const billno = (el('billno').value.startsWith('DRAFT-')) ? await getNextBillNo() : el('billno').value; // ถ้าเป็น draft → ขอเลขจริง
   const customer = el('customer').value;
   const total = safeEval(el('grand').textContent.replace(/[^\d.]/g, ''));
   const cash = safeEval(el('cash').value);
