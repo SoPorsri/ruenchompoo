@@ -27,27 +27,9 @@ let currentlyOpenRow = null;      // track open swipe row (so we can close other
 
 /* --- DB helpers --- (unchanged from yours) */
 async function getNextBillNo() {
-  // ดึงเลขสูงสุดจาก bills
-  const { data: b, error: e1 } = await client
-    .from('bills')
-    .select('billno')
-    .order('billno', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  // ดึงเลขสูงสุดจาก drafts
-  const { data: d, error: e2 } = await client
-    .from('drafts')
-    .select('billno')
-    .order('billno', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  let maxBill = 0;
-  if (b && b.billno) maxBill = Math.max(maxBill, parseInt(b.billno, 10) || 0);
-  if (d && d.billno) maxBill = Math.max(maxBill, parseInt(d.billno, 10) || 0);
-
-  return String(maxBill + 1).padStart(5, '0');
+  const { data, error } = await client.rpc('get_next_billno');
+  if (error) throw error;
+  return data; // เช่น "250900001"
 }
 
 async function loadTableName() {
