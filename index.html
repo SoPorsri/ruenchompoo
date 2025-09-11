@@ -14,12 +14,23 @@
     header {
       background: linear-gradient(90deg, #ec4899, #d946ef);
       color: white;
-      padding: 6px; /* ลด padding */
+      padding: clamp(4px, 1vw, 8px) clamp(8px, 2vw, 12px);
+      /* บนจอเล็กสุด padding 4px/8px จอใหญ่สุด padding 8px/12px */
+      
       text-align: center;
-      font-size: 20px; /* ลด font นิดหน่อย */
+      font-size: clamp(14px, 2vw, 18px); /* ตัวหนังสือจะเล็กบนจอเล็ก ใหญ่บนจอใหญ่ */
       font-weight: bold;
       letter-spacing: 0.5px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap; /* เผื่อจอแคบ */
+    }
+    header img {
+      max-height: clamp(40px, 10vw, 80px); /* เล็กสุด 40px ใหญ่สุด 80px */
+      height: auto;
+      margin-right: 8px;
     }
     .layout {
       display: grid; grid-template-columns: 90px 90px 90px 90px;
