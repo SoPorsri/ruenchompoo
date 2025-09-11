@@ -389,10 +389,23 @@ async function saveBill() {
     if (updateError) console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
   }
 
-  if (currentDraftId) {
-    await client.from('draft_items').delete().eq('draft_id', currentDraftId);
-    await client.from('drafts').delete().eq('id', currentDraftId);
-    currentDraftId = null; // เคลียร์หลังลบเสร็จ
+  // ลบ draft โดยใช้ table_id
+  if (table_id) {
+    // หาว่า table_id นี้มี draft ไหม
+    const { data: d } = await client.from('drafts')
+      .select('id')
+      .eq('table_id', table_id)
+      .maybeSingle();
+
+    if (d) {
+      // ลบ draft_items ก่อน
+      const { error: diErr } = await client.from('draft_items').delete().eq('draft_id', d.id);
+      if (diErr) console.log('ลบ draft_items ผิดพลาด', diErr);
+
+      // ลบ draft
+      const { error: dErr } = await client.from('drafts').delete().eq('id', d.id);
+      if (dErr) console.log('ลบ drafts ผิดพลาด', dErr);
+    }
   }
 
   // print
