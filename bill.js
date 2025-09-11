@@ -129,22 +129,53 @@ async function saveNewOrder() {
    Drafts / calc / print etc.
    (unchanged except minor sanitization)
    --------------------------- */
+let currentDraftId = null;
+
 async function loadDraft() {
   if (!table_id) return;
-  const { data: draftData, error: draftError } = await client.from('drafts').select('*').eq('table_id', table_id).single();
-  if (draftError) { console.log('โหลด draft ผิดพลาด', draftError); return; }
-  if (!draftData) return;
-  //el('billno').value = draftData.billno || await getNextBillNo();
-  el('billno').value = draftData.billno || '';
+
+  // โหลด draft จาก table_id
+  const { data: draftData, error: draftError } = await client
+    .from('drafts')
+    .select('*')
+    .eq('table_id', table_id)
+    .single();
+
+  if (draftError) {
+    console.log('โหลด draft ผิดพลาด', draftError);
+    return;
+  }
+  if (!draftData) {
+    currentDraftId = null; // ไม่มี draft
+    return;
+  }
+
+  // เก็บ id ของ draft ไว้ลบตอน save
+  currentDraftId = draftData.id;
+
+  // เติมข้อมูลลงฟอร์ม
+  el('billno').value = draftData.billno || ''; // ไม่ต้อง gen เลขจริงตอนนี้
   el('customer').value = draftData.customer || '';
   el('cash').value = draftData.cash || '';
 
-  const { data: items, error: itemsError } = await client.from('draft_items').select('*').eq('draft_id', draftData.id);
-  if (itemsError) { console.log('โหลด draft_items ผิดพลาด', itemsError); return; }
+  // โหลดรายการ draft_items
+  const { data: items, error: itemsError } = await client
+    .from('draft_items')
+    .select('*')
+    .eq('draft_id', draftData.id);
+
+  if (itemsError) {
+    console.log('โหลด draft_items ผิดพลาด', itemsError);
+    return;
+  }
+
   items.forEach(item => {
-    const input = document.querySelector(`#menuItems input[data-id="${item.menu_id}"]`);
+    const input = document.querySelector(
+      `#menuItems input[data-id="${item.menu_id}"]`
+    );
     if (input) input.value = item.qty;
   });
+
   calc();
 }
 
@@ -358,9 +389,10 @@ async function saveBill() {
     if (updateError) console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
   }
 
-  if (draftData) {
-    await client.from('draft_items').delete().eq('draft_id', draftData.id);
-    await client.from('drafts').delete().eq('id', draftData.id);
+  if (currentDraftId) {
+    await client.from('draft_items').delete().eq('draft_id', currentDraftId);
+    await client.from('drafts').delete().eq('id', currentDraftId);
+    currentDraftId = null; // เคลียร์หลังลบเสร็จ
   }
 
   // print
