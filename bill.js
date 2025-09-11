@@ -134,7 +134,8 @@ async function loadDraft() {
   const { data: draftData, error: draftError } = await client.from('drafts').select('*').eq('table_id', table_id).single();
   if (draftError) { console.log('โหลด draft ผิดพลาด', draftError); return; }
   if (!draftData) return;
-  el('billno').value = draftData.billno || await getNextBillNo();
+  //el('billno').value = draftData.billno || await getNextBillNo();
+  el('billno').value = draftData.billno || '';
   el('customer').value = draftData.customer || '';
   el('cash').value = draftData.cash || '';
 
@@ -370,7 +371,8 @@ async function saveBill() {
   w.close();
 
   // clear
-  el('billno').value = await getNextBillNo();
+  //el('billno').value = await getNextBillNo();
+  el('billno').value = '';
   document.querySelectorAll('#menuItems input').forEach(i => i.value = '');
   el('cash').value = '';
   calc();
@@ -563,7 +565,7 @@ function closeOpenRow() {
    ============================ */
 window.addEventListener('DOMContentLoaded', async () => {
   el('today').textContent = todayText();
-  el('billno').value = await getNextBillNo();
+  //el('billno').value = await getNextBillNo();
   await loadTableName();
   await loadMenu();
   await loadDraft();
