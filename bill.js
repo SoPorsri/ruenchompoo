@@ -34,7 +34,7 @@ async function getNextBillNo() {
 
 async function loadTableName() {
   if (!table_id) return;
-  const { data, error } = await client.from('tables').select('*').eq('id', table_id).single();
+  const { data, error } = await client.from('tables').select('*').eq('id', table_id).maybeSingle();
   if (error) { console.log(error); return; }
   if (data) {
     el('customer').value = data.name;
@@ -139,7 +139,7 @@ async function loadDraft() {
     .from('drafts')
     .select('*')
     .eq('table_id', table_id)
-    .single();
+    .maybeSingle();
 
   if (draftError) {
     console.log('โหลด draft ผิดพลาด', draftError);
@@ -312,14 +312,14 @@ async function saveDraft() {
   const change = safeEval(el('change').value);
 
   try {
-    let { data: existingDraft } = await client.from('drafts').select('*').eq('billno', billno).single();
+    let { data: existingDraft } = await client.from('drafts').select('*').eq('billno', billno).maybeSingle();
     let draftId;
     if (existingDraft) {
-      const { data: updatedDraft, error: updateError } = await client.from('drafts').update({ customer, table_id, total, cash, change, updated_at: new Date().toISOString() }).eq('id', existingDraft.id).select().single();
+      const { data: updatedDraft, error: updateError } = await client.from('drafts').update({ customer, table_id, total, cash, change, updated_at: new Date().toISOString() }).eq('id', existingDraft.id).select().maybeSingle();
       if (updateError) throw updateError;
       draftId = updatedDraft.id;
     } else {
-      const { data: newDraft, error: insertError } = await client.from('drafts').insert([{ billno, customer, table_id, total, cash, change }]).select().single();
+      const { data: newDraft, error: insertError } = await client.from('drafts').insert([{ billno, customer, table_id, total, cash, change }]).select().maybeSingle();
       if (insertError) throw insertError;
       draftId = newDraft.id;
     }
@@ -361,7 +361,7 @@ async function saveBill() {
       .from('drafts')
       .select('*')
       .eq('billno', billno)
-      .single();
+      .maybeSingle();
   
     if (!error && data) draftData = data;
   }
@@ -380,7 +380,7 @@ async function saveBill() {
                  ? new Date(draftData.created_at)
                  : new Date(),  // <— บังคับเป็น Date object
     closed_at: new Date()
-  }]).select().single();
+  }]).select().maybeSingle();
 
   if (billError) { alert('บันทึกบิลผิดพลาด'); console.log(billError); return; }
 
@@ -728,7 +728,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (updateError) console.log('อัปเดตสถานะโต๊ะผิดพลาด', updateError);
     }
     if (table_id) {
-      const { data: draftData } = await client.from('drafts').select('id').eq('table_id', table_id).single();
+      const { data: draftData } = await client.from('drafts').select('id').eq('table_id', table_id).maybeSingle();
       if (draftData) {
         await client.from('draft_items').delete().eq('draft_id', draftData.id);
         await client.from('drafts').delete().eq('id', draftData.id);
