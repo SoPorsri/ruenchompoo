@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เครื่องพิมพ์ใบเสร็จ XP-C582</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 sm:p-8">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-6">สั่งพิมพ์ใบเสร็จ</h1>
+        <p class="text-center text-gray-500 mb-8">กรุณากรอกข้อมูลเพื่อสั่งพิมพ์ใบเสร็จผ่านเครือข่าย</p>
+
+        <div class="mb-6">
+            <label for="printerIp" class="block text-gray-700 text-sm font-medium mb-2">ที่อยู่ IP เครื่องพิมพ์</label>
+            <input type="text" id="printerIp" value="192.168.1.100" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300" placeholder="ตัวอย่าง: 192.168.1.100">
+        </div>
+
+        <div class="mb-6">
+            <label for="printContent" class="block text-gray-700 text-sm font-medium mb-2">เนื้อหาใบเสร็จ</label>
+            <textarea id="printContent" rows="10" class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300 resize-none" placeholder="กาแฟดำ     1      50    50&#10;ชาเย็น      2      40    80&#10;เค้กช็อก   1      60    60&#10;ราคารวม: 190 บาท&#10;ขอบคุณที่ใช้บริการ"></textarea>
+        </div>
+
+        <button id="printButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+            พิมพ์ใบเสร็จ
+        </button>
+
+        <div id="statusMessage" class="mt-6 text-center text-sm font-medium"></div>
+
+        <div id="alertModal" class="fixed inset-0 bg-gray-600 bg-opacity-75 hidden items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="alertTitle" class="text-xl font-bold text-gray-800"></h3>
+                    <button onclick="hideAlert()" class="text-gray-400 hover:text-gray-600 transition duration-300">&times;</button>
+                </div>
+                <p id="alertMessage" class="text-gray-600 mb-6"></p>
+                <div class="flex justify-end">
+                    <button onclick="hideAlert()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">ตกลง</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const printButton = document.getElementById('printButton');
+        const printerIpInput = document.getElementById('printerIp');
+        const printContentTextarea = document.getElementById('printContent');
+        const statusMessageDiv = document.getElementById('statusMessage');
+        const alertModal = document.getElementById('alertModal');
+        const alertTitle = document.getElementById('alertTitle');
+        const alertMessage = document.getElementById('alertMessage');
+
+        function showAlert(title, message) {
+            alertTitle.textContent = title;
+            alertMessage.textContent = message;
+            alertModal.classList.remove('hidden');
+            alertModal.classList.add('flex');
+        }
+
+        function hideAlert() {
+            alertModal.classList.remove('flex');
+            alertModal.classList.add('hidden');
+        }
+
+        printButton.addEventListener('click', () => {
+            const printerIp = printerIpInput.value;
+            const printContent = printContentTextarea.value;
+
+            if (!printerIp || !printContent) {
+                showAlert('ข้อผิดพลาด', 'กรุณากรอกข้อมูล IP และเนื้อหาที่ต้องการพิมพ์ให้ครบถ้วน');
+                return;
+            }
+
+            statusMessageDiv.textContent = 'กำลังส่งคำสั่งพิมพ์...';
+            statusMessageDiv.classList.remove('text-red-500', 'text-green-500');
+            statusMessageDiv.classList.add('text-blue-500');
+
+            const printData = {
+                ip: printerIp,
+                content: printContent
+            };
+
+            // *** ส่วนนี้คือโค้ดจริงที่เชื่อมต่อกับ API บน Railway ***
+            fetch('https://modest-fulfillment.up.railway.app/print', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(printData),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusMessageDiv.textContent = 'สั่งพิมพ์สำเร็จ!';
+                    statusMessageDiv.classList.remove('text-blue-500', 'text-red-500');
+                    statusMessageDiv.classList.add('text-green-500');
+                    showAlert('สำเร็จ', 'คำสั่งพิมพ์ถูกส่งไปที่เครื่องพิมพ์แล้ว');
+                } else {
+                    statusMessageDiv.textContent = `เกิดข้อผิดพลาด: ${data.message}`;
+                    statusMessageDiv.classList.remove('text-blue-500', 'text-green-500');
+                    statusMessageDiv.classList.add('text-red-500');
+                    showAlert('ข้อผิดพลาด', data.message);
+                }
+            })
+            .catch((error) => {
+                statusMessageDiv.textContent = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้';
+                statusMessageDiv.classList.remove('text-blue-500', 'text-green-500');
+                statusMessageDiv.classList.add('text-red-500');
+                console.error('Error:', error);
+                showAlert('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ ลองตรวจสอบการเชื่อมต่อ');
+            });
+        });
+    </script>
+</body>
+</html>
