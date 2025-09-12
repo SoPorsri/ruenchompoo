@@ -360,13 +360,13 @@ async function saveBill() {
     const { data, error } = await client
       .from('drafts')
       .select('*')
-      .eq('billno', billno)
+      .eq('table_id', table_id)
       .maybeSingle();
   
     if (!error && data) draftData = data;
   }
   
-  console.log('billno', billno); // <— ดูว่ามีค่าจริงไหม
+  console.log('billno', billno, 'table_id', table_id, 'draftData', draftData);
 
   const { data: bill, error: billError } = await client.from('bills').insert([{
     billno,
