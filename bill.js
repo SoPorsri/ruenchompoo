@@ -357,14 +357,28 @@ async function saveBill() {
 
   let draftData = null;
   if (billno) {
-    const { data, error } = await client.from('drafts').select('*').eq('billno', billno).single();
+    const { data, error } = await client
+      .from('drafts')
+      .select('*')
+      .eq('billno', billno)
+      .single();
+  
     if (!error && data) draftData = data;
   }
+  
+  console.log('draftData.created_at', draftData?.created_at); // <— ดูว่ามีค่าจริงไหม
 
   const { data: bill, error: billError } = await client.from('bills').insert([{
-    billno, customer, table_id, total, cash, change,
+    billno,
+    customer,
+    table_id,
+    total,
+    cash,
+    change,
     status: 'closed',
-    created_at: draftData ? draftData.created_at : new Date(),
+    created_at: draftData?.created_at
+                 ? new Date(draftData.created_at)
+                 : new Date(),  // <— บังคับเป็น Date object
     closed_at: new Date()
   }]).select().single();
 
