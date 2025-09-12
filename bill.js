@@ -365,8 +365,6 @@ async function saveBill() {
   
     if (!error && data) draftData = data;
   }
-  
-  console.log('billno', billno, 'table_id', table_id, 'draftData', draftData);
 
   const { data: bill, error: billError } = await client.from('bills').insert([{
     billno,
