@@ -219,16 +219,20 @@
     async function ensureTablesExist() {
       const { data: dbTables, error } = await client.from('tables').select('id');
       if (error) { console.error(error); return; }
-
       const existingIds = dbTables.map(t => t.id);
       const missing = tables.filter(t => !existingIds.includes(t.id));
 
       if (missing.length > 0) {
         console.log("Insert missing tables:", missing);
-        const { error: insertError } = await client.from('tables').insert(
+        // destructure data, error ออกมา
+        const { data, error: upsertError } = await client.from('tables').upsert(
           missing.map(m => ({ id: m.id, name: m.name, status: "ว่าง" }))
         );
-        if (insertError) console.error("Insert error:", insertError);
+        if (upsertError) {
+          console.error("Upsert error:", upsertError);
+        } else {
+          console.log("Upsert success:", data);
+        }
       }
     }
 
