@@ -366,7 +366,7 @@ async function saveBill() {
     if (!error && data) draftData = data;
   }
   
-  console.log('draftData.created_at', draftData?.created_at); // <— ดูว่ามีค่าจริงไหม
+  console.log('billno', billno); // <— ดูว่ามีค่าจริงไหม
 
   const { data: bill, error: billError } = await client.from('bills').insert([{
     billno,
