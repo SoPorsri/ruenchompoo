@@ -15,27 +15,41 @@
       background: linear-gradient(90deg, #ec4899, #d946ef);
       color: white;
       padding: clamp(4px, 1vw, 8px) clamp(8px, 2vw, 12px);
-      /* บนจอเล็กสุด padding 4px/8px จอใหญ่สุด padding 8px/12px */
-      
       text-align: center;
-      font-size: clamp(14px, 2vw, 18px); /* ตัวหนังสือจะเล็กบนจอเล็ก ใหญ่บนจอใหญ่ */
+      font-size: clamp(14px, 2vw, 18px);
       font-weight: bold;
       letter-spacing: 0.5px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      flex-wrap:wrap; /* เผื่อจอแคบ */
+      position: relative; /* สำคัญสำหรับ positioning ปุ่ม */
     }
+    
+    header img {
+      height: 100px;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    
+    header span {
+      vertical-align: middle;
+    }
+    
     header button {
-      margin-left:20px;
-      background:#fff;
-      color:#d946ef;
-      border:none;
-      padding:6px 12px;
-      border-radius:6px;
-      cursor:pointer;
-      font-size: clamp(12px, 1.8vw, 16px); /* ปุ่มก็ย่อขยาย */
+      position: absolute; /* ทำให้ลอยได้ */
+      bottom: 8px;        /* ล่างของ header */
+      right: 12px;        /* ขอบขวา */
+      background: #fff;
+      color: #d946ef;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: clamp(12px, 1.8vw, 16px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: transform 0.2s;
+    }
+    
+    header button:hover {
+      transform: translateY(-2px);
     }
     .layout {
       display: grid; grid-template-columns: 90px 90px 90px 90px;
@@ -89,11 +103,10 @@
   </style>
 </head>
 <body>
-  <header> 
-    <img src="images/LOGO.png" alt="โลโก้ร้าน" style="height:100px; vertical-align:middle; margin-right:4px;">
-    ร้านเรือนชมพูเนื้อย่างเกาหลี • สาขานาเชือก
-    <button onclick="openReport()" 
-      style="margin-left:20px; background:#fff; color:#d946ef; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">
+  <header>
+    <img src="images/LOGO.png" alt="โลโก้ร้าน">
+    <span>ร้านเรือนชมพูเนื้อย่างเกาหลี • สาขานาเชือก</span>
+    <button onclick="openReport()">
       <i class="fa-solid fa-chart-line"></i> ดูรายงาน
     </button>
   </header>
