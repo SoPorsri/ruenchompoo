@@ -75,7 +75,7 @@ async function loadMenu() {
           <input class="num menu-qty" 
             type="text" 
             data-id="${item.id}" 
-            value=""
+            value="${existingValues[item.id] || ''}"
             placeholder="เช่น 1+2"
             inputmode="decimal" 
             pattern="[0-9.+]*">
