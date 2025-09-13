@@ -94,6 +94,7 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(printData),
+                mode: 'cors'
             })
             .then(response => response.json())
             .then(data => {
