@@ -91,19 +91,18 @@ async function loadMenu() {
 
     // เพิ่ม Event Listener นี้เข้าไปใน row
     row.addEventListener('contextmenu', (e) => {
-        // ป้องกันเมนูคลิกขวาเริ่มต้นของเบราว์เซอร์
-        e.preventDefault(); 
-        
-        // ปิดเมนูอื่นๆ ที่อาจเปิดอยู่ (เช่น เมนู swipe)
-        if (currentlyOpenRow) closeRow(currentlyOpenRow);
-        
-        // เก็บข้อมูลรายการเมนูที่ถูกคลิก
-        activeMenuItem = item;
-        
-        // กำหนดตำแหน่งเมนูให้ตรงกับตำแหน่งเมาส์
-        contextMenu.style.left = `${e.clientX}px`;
-        contextMenu.style.top = `${e.clientY}px`;
-        contextMenu.style.display = 'block';
+      e.preventDefault(); // ปิดเมนูคลิกขวาปกติ
+    
+      if (currentlyOpenRow) closeRow(currentlyOpenRow);
+      activeMenuItem = item;
+    
+      // ใช้ pageX/pageY หรือ clientX + scroll
+      const x = e.pageX;  // หรือ e.clientX + window.scrollX
+      const y = e.pageY;  // หรือ e.clientY + window.scrollY
+    
+      contextMenu.style.left = `${x}px`;
+      contextMenu.style.top = `${y}px`;
+      contextMenu.style.display = 'block';
     });
 
     // attach custom keypad
