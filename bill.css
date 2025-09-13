@@ -173,6 +173,14 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
   background-color: #f9f9f9;                      /* พื้นหลังนุ่ม ๆ */
 }
 
+.menu-qty.highlight {
+  border: 1px solid #007aff;                    /* สีฟ้า iOS */
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2); /* เงาฟ้าอ่อน */
+  background-color: #f9f9f9;                     /* พื้นหลังนุ่ม ๆ */
+  border-radius: 6px;                            /* มุมโค้งสไตล์ iOS */
+  transition: all 0.2s ease-in-out;              /* ทำให้ smooth */
+}
+
 /* placeholder + drag visual */
 .placeholder{border:2px dashed var(--accent);background:#f0fdf4}
 .drag-over{background:#e0f2fe;border-top:3px solid var(--accent)}
