@@ -73,7 +73,7 @@ async function loadMenu() {
         <div class="menu-price right">฿${Number(item.price).toFixed(2)}</div>
         <div>
           <input class="num menu-qty" 
-            type="text" 
+            type="tel" 
             data-id="${item.id}" 
             value="${existingValues[item.id] || ''}"
             placeholder="เช่น 1+2"
