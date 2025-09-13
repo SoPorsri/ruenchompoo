@@ -191,7 +191,7 @@ function openCustomKeypad(input) {
   });
   keypad.appendChild(closeBtn);
   
-  const keys = ['1', '2', '3', '+', '4', '5', '6', '.', '7', '8', '9', '&#x232B;', 'empty', '0', 'empty', 'C'];
+  const keys = ['1', '2', '3', '+', '4', '5', '6', '.', '7', '8', '9', '⌫', 'empty', '0', 'empty', 'C'];
   keys.forEach(k => {
       let element;
       if (k === 'empty') {
