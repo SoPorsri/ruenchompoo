@@ -67,7 +67,7 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
 /* header grid (column titles) */
 .grid.header{
   display:grid;
-  grid-template-columns: 30px 1fr 100px 130px 10px; /* ☰ | สินค้า | ราคา | จำนวน */
+  grid-template-columns: 30px 1fr 100px 110px 10px; /* ☰ | สินค้า | ราคา | จำนวน */
   gap:10px;
   align-items:center;
   font-weight:700;
