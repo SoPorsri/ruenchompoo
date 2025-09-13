@@ -5,6 +5,9 @@ const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
 const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+let activeMenuItem = null;
+const contextMenu = document.getElementById('contextMenu');
+
 const el = id => document.getElementById(id);
 const fmt = n => new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(n || 0);
 function safeEval(expr) {
@@ -93,6 +96,23 @@ async function loadMenu() {
       e.preventDefault(); 
       openCustomKeypad(input);
     });
+
+    // เพิ่ม Event Listener นี้เข้าไปใน row
+    row.addEventListener('contextmenu', (e) => {
+        // ป้องกันเมนูคลิกขวาเริ่มต้นของเบราว์เซอร์
+        e.preventDefault();
+        
+        // ปิดเมนูอื่นๆ ที่อาจเปิดอยู่ (เช่น เมนู swipe)
+        if (currentlyOpenRow) closeRow(currentlyOpenRow);
+        
+        // เก็บข้อมูลรายการเมนูที่ถูกคลิก
+        activeMenuItem = item;
+        
+        // กำหนดตำแหน่งและแสดงเมนูคลิกขวา
+        contextMenu.style.left = `${e.clientX}px`;
+        contextMenu.style.top = `${e.clientY}px`;
+        contextMenu.style.display = 'block';
+    });
   });
 
   // init or re-init Sortable
@@ -109,6 +129,44 @@ async function loadMenu() {
   closeOpenRow();
   return true;
 }
+/* ==========================
+   ปุ่ม ลบ แก้ไข สำหรับ PC
+   ========================== */
+contextMenu.addEventListener('click', async (e) => {
+    // ซ่อนเมนูทันทีเมื่อคลิก
+    contextMenu.style.display = 'none';
+    
+    const action = e.target.dataset.action;
+    
+    if (activeMenuItem && action) {
+        if (action === 'edit') {
+            // เรียกใช้ฟังก์ชันแสดง popup สำหรับแก้ไข
+            showEditPopup(activeMenuItem);
+        } else if (action === 'delete') {
+            // ลบรายการที่ถูกเลือก
+            if (confirm("ลบเมนูนี้ใช่ไหม?")) {
+                const { error } = await client.from('menu').delete().eq('id', activeMenuItem.id);
+                if (error) {
+                    alert('ลบเมนูผิดพลาด');
+                    console.error(error);
+                }
+                // โหลดเมนูใหม่หลังจากลบ
+                await loadMenu();
+            }
+        }
+    }
+    // รีเซ็ตรายการที่ถูกเลือก
+    activeMenuItem = null;
+});
+
+// เพิ่ม Event Listener เพื่อซ่อนเมนูเมื่อคลิกที่อื่น
+window.addEventListener('click', (e) => {
+    // ถ้าการคลิกไม่ได้เกิดขึ้นบนเมนูคลิกขวา ให้ซ่อนเมนู
+    if (!contextMenu.contains(e.target)) {
+        contextMenu.style.display = 'none';
+        activeMenuItem = null;
+    }
+});
 
 /* ==========================
    Custom Keypad
