@@ -127,13 +127,13 @@ function openCustomKeypad(input) {
 
   const closeBtn = document.createElement("button");
   closeBtn.className = "close-keypad";
-  closeBtn.textContent = "✕";
+  closeBtn.innerHTML = '⌨️<br>&#x25BC;'; // ใช้ Unicode สำหรับสัญลักษณ์คีย์บอร์ดและลูกศรชี้ลง
   closeBtn.addEventListener("click", () => { // <--- แก้ไขตรงนี้
     closeCustomKeypad();
   });
   keypad.appendChild(closeBtn);
   
-  const keys = ['1','2','3','+','4','5','6','.','7','8','9','⌫','','0','','Clear'];
+  const keys = ['1','2','3','+','4','5','6','.','7','8','9','⌫','','0','','C'];
   keys.forEach(k => {
     const btn = document.createElement('button');
     btn.textContent = k;
