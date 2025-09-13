@@ -124,8 +124,8 @@ function openCustomKeypad(input) {
   const closeBtn = document.createElement("button");
   closeBtn.className = "close-keypad";
   closeBtn.textContent = "✕";
-  closeBtn.addEventListener("click", () => {
-    keypad.classList.remove("show");
+  closeBtn.addEventListener("click", () => { // <--- แก้ไขตรงนี้
+    closeCustomKeypad();
   });
   keypad.appendChild(closeBtn);
   
@@ -171,11 +171,6 @@ document.addEventListener('click', e => {
       (!e.target.closest('#customKeypad'))) {
     closeCustomKeypad();
   }
-});
-
-// ปิดคีย์บอร์ดเมื่อกดปุ่ม ✕
-document.querySelector("#customKeypad .close-keypad").addEventListener("click", () => {
-  document.getElementById("customKeypad").classList.remove("show");
 });
 
 /* ---------------------------
