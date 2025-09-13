@@ -121,7 +121,15 @@ function openCustomKeypad(input) {
   }
   keypad.innerHTML = '';
 
-  const keys = ['7','8','9','+','4','5','6','.','1','2','3','⌫','0','C'];
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "close-keypad";
+  closeBtn.textContent = "✕";
+  closeBtn.addEventListener("click", () => {
+    keypad.classList.remove("show");
+  });
+  keypad.appendChild(closeBtn);
+  
+  const keys = ['1','2','3','+','4','5','6','.','7','8','9','⌫','C','0'];
   keys.forEach(k => {
     const btn = document.createElement('button');
     btn.textContent = k;
