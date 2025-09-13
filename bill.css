@@ -302,61 +302,57 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
 }
 
 /* ==========================
-   Custom Keypad (iOS style)
+   Custom Keypad
    ========================== */
 #customKeypad {
+  /* Positioning & Layout */
   position: fixed;
-  bottom: -360px;           /* เริ่มซ่อน */
+  bottom: -100%;
   left: 0;
+  z-index: 9999;
   width: 100%;
-  background: #d1d5db;       /* gray-300 แบบ iOS keyboard */
+
+  /* Display & Structure */
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  padding: 12px;
-  box-shadow: 0 -4px 12px rgba(0,0,0,0.25);
-  transition: bottom 0.25s cubic-bezier(.2,.9,.2,1);
-  z-index: 9999;
-  max-height: 50vh;
-  overflow-y: auto;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
+  gap: 5px;
+
+  /* Sizing & Spacing */
+  padding: 10px;
+
+  /* Appearance */
+  background: #f2f2f2;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+
+  /* Animation */
+  transition: bottom 0.3s ease;
 }
 
 #customKeypad.show {
-  bottom: 0;
+  bottom: 0; /* แสดง keypad */
 }
 
-/* ปุ่มตัวเลข */
+/* --- Buttons within the Keypad --- */
 #customKeypad button {
-  font-family: 'Helvetica Neue', 'Segoe UI', Roboto, Arial, sans-serif;
+  /* Typography */
+  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
   font-weight: 600;
   font-size: 1.8rem;
-  color: #111;
-  background: #f3f4f6;         /* light gray */
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 18px 0;             /* สูงมากขึ้นเพื่อให้กดง่าย */
+  color: #222;
+
+  /* Sizing & Spacing */
+  padding: 12px;
+  
+  /* Appearance */
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+
+  /* Interactivity */
   cursor: pointer;
   user-select: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;     /* ตัวเลขกึ่งกลางแนวตั้ง/แนวนอน */
-  transition: background 0.15s ease;
 }
 
 #customKeypad button:active {
-  background: #e5e7eb;          /* feedback เวลากด */
-}
-
-/* ปุ่มย่อ/ปิด keypad */
-#customKeypad .key-close {
-  grid-column: span 4;         /* กว้างเต็ม */
-  background: #f87171;         /* สีแดงแบบ iOS delete */
-  color: #fff;
-  font-weight: 700;
-  font-size: 1.4rem;
-}
-#customKeypad .key-close:active {
-  background: #ef4444;
+  background: #ddd;
 }
