@@ -360,3 +360,36 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
 #customKeypad button:active {
   background: #ddd;
 }
+
+/* ปุ่มปิดเล็กมุมขวาแบบ iOS */
+#customKeypad .close-keypad {
+  position: absolute;
+  top: -20px;         /* ดันขึ้นเหนือ keypad */
+  right: 15px;        /* ชิดขวานิดหน่อย */
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ff4d4d;
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: bold;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+  cursor: pointer;
+  z-index: 10000;     /* ให้อยู่บน keypad */
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+#customKeypad .close-keypad:hover {
+  background: #ff1a1a;
+  transform: scale(1.1);
+}
+
+#customKeypad .close-keypad:active {
+  background: #e60000;
+  transform: scale(0.95);
+}
+
