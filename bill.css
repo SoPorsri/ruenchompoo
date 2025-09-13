@@ -302,42 +302,61 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
 }
 
 /* ==========================
-   Custom Keypad
+   Custom Keypad (iOS style)
    ========================== */
 #customKeypad {
   position: fixed;
-  bottom: -100%; /* เริ่มจากด้านล่าง (ซ่อนก่อน) */
+  bottom: -360px;           /* เริ่มซ่อน */
   left: 0;
   width: 100%;
-  background: #f2f2f2;
+  background: #d1d5db;       /* gray-300 แบบ iOS keyboard */
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 5px;
-  padding: 10px;
-  box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
-  transition: bottom 0.3s ease; /* animation smooth */
+  gap: 6px;
+  padding: 12px;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.25);
+  transition: bottom 0.25s cubic-bezier(.2,.9,.2,1);
   z-index: 9999;
+  max-height: 50vh;
+  overflow-y: auto;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
 }
 
 #customKeypad.show {
-  bottom: 0; /* แสดง keypad */
+  bottom: 0;
 }
 
+/* ปุ่มตัวเลข */
 #customKeypad button {
-  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  font-family: 'Helvetica Neue', 'Segoe UI', Roboto, Arial, sans-serif;
   font-weight: 600;
   font-size: 1.8rem;
-  color: #222;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 12px;
+  color: #111;
+  background: #f3f4f6;         /* light gray */
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 18px 0;             /* สูงมากขึ้นเพื่อให้กดง่าย */
   cursor: pointer;
   user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;     /* ตัวเลขกึ่งกลางแนวตั้ง/แนวนอน */
+  transition: background 0.15s ease;
 }
 
 #customKeypad button:active {
-  background: #ddd;
+  background: #e5e7eb;          /* feedback เวลากด */
 }
 
-
+/* ปุ่มย่อ/ปิด keypad */
+#customKeypad .key-close {
+  grid-column: span 4;         /* กว้างเต็ม */
+  background: #f87171;         /* สีแดงแบบ iOS delete */
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.4rem;
+}
+#customKeypad .key-close:active {
+  background: #ef4444;
+}
