@@ -76,8 +76,7 @@ async function loadMenu() {
             type="text" 
             data-id="${item.id}" 
             value="${existingValues[item.id] || ''}"
-            placeholder="เช่น 1+2"
-            readonly>
+            placeholder="เช่น 1+2">
         </div>
       </div>
       <div class="action-btns" aria-hidden="true">
