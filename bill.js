@@ -165,6 +165,17 @@ document.addEventListener('click', e => {
   }
 });
 
+document.querySelector('#customKeypad').addEventListener('click', e => {
+  const key = e.target.dataset.key;
+  if (!key) return;
+  
+  if (key === 'close') {
+    document.getElementById('customKeypad').classList.remove('show');
+  } else {
+    handleKey(currentInput, key); // currentInput คือ input ที่ focus อยู่
+  }
+});
+
 /* ---------------------------
    Save new sort_order -> DB
    --------------------------- */
