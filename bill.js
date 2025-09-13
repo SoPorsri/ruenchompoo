@@ -86,6 +86,25 @@ async function loadMenu() {
 
     enableSwipe(row, item);
 
+    // --- ส่วนที่เพิ่มใหม่สำหรับ PC ---
+    row.addEventListener('contextmenu', async (e) => {
+        // ป้องกันไม่ให้เมนูคลิกขวาเริ่มต้นของเบราว์เซอร์แสดงขึ้นมา
+        e.preventDefault(); 
+        if (confirm("ลบเมนูนี้ใช่ไหม?")) {
+            // เรียกใช้โค้ดลบรายการเมนู
+            const { error } = await client.from('menu').delete().eq('id', item.id);
+            if (error) {
+                alert('ลบเมนูผิดพลาด');
+                console.error(error);
+                return;
+            }
+            // ลบแถวออกจากหน้าจอ
+            row.remove();
+            // บันทึกลำดับใหม่
+            await saveNewOrder();
+        }
+    });
+
     // attach custom keypad
     const input = row.querySelector('.menu-qty');
     input.addEventListener('mousedown', (e) => {
