@@ -109,21 +109,14 @@ async function loadMenu() {
 /* ==========================
    Custom Keypad
    ========================== */
+let activeInput = null;
+
 function openCustomKeypad(input) {
+  activeInput = input;
   let keypad = document.getElementById('customKeypad');
   if (!keypad) {
     keypad = document.createElement('div');
     keypad.id = 'customKeypad';
-    keypad.style.position = 'fixed';
-    keypad.style.bottom = '0';
-    keypad.style.left = '0';
-    keypad.style.width = '100%';
-    keypad.style.background = '#f2f2f2';
-    keypad.style.display = 'grid';
-    keypad.style.gridTemplateColumns = 'repeat(4, 1fr)';
-    keypad.style.gap = '5px';
-    keypad.style.padding = '10px';
-    keypad.style.boxShadow = '0 -2px 8px rgba(0,0,0,0.2)';
     document.body.appendChild(keypad);
   }
   keypad.innerHTML = '';
@@ -132,14 +125,25 @@ function openCustomKeypad(input) {
   keys.forEach(k => {
     const btn = document.createElement('button');
     btn.textContent = k;
-    btn.style.fontSize = '20px';
-    btn.style.padding = '12px';
     btn.addEventListener('click', () => handleKey(input, k));
     keypad.appendChild(btn);
   });
+
+  // แสดง keypad ด้วย animation
+  keypad.classList.add('show');
 }
 
+// ปิด keypad
+function closeCustomKeypad() {
+  const keypad = document.getElementById('customKeypad');
+  if (keypad) keypad.classList.remove('show');
+  activeInput = null;
+}
+
+// กดปุ่ม keypad
 function handleKey(input, key) {
+  if (!input) return;
+
   if (key === '⌫') {
     input.value = input.value.slice(0, -1);
   } else if (key === 'C') {
@@ -147,9 +151,19 @@ function handleKey(input, key) {
   } else {
     input.value += key;
   }
-  input.value = input.value.replace(/[^0-9.+]/g,''); // sanitize
+
+  // sanitize
+  input.value = input.value.replace(/[^0-9.+]/g,'');
   calc();
 }
+
+// ซ่อน keypad ถ้า click นอก
+document.addEventListener('click', e => {
+  if (!e.target.classList.contains('menu-qty') &&
+      (!e.target.closest('#customKeypad'))) {
+    closeCustomKeypad();
+  }
+});
 
 /* ---------------------------
    Save new sort_order -> DB
