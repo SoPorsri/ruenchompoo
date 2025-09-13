@@ -135,7 +135,6 @@ function openCustomKeypad(input) {
   keypad.appendChild(closeBtn);
   
   const keys = ['1', '2', '3', '+', '4', '5', '6', '.', '7', '8', '9', '&#x232B;', 'empty', '0', 'empty', 'C'];
-
   keys.forEach(k => {
       let element;
       if (k === 'empty') {
@@ -145,7 +144,7 @@ function openCustomKeypad(input) {
       } else {
           // ถ้าไม่ใช่ค่า 'empty' ให้สร้าง button ตามปกติ
           element = document.createElement('button');
-          element.textContent = k;
+          element.innerHTML = k;
           
           // เพิ่ม event listener ให้กับปุ่มที่ใช้งานได้เท่านั้น
           element.addEventListener('click', () => handleKey(input, k));
