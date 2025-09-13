@@ -134,12 +134,23 @@ function openCustomKeypad(input) {
   });
   keypad.appendChild(closeBtn);
   
-  const keys = ['1','2','3','+','4','5','6','.','7','8','9','⌫','','0','','C'];
+  const keys = ['1', '2', '3', '+', '4', '5', '6', '.', '7', '8', '9', '⌫', 'empty', '0', 'empty', 'C'];
+
   keys.forEach(k => {
-    const btn = document.createElement('button');
-    btn.textContent = k;
-    btn.addEventListener('click', () => handleKey(input, k));
-    keypad.appendChild(btn);
+      let element;
+      if (k === 'empty') {
+          // ถ้าเป็นค่า 'empty' ให้สร้าง div แทน button
+          element = document.createElement('div');
+          element.className = 'empty-cell'; // เพิ่ม class สำหรับจัดสไตล์
+      } else {
+          // ถ้าไม่ใช่ค่า 'empty' ให้สร้าง button ตามปกติ
+          element = document.createElement('button');
+          element.textContent = k;
+          
+          // เพิ่ม event listener ให้กับปุ่มที่ใช้งานได้เท่านั้น
+          element.addEventListener('click', () => handleKey(input, k));
+      }
+      keypad.appendChild(element);
   });
 
   // แสดง keypad ด้วย animation
