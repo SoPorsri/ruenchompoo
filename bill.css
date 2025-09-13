@@ -399,7 +399,9 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
 }
 
 .context-menu {
-  position: absolute;
+  position: absolute;       /* อ้างอิง body */
+  left: 0;                  /* ใส่ค่าเริ่มต้น ป้องกันเลื่อน */
+  top: 0;
   z-index: 9999;
   width: 150px;
   background-color: var(--card);
@@ -409,6 +411,7 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
   padding: 6px 0;
   font-size: 16px;
   cursor: pointer;
+  display: none;            /* เริ่มต้นซ่อน */
 }
 
 .context-menu-item {
