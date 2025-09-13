@@ -326,6 +326,13 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
 
   /* Animation */
   transition: bottom 0.3s ease;
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+
+  /* เพิ่มคำสั่งนี้เพื่อจัดตำแหน่งเนื้อหาในแต่ละ cell */
+  place-items: center; 
 }
 
 #customKeypad.show {
@@ -351,6 +358,10 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
   /* Interactivity */
   cursor: pointer;
   user-select: none;
+
+  display: flex;
+  justify-content: center; /* จัดเนื้อหาในแนวนอนให้อยู่ตรงกลาง */
+  align-items: center;     /* จัดเนื้อหาในแนวตั้งให้อยู่ตรงกลาง */
 }
 
 #customKeypad button:active {
