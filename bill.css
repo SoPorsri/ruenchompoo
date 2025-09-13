@@ -301,3 +301,43 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
   to {opacity:1; transform: translateY(0);}
 }
 
+#customKeypad {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  max-height: 40%;
+  background: #f2f2f2;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  padding: 10px;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.3);
+  overflow-y: auto;
+  z-index: 9999;
+}
+
+#customKeypad button {
+  font-size: 1.5rem;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+#customKeypad button:active {
+  background: #ddd;
+  transform: scale(0.95);
+}
+
+@media (max-width: 600px) {
+  #customKeypad button {
+    font-size: 1.3rem;
+    padding: 12px;
+  }
+}
+
+
