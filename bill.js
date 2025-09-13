@@ -114,6 +114,12 @@ async function loadMenu() {
       input.classList.add('highlight');
       openCustomKeypad(input);
     });
+
+    // เอา highlight ออกทันทีเมื่อค่า input เปลี่ยน
+    input.addEventListener('input', () => {
+      input.classList.remove('highlight');
+    });
+
   });
 
   // init or re-init Sortable
