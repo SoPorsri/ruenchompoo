@@ -363,19 +363,23 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
 
 /* ปุ่มปิดคีย์บอร์ด iOS Style */
 #customKeypad .close-keypad-btn {
-  position: absolute; /* ทำให้สามารถจัดตำแหน่งได้อย่างอิสระ */
-  top: 10px; /* ระยะห่างจากด้านบนของ Keypad */
-  right: 10px; /* ระยะห่างจากด้านขวาของ Keypad */
-  background: none;
-  border: none; /* ไม่มีกรอบ */
-  color: #007aff; /* สีน้ำเงิน iOS */
-  font-size: 2rem; /* ขนาดใหญ่ขึ้น */
-  cursor: pointer;
-  z-index: 10000;
+  position: absolute;
+  top: -20px; /* ดันขึ้นเหนือ keypad */
+  right: 15px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ff4d4d;
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: bold;
+  border: none;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+  z-index: 10000;
 }
 
 #customKeypad .close-keypad-btn:active {
