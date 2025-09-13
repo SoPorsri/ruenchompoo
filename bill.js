@@ -47,6 +47,13 @@ async function loadTableName() {
    Load menu: build DOM rows
    --------------------------- */
 async function loadMenu() {
+  // ✨ 1. เก็บค่าที่ผู้ใช้พิมพ์ไว้ก่อนจะล้าง DOM
+  const existingValues = {};
+  document.querySelectorAll('#menuItems input.menu-qty').forEach(inp => {
+    existingValues[inp.dataset.id] = inp.value;
+  });
+
+  // 2. ดึงข้อมูลเมนูจาก DB
   const { data, error } = await client.from('menu').select('*').order('sort_order', { ascending: true });
   if (error) { alert('โหลดเมนูผิดพลาด'); console.log(error); return; }
 
@@ -54,7 +61,7 @@ async function loadMenu() {
   const container = el('menuItems');
   container.innerHTML = '';
 
-  // create rows
+  // 3. วาด row ใหม่ พร้อม restore ค่าเก่า
   menuData.forEach(item => {
     const row = document.createElement('div');
     row.className = 'row draggable';
@@ -68,6 +75,7 @@ async function loadMenu() {
           <input class="num menu-qty" 
             type="text" 
             data-id="${item.id}" 
+            value="${existingValues[item.id] || ''}"   <!-- ✨ restore ค่าเก่า -->
             placeholder="เช่น 1+2"
             inputmode="decimal" 
             pattern="[0-9.+]*">
@@ -84,10 +92,10 @@ async function loadMenu() {
     enableSwipe(row, item);
   });
 
-  // inputs -> calc
+  // 4. bind event input
   container.querySelectorAll('.menu-qty').forEach(i => i.addEventListener('input', calc));
 
-  // init or re-init Sortable (drag-reorder)
+  // 5. init or re-init Sortable (drag-reorder)
   if (sortableInstance) {
     try { sortableInstance.destroy(); } catch (e) { /* ignore */ }
     sortableInstance = null;
