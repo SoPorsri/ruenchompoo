@@ -126,10 +126,11 @@ function openCustomKeypad(input) {
   keypad.innerHTML = '';
 
   const closeBtn = document.createElement("button");
-  closeBtn.className = "close-keypad";
-  closeBtn.innerHTML = '⌨️<br>&#x25BC;'; // ใช้ Unicode สำหรับสัญลักษณ์คีย์บอร์ดและลูกศรชี้ลง
-  closeBtn.addEventListener("click", () => { // <--- แก้ไขตรงนี้
-    closeCustomKeypad();
+  closeBtn.className = "close-keypad-btn"; // ใช้ชื่อ class ที่แก้ไขแล้ว
+  closeBtn.innerHTML = "&#x2328;"; // ใช้สัญลักษณ์คีย์บอร์ด
+  closeBtn.addEventListener("click", (e) => {
+    e.stopPropagation(); // หยุดการทำงานของ event click
+    closeCustomKeypad(); // เรียกฟังก์ชันปิด keypad ที่เราสร้างไว้
   });
   keypad.appendChild(closeBtn);
   
