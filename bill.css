@@ -67,9 +67,14 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
 /* header grid (column titles) */
 .grid.header{
   display:grid;
-  grid-template-columns: 30px 1fr 100px 150px; /* ☰ | สินค้า | ราคา | จำนวน */
-  gap:10px;align-items:center;font-weight:700;
-  border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:8px;color:#808080;
+  grid-template-columns: 30px 1fr 100px 130px; 10px; /* ☰ | สินค้า | ราคา | จำนวน */
+  gap:10px;
+  align-items:center;
+  font-weight:700;
+  border-bottom:1px solid var(--line);
+  padding-bottom:6px;
+  margin-bottom:8px;
+  color:#808080;
 }
 
 /* small helper */
