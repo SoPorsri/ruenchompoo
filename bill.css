@@ -301,97 +301,43 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
   to {opacity:1; transform: translateY(0);}
 }
 
-/* ===========================
-   Custom Keypad Container
-   =========================== */
+/* ==========================
+   Custom Keypad
+   ========================== */
 #customKeypad {
   position: fixed;
-  bottom: 0;
+  bottom: -100%; /* เริ่มจากด้านล่าง (ซ่อนก่อน) */
   left: 0;
   width: 100%;
-  max-height: 45%; /* สูงสุด 45% ของหน้าจอ */
-  background: #f9f9f9;
+  background: #f2f2f2;
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4 ปุ่มต่อแถว */
-  gap: 6px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
   padding: 10px;
-  box-shadow: 0 -4px 12px rgba(0,0,0,0.25);
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-  overflow-y: auto; /* scrollable ถ้าเกินความสูง */
-  overflow-x: hidden;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.2);
+  transition: bottom 0.3s ease; /* animation smooth */
   z-index: 9999;
-  touch-action: manipulation; /* ป้องกัน pinch/zoom บนมือถือ */
 }
 
-/* ===========================
-   Keypad Buttons
-   =========================== */
+#customKeypad.show {
+  bottom: 0; /* แสดง keypad */
+}
+
 #customKeypad button {
-  font-size: 1.6rem;
-  padding: 18px 0;
-  border-radius: 10px;
+  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  font-weight: 600;
+  font-size: 1.8rem;
+  color: #222;
+  background: #fff;
   border: 1px solid #ccc;
-  background: linear-gradient(to bottom, #fff, #e6e6e6);
-  box-shadow: 0 2px 3px rgba(0,0,0,0.15);
+  border-radius: 8px;
+  padding: 12px;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
   user-select: none;
 }
 
-/* ปุ่ม active / กดแล้ว */
 #customKeypad button:active {
-  background: linear-gradient(to bottom, #e0e0e0, #cfcfcf);
-  transform: scale(0.95);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-}
-
-/* ===========================
-   Responsive สำหรับมือถือ
-   =========================== */
-@media (max-width: 768px) {
-  #customKeypad {
-    max-height: 50%;
-    padding: 8px;
-    gap: 5px;
-    grid-template-columns: repeat(4, 1fr); /* 4 ปุ่มต่อแถว */
-  }
-
-  #customKeypad button {
-    font-size: 1.4rem;
-    padding: 14px 0;
-  }
-}
-
-@media (max-width: 480px) {
-  #customKeypad {
-    max-height: 55%;
-    padding: 6px;
-    gap: 4px;
-  }
-
-  #customKeypad button {
-    font-family: 'Segoe UI', Roboto, Arial, sans-serif; /* อ่านง่าย */
-    font-weight: 600; /* ตัวอักษรหนา */
-    font-size: 1.8rem; /* ตัวใหญ่ขึ้น */
-    color: #222; /* อ่านง่ายบนพื้นหลังอ่อน */
-  }
-}
-
-/* ===========================
-   Optional: Scrollbar Styling
-   =========================== */
-#customKeypad::-webkit-scrollbar {
-  width: 6px;
-}
-
-#customKeypad::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.2);
-  border-radius: 3px;
-}
-
-#customKeypad::-webkit-scrollbar-track {
-  background: rgba(0,0,0,0.05);
+  background: #ddd;
 }
 
 
