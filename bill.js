@@ -133,7 +133,7 @@ function openCustomKeypad(input) {
   });
   keypad.appendChild(closeBtn);
   
-  const keys = ['1','2','3','+','4','5','6','.','7','8','9','⌫','C','0'];
+  const keys = ['1','2','3','+','4','5','6','.','7','8','9','⌫','','0','','Clear'];
   keys.forEach(k => {
     const btn = document.createElement('button');
     btn.textContent = k;
