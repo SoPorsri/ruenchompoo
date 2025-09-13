@@ -165,6 +165,11 @@ document.addEventListener('click', e => {
   }
 });
 
+// ปิดคีย์บอร์ดเมื่อกดปุ่ม ✕
+document.querySelector("#customKeypad .close-keypad").addEventListener("click", () => {
+  document.getElementById("customKeypad").classList.remove("show");
+});
+
 /* ---------------------------
    Save new sort_order -> DB
    --------------------------- */
