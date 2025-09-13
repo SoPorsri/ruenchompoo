@@ -146,15 +146,17 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
 /* menu text */
 .menu-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:18px;font-weight:600;padding-right:6px}
 .menu-price{text-align:right;color:var(--muted);font-size:17px;font-weight:600;min-width:80px}
-.menu-qty{
-  width:100%;
-  max-width:100px;
-  border-radius:10px;
-  padding:8px 6px;
-  border:1px solid var(--line);
-  font-size:16px;
-  text-align:right;
-  background:#fff
+.menu-qty {
+    width: 100%;
+    max-width: 100px;
+    border-radius: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    font-size: 16px;
+    text-align: right;
+    background: #fff;
+    /* เพิ่ม margin-left เพื่อให้ input ขยับไปทางขวา */
+    margin-left: auto;
 }
 
 /* placeholder + drag visual */
