@@ -111,9 +111,7 @@ async function loadMenu() {
       // ป้องกันการโฟกัสอัตโนมัติของเบราว์เซอร์
       e.preventDefault(); 
       const qtyInput = row.querySelector('.menu-qty');
-      qtyInput.removeAttribute('readonly'); // เปิดให้ focus
-      qtyInput.focus();
-      qtyInput.setAttribute('readonly', true);
+      input.classList.add('highlight');
       openCustomKeypad(input);
     });
   });
@@ -221,6 +219,7 @@ function openCustomKeypad(input) {
 function closeCustomKeypad() {
   const keypad = document.getElementById('customKeypad');
   if (keypad) keypad.classList.remove('show');
+  if (activeInput) activeInput.classList.remove('highlight'); // เอา highlight ออก
   activeInput = null;
 }
 
