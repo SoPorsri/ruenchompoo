@@ -89,46 +89,29 @@ async function loadMenu() {
 
     enableSwipe(row, item);
 
+    // เพิ่ม Event Listener นี้เข้าไปใน row
+    row.addEventListener('contextmenu', (e) => {
+        // ป้องกันเมนูคลิกขวาเริ่มต้นของเบราว์เซอร์
+        e.preventDefault(); 
+        
+        // ปิดเมนูอื่นๆ ที่อาจเปิดอยู่ (เช่น เมนู swipe)
+        if (currentlyOpenRow) closeRow(currentlyOpenRow);
+        
+        // เก็บข้อมูลรายการเมนูที่ถูกคลิก
+        activeMenuItem = item;
+        
+        // กำหนดตำแหน่งเมนูให้ตรงกับตำแหน่งเมาส์
+        contextMenu.style.left = `${e.clientX}px`;
+        contextMenu.style.top = `${e.clientY}px`;
+        contextMenu.style.display = 'block';
+    });
+
     // attach custom keypad
     const input = row.querySelector('.menu-qty');
     input.addEventListener('mousedown', (e) => {
       // ป้องกันการโฟกัสอัตโนมัติของเบราว์เซอร์
       e.preventDefault(); 
       openCustomKeypad(input);
-    });
-
-    // เพิ่ม Event Listener นี้เข้าไปใน row
-    row.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        
-        // ปิดเมนูอื่นๆ ที่อาจเปิดอยู่ (เช่น เมนู swipe)
-        if (currentlyOpenRow) closeRow(currentlyOpenRow);
-        
-        activeMenuItem = item;
-        
-        // แก้ไขโค้ดตรงนี้
-        const rowRect = row.getBoundingClientRect();
-        const menuWidth = contextMenu.offsetWidth;
-        const menuHeight = contextMenu.offsetHeight;
-        
-        // กำหนดตำแหน่งด้านซ้าย: ให้เมนูอยู่ตรงกับตำแหน่งเมาส์
-        let leftPos = e.clientX;
-        // หากเมนูจะล้นขอบจอขวา ให้ขยับเมนูมาทางซ้าย
-        if (leftPos + menuWidth > window.innerWidth) {
-            leftPos = window.innerWidth - menuWidth - 10; // 10px เพื่อเว้นขอบ
-        }
-        
-        // กำหนดตำแหน่งด้านบน: ให้เมนูอยู่ตรงกับตำแหน่งเมาส์
-        let topPos = e.clientY;
-        // หากเมนูจะล้นขอบจอด้านล่าง ให้ขยับเมนูขึ้นด้านบน
-        if (topPos + menuHeight > window.innerHeight) {
-            topPos = window.innerHeight - menuHeight - 10;
-        }
-    
-        contextMenu.style.left = `${leftPos}px`;
-        contextMenu.style.top = `${topPos}px`;
-        
-        contextMenu.style.display = 'block';
     });
   });
 
