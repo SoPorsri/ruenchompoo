@@ -398,3 +398,30 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
   z-index: 10000;
 }
 
+.context-menu {
+  position: absolute;
+  z-index: 9999;
+  width: 150px;
+  background-color: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 6px 0;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.context-menu-item {
+  padding: 10px 16px;
+  color: var(--ink);
+  transition: background-color 0.15s ease;
+}
+
+.context-menu-item:hover {
+  background-color: #f0f4f8;
+}
+
+.context-menu-item[data-action="delete"] {
+  color: var(--danger);
+}
+
