@@ -88,7 +88,11 @@ async function loadMenu() {
 
     // attach custom keypad
     const input = row.querySelector('.menu-qty');
-    input.addEventListener('focus', () => openCustomKeypad(input));
+    input.addEventListener('mousedown', (e) => {
+      // ป้องกันการโฟกัสอัตโนมัติของเบราว์เซอร์
+      e.preventDefault(); 
+      openCustomKeypad(input);
+    });
   });
 
   // init or re-init Sortable
