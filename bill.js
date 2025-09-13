@@ -76,7 +76,8 @@ async function loadMenu() {
             type="text" 
             data-id="${item.id}" 
             value="${existingValues[item.id] || ''}"
-            placeholder="เช่น 1+2">
+            placeholder="เช่น 1+2"
+            readonly>
         </div>
       </div>
       <div class="action-btns" aria-hidden="true">
@@ -109,6 +110,10 @@ async function loadMenu() {
     input.addEventListener('mousedown', (e) => {
       // ป้องกันการโฟกัสอัตโนมัติของเบราว์เซอร์
       e.preventDefault(); 
+      const qtyInput = row.querySelector('.menu-qty');
+      qtyInput.removeAttribute('readonly'); // เปิดให้ focus
+      qtyInput.focus();
+      qtyInput.setAttribute('readonly', true);
       openCustomKeypad(input);
     });
   });
