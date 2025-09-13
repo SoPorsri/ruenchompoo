@@ -47,13 +47,11 @@ async function loadTableName() {
    Load menu: build DOM rows
    --------------------------- */
 async function loadMenu() {
-  // ✨ 1. เก็บค่าที่ผู้ใช้พิมพ์ไว้ก่อนจะล้าง DOM
   const existingValues = {};
   document.querySelectorAll('#menuItems input.menu-qty').forEach(inp => {
     existingValues[inp.dataset.id] = inp.value;
   });
 
-  // 2. ดึงข้อมูลเมนูจาก DB
   const { data, error } = await client.from('menu').select('*').order('sort_order', { ascending: true });
   if (error) { alert('โหลดเมนูผิดพลาด'); console.log(error); return; }
 
@@ -61,7 +59,6 @@ async function loadMenu() {
   const container = el('menuItems');
   container.innerHTML = '';
 
-  // 3. วาด row ใหม่ พร้อม restore ค่าเก่า
   menuData.forEach(item => {
     const row = document.createElement('div');
     row.className = 'row draggable';
@@ -73,11 +70,11 @@ async function loadMenu() {
         <div class="menu-price right">฿${Number(item.price).toFixed(2)}</div>
         <div>
           <input class="num menu-qty" 
-            type="tel" 
+            type="text" 
             data-id="${item.id}" 
             value="${existingValues[item.id] || ''}"
             placeholder="เช่น 1+2"
-            pattern="[0-9.+]*">
+            readonly>
         </div>
       </div>
       <div class="action-btns" aria-hidden="true">
@@ -87,35 +84,71 @@ async function loadMenu() {
     `;
     container.appendChild(row);
 
-    // attach swipe + edit/delete handlers
     enableSwipe(row, item);
+
+    // attach custom keypad
+    const input = row.querySelector('.menu-qty');
+    input.addEventListener('focus', () => openCustomKeypad(input));
   });
 
-  // 4. bind event input
-  container.querySelectorAll('.menu-qty').forEach(i => i.addEventListener('input', calc));
-
-  // 5. init or re-init Sortable (drag-reorder)
-  if (sortableInstance) {
-    try { sortableInstance.destroy(); } catch (e) { /* ignore */ }
-    sortableInstance = null;
-  }
+  // init or re-init Sortable
+  if (sortableInstance) { try { sortableInstance.destroy(); } catch(e){} sortableInstance = null; }
   if (window.Sortable) {
     sortableInstance = new Sortable(container, {
       handle: '.drag-handle',
       animation: 150,
       ghostClass: 'dragging-ghost',
-      onEnd: async (evt) => {
-        // reorder saved to DB
-        await saveNewOrder();
-      }
+      onEnd: saveNewOrder
     });
-  } else {
-    console.warn('SortableJS not found. Reordering disabled.');
   }
 
-  // ensure no rows left open
   closeOpenRow();
   return true;
+}
+
+/* ==========================
+   Custom Keypad
+   ========================== */
+function openCustomKeypad(input) {
+  let keypad = document.getElementById('customKeypad');
+  if (!keypad) {
+    keypad = document.createElement('div');
+    keypad.id = 'customKeypad';
+    keypad.style.position = 'fixed';
+    keypad.style.bottom = '0';
+    keypad.style.left = '0';
+    keypad.style.width = '100%';
+    keypad.style.background = '#f2f2f2';
+    keypad.style.display = 'grid';
+    keypad.style.gridTemplateColumns = 'repeat(4, 1fr)';
+    keypad.style.gap = '5px';
+    keypad.style.padding = '10px';
+    keypad.style.boxShadow = '0 -2px 8px rgba(0,0,0,0.2)';
+    document.body.appendChild(keypad);
+  }
+  keypad.innerHTML = '';
+
+  const keys = ['7','8','9','+','4','5','6','.','1','2','3','⌫','0','C'];
+  keys.forEach(k => {
+    const btn = document.createElement('button');
+    btn.textContent = k;
+    btn.style.fontSize = '20px';
+    btn.style.padding = '12px';
+    btn.addEventListener('click', () => handleKey(input, k));
+    keypad.appendChild(btn);
+  });
+}
+
+function handleKey(input, key) {
+  if (key === '⌫') {
+    input.value = input.value.slice(0, -1);
+  } else if (key === 'C') {
+    input.value = '';
+  } else {
+    input.value += key;
+  }
+  input.value = input.value.replace(/[^0-9.+]/g,''); // sanitize
+  calc();
 }
 
 /* ---------------------------
