@@ -371,8 +371,10 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
   }
 
   #customKeypad button {
-    font-size: 1.3rem;
-    padding: 12px 0;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif; /* อ่านง่าย */
+    font-weight: 600; /* ตัวอักษรหนา */
+    font-size: 1.8rem; /* ตัวใหญ่ขึ้น */
+    color: #222; /* อ่านง่ายบนพื้นหลังอ่อน */
   }
 }
 
