@@ -108,16 +108,19 @@ async function loadMenu() {
     // attach custom keypad
     const input = row.querySelector('.menu-qty');
     input.addEventListener('mousedown', (e) => {
-      // ป้องกันการโฟกัสอัตโนมัติของเบราว์เซอร์
-      e.preventDefault(); 
-      const qtyInput = row.querySelector('.menu-qty');
+      e.preventDefault();          // ป้องกัน keyboard ขึ้นบนมือถือ
+    
+      // ถ้ามี input ก่อนหน้า active อยู่ → ลบ highlight
+      if (activeInput && activeInput !== input) {
+        activeInput.classList.remove('highlight');
+      }
+    
+      // ทำ input ปัจจุบันเป็น active และเพิ่ม highlight
+      activeInput = input;
       input.classList.add('highlight');
+    
+      // เปิด custom keypad
       openCustomKeypad(input);
-    });
-
-    // เอา highlight ออกทันทีเมื่อค่า input เปลี่ยน
-    input.addEventListener('input', () => {
-      input.classList.remove('highlight');
     });
 
   });
