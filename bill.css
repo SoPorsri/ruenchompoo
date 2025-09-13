@@ -352,7 +352,9 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
   cursor: pointer;
   user-select: none;
 
-  align-items: center;     /* จัดเนื้อหาในแนวตั้งให้อยู่ตรงกลาง */
+  display: flex;            /* ทำให้ปุ่มใช้ flexbox */
+  justify-content: center;  /* จัดกลางในแนวนอน */
+  align-items: center;      /* จัดกลางในแนวตั้ง */
 }
 
 #customKeypad button:active {
