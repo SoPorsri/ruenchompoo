@@ -382,7 +382,3 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
   z-index: 10000;
 }
 
-#customKeypad .close-keypad-btn:active {
-  color: #005bb5; /* สีเข้มขึ้นเมื่อกด */
-}
-
