@@ -136,12 +136,21 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
   background:var(--card);
   border:1px solid var(--line);
   border-radius:10px;
-  transition: transform .22s cubic-bezier(.2,.9,.2,1);
+  transition: transform 0.35s cubic-bezier(0.22, 1.0, 0.36, 1.0);
   z-index:2; /* อยู่สูงกว่า action-btns */
   min-height:48px;
   box-shadow: 0 1px 0 rgba(2,8,23,.02);
   width:100%;
   box-sizing:border-box;
+}
+
+.row.show-actions .row-content{
+  transform: translateX(-160px); /* = 80 + 80 */
+}
+
+.row.hide-actions .row-content{
+  transform: translateX(0);
+  transition: transform 0.35s cubic-bezier(0.22, 1.0, 0.36, 1.0);
 }
 
 /* drag handle */
