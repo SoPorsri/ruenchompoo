@@ -2,9 +2,18 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<title>Print POS ESC/POS</title>
+<title>Print POS ESC/POS Advance</title>
+<style>
+  body { font-family: "Tahoma", "Noto Sans Thai", sans-serif; font-size:12px; }
+  pre { background:#f4f4f4; padding:10px; white-space: pre-wrap; word-wrap: break-word; border:1px solid #ccc; }
+  button { margin-top:10px; padding:5px 10px; font-size:14px; }
+</style>
 </head>
 <body>
+<h3>Preview ใบเสร็จ (ESC/POS)</h3>
+<pre id="preview">Loading...</pre>
+<button id="printBtn">สั่งพิมพ์จริง</button>
+
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
@@ -18,81 +27,90 @@ const PRINTER_IP = '192.168.1.100';             // Printer IP
 const urlParams = new URLSearchParams(window.location.search)
 const billId = urlParams.get('bill_id')
 
-if(billId) loadAndPrintBill(billId)
+let ESCString = ''  // จะเก็บ ESC/POS ทั้งหมด
 
-async function loadAndPrintBill(billId){
-  // --- 1. ดึงข้อมูลบิล ---
-  const { data: bill, error: billError } = await client
-    .from('bills').select('*').eq('id', billId).single()
-  if(billError || !bill){ alert("❌ ไม่พบบิล"); return; }
+if(billId) loadAndPreview(billId)
 
-  // --- 2. ดึงรายการสินค้า ---
-  const { data: items, error: itemsError } = await client
-    .from('bill_items').select('id, qty, price, total, menu_id').eq('bill_id', billId)
-  if(itemsError) console.error(itemsError)
+async function loadAndPreview(billId){
+  // --- ดึงข้อมูลบิล ---
+  const { data: bill } = await client.from('bills').select('*').eq('id', billId).single()
+  const { data: items } = await client.from('bill_items').select('id, qty, price, total, menu_id').eq('bill_id', billId)
 
-  // --- 3. ดึงชื่อเมนู ---
   let menuNames = {}
   if(items?.length>0){
     const menuIds = items.map(i=>i.menu_id).filter(Boolean)
     if(menuIds.length>0){
-      const { data: menus } = await client
-        .from('menu').select('id,name').in('id', menuIds)
+      const { data: menus } = await client.from('menu').select('id,name').in('id', menuIds)
       menus?.forEach(m=>menuNames[m.id]=m.name)
     }
   }
   bill.items = (items||[]).map(i=>({...i, menu_name: menuNames[i.menu_id]||"-"}))
 
-  // --- 4. สร้าง ESC/POS string ---
-  let escpos = ''
-  escpos += '\x1B\x40';             // Initialize printer
-  escpos += '\x1B\x61\x01';         // Center align
-  escpos += '\x1B\x21\x30';         // Bold + Double Height
-  escpos += 'ร้านเรือนชมพูเนื้อย่างเกาหลี\n';
-  escpos += '\x1B\x21\x00';         // Normal
-  escpos += 'สาขานาเชือก\n';
-  escpos += 'โทร: 0885305228, 0621392902\n';
-  escpos += `บิลเลขที่: ${bill.billno || bill.id}\n`;
-  escpos += `โต๊ะ/ลูกค้า: ${bill.customer || '-'}\n`;
+  // --- สร้าง ESC/POS advance ---
+  ESCString = ''
+  ESCString += '\x1B\x40';             // Init
+  ESCString += '\x1B\x61\x01';         // Center
+  ESCString += '\x1B\x21\x30';         // Bold+double height
+  ESCString += 'ร้านเรือนชมพูเนื้อย่างเกาหลี\n';
+  ESCString += '\x1B\x21\x00';         // Normal
+  ESCString += 'สาขานาเชือก\n';
+  ESCString += 'โทร: 0885305228, 0621392902\n';
+  ESCString += `บิลเลขที่: ${bill.billno||bill.id}\n`;
+  ESCString += `โต๊ะ/ลูกค้า: ${bill.customer||'-'}\n`;
   const closedText = bill.closed_at
-    ? new Date(bill.closed_at).toLocaleString('th-TH', { dateStyle:'short', timeStyle:'short' })
+    ? new Date(bill.closed_at).toLocaleString('th-TH',{dateStyle:'short', timeStyle:'short'})
     : '-';
-  escpos += `เวลาเช็คบิล: ${closedText}\n`;
-  escpos += '\x1B\x61\x00';         // Left align
-  escpos += '--------------------------------\n';
-  escpos += 'สินค้า           ราคา  จำนวน   รวม\n';
-  escpos += '--------------------------------\n';
+  ESCString += `เวลาเช็คบิล: ${closedText}\n`;
+  ESCString += '\x1B\x61\x00';         // Left
+  ESCString += '--------------------------------\n';
+  ESCString += 'สินค้า           ราคา  จำนวน   รวม\n';
+  ESCString += '--------------------------------\n';
 
-  // --- 5. แสดงรายการสินค้า ---
   bill.items.forEach(item=>{
-    const name = item.menu_name.padEnd(15,' ');
+    const name = item.menu_name.length>15 ? item.menu_name.slice(0,15) : item.menu_name.padEnd(15,' ');
     const price = Number(item.price).toFixed(2).padStart(5,' ');
     const qty = String(item.qty).padStart(5,' ');
     const total = Number(item.total).toFixed(2).padStart(6,' ');
-    escpos += `${name}${price}${qty}${total}\n`;
+    ESCString += `${name}${price}${qty}${total}\n`;
   })
 
-  escpos += '--------------------------------\n';
-  escpos += `ยอดรวม      : ${Number(bill.total||0).toFixed(2)}\n`;
-  escpos += `รับเงินมา    : ${Number(bill.cash||0).toFixed(2)}\n`;
-  escpos += `เงินทอน     : ${Number(bill.change||0).toFixed(2)}\n`;
-  escpos += '\n*** ขอบคุณที่อุดหนุน ***\n\n';
-  escpos += '\x1D\x56\x41';         // Cut paper
+  ESCString += '================================\n'; // Double line
+  ESCString += '\x1B\x21\x08';  // Bold
+  ESCString += `ยอดรวม      : ${Number(bill.total||0).toFixed(2)}\n`;
+  ESCString += `รับเงินมา    : ${Number(bill.cash||0).toFixed(2)}\n`;
+  ESCString += `เงินทอน     : ${Number(bill.change||0).toFixed(2)}\n`;
+  ESCString += '\x1B\x21\x00';  // Normal
+  ESCString += '--------------------------------\n';
+  ESCString += '\n*** ขอบคุณที่อุดหนุน ***\n\n';
+  ESCString += '\x1D\x56\x41'; // Cut
 
-  // --- 6. ส่งไป Node.js server ---
-  try {
-    const response = await fetch(`${SERVER_URL}/print`,{
+  // --- แปลงเป็น preview readable ---
+  const previewEl = document.getElementById('preview')
+  let display = ESCString
+    .replace(/\x1B\x40/g,'')      // Remove init
+    .replace(/\x1B\x61\x01/g,'[CENTER]')
+    .replace(/\x1B\x61\x00/g,'[LEFT]')
+    .replace(/\x1B\x21\x30/g,'[BOLD DOUBLE]')
+    .replace(/\x1B\x21\x08/g,'[BOLD]')
+    .replace(/\x1D\x56\x41/g,'[CUT]')
+  previewEl.textContent = display
+}
+
+// --- ปุ่มสั่งพิมพ์จริง ---
+document.getElementById('printBtn').addEventListener('click', async ()=>{
+  try{
+    const resp = await fetch(`${SERVER_URL}/print`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({printer_ip:PRINTER_IP, escpos})
+      body:JSON.stringify({printer_ip:PRINTER_IP, escpos:ESCString})
     })
-    const result = await response.json()
+    const result = await resp.json()
     if(result.success) alert('✅ สั่งพิมพ์สำเร็จ!');
     else alert('❌ เกิดข้อผิดพลาด: '+result.message);
-  } catch(e){
+  }catch(e){
     console.error(e); alert('❌ ไม่สามารถเชื่อมต่อเครื่องพิมพ์ได้');
   }
-}
+})
 </script>
 </body>
 </html>
