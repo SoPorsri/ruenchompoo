@@ -4,7 +4,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   const tables = [
-    { id:1,name:"ซุ้ม1"},{id:2,name:"ซุ้ม2"},/*...*/ {id:22,name:"B4"}
+    { id: 1, name: "ซุ้ม1" }, { id: 2, name: "ซุ้ม2" }, { id: 3, name: "ซุ้ม3" }, { id: 4, name: "ซุ้ม4" },
+    { id: 5, name: "ซุ้ม5" }, { id: 6, name: "ซุ้ม6" }, { id: 7, name: "ซุ้ม7" }, { id: 8, name: "ซุ้ม8" },
+    { id: 9, name: "ซุ้ม9" }, { id: 10, name: "ซุ้ม10" }, { id: 11, name: "A1" }, { id: 12, name: "A2" },
+    { id: 13, name: "A3" }, { id: 14, name: "A4" }, { id: 15, name: "A5" }, { id: 16, name: "A6" },
+    { id: 17, name: "A7" }, { id: 18, name: "A8" }, { id: 19, name: "B1" }, { id: 20, name: "B2" },
+    { id: 21, name: "B3" }, { id: 22, name: "B4" }
   ];
 
   // Set IP
