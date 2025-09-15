@@ -1,33 +1,89 @@
-async function sendPrintRequest(bill) {
-  const printerIp = "192.168.1.100"; // IP ของเครื่อง XP-C582
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <title>พิมพ์บิล</title>
+</head>
+<body>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-  const response = await fetch("http://192.168.1.88:8080/print", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ printer_ip: printerIp, bill })
-  });
+const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
+const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const data = await response.json();
-  console.log(data);
-  if(data.success){
-    alert("สั่งพิมพ์สำเร็จ!");
-  } else {
-    alert("เกิดข้อผิดพลาด: " + data.message);
-  }
+// IP ของ Node.js server (PC)
+const SERVER_URL = 'http://192.168.1.88:8080';
+
+// IP ของ Printer
+const PRINTER_IP = '192.168.1.100';
+
+// ดึง bill_id จาก query string
+const urlParams = new URLSearchParams(window.location.search)
+const billId = urlParams.get('bill_id')
+
+if (billId) {
+  loadAndPrintBill(billId)
 }
 
-// ตัวอย่างเรียกใช้
-const exampleBill = {
-  billno: "B12345",
-  customer: "โต๊ะ 5",
-  total: 150.00,
-  cash: 200.00,
-  change: 50.00,
-  items: [
-    { menu_name: "สเต็ก", qty: 1, price: 100, total: 100 },
-    { menu_name: "น้ำเปล่า", qty: 1, price: 50, total: 50 }
-  ]
-};
+// --- ฟังก์ชันดึงข้อมูลและสั่งพิมพ์ ---
+async function loadAndPrintBill(billId) {
+  // 1️⃣ ดึงข้อมูลบิล
+  const { data: bill, error: billError } = await client
+    .from('bills')
+    .select('*')
+    .eq('id', billId)
+    .single()
 
-// เรียกฟังก์ชันนี้เมื่อต้องการพิมพ์
-// sendPrintRequest(exampleBill);
+  if (billError || !bill) {
+    alert("❌ ไม่พบบิล")
+    console.error(billError)
+    return
+  }
+
+  // 2️⃣ ดึงรายการสินค้า
+  const { data: items, error: itemsError } = await client
+    .from('bill_items')
+    .select('id, qty, price, total, menu_id')
+    .eq('bill_id', billId)
+
+  if(itemsError){
+    console.error(itemsError)
+  }
+
+  // 3️⃣ ดึงชื่อเมนู
+  let menuNames = {}
+  if(items && items.length>0){
+    const menuIds = items.map(i=>i.menu_id).filter(Boolean)
+    if(menuIds.length>0){
+      const { data: menus } = await client
+        .from('menu')
+        .select('id, name')
+        .in('id', menuIds)
+      menus?.forEach(m => menuNames[m.id] = m.name)
+    }
+  }
+
+  // 4️⃣ รวมรายการ
+  bill.items = (items||[]).map(i=>({
+    ...i,
+    menu_name: menuNames[i.menu_id] || "-"
+  }))
+
+  // 5️⃣ ส่ง POST ไป Node.js server
+  const response = await fetch(`${SERVER_URL}/print`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ printer_ip: PRINTER_IP, bill })
+  })
+
+  const result = await response.json()
+  if(result.success){
+    alert("✅ สั่งพิมพ์สำเร็จ!")
+  } else {
+    alert("❌ เกิดข้อผิดพลาด: " + result.message)
+  }
+}
+</script>
+</body>
+</html>
