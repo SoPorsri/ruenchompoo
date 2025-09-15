@@ -35,9 +35,9 @@
 
     /* ===== Set IP button: มุมขวาล่างของ header ===== */
     #setIpBtn {
-      position: absolute;
+      position: absolute; /* หรือ fixed ถ้าต้องการให้เลื่อนตามหน้า */
       right: clamp(10px, 2vw, 16px);
-      bottom: clamp(8px, 1.5vw, 12px); /* Changed from top to bottom */
+      top: calc(0 + clamp(0px, 2vw, 16px) + 100px); /* 100px = ความสูง header */
       background: linear-gradient(135deg, #f59e0b, #d97706);
       color: #fff;
       border: none;
@@ -62,8 +62,11 @@
     #setIpBtn:hover { transform: translateY(-2px); }
 
     @media (max-width: 600px) {
-      header img { height: 72px; }
-      #setIpBtn { padding: 6px 10px; font-size:12px; right:10px; bottom:8px; }
+      #setIpBtn {
+        padding: 6px 10px;
+        font-size:12px;
+        top: calc(0 + 72px + 8px); /* ปรับตาม header บนมือถือ */
+      }
     }
     /* ================================================ */
     
@@ -167,17 +170,16 @@
   <header>
     <img src="images/LOGO.png" alt="โลโก้ร้าน">
     <span>ร้านเรือนชมพูเนื้อย่างเกาหลี • สาขานาเชือก</span>
-
-
-    <!-- ปุ่ม Set IP อยู่ด้านบนขวา -->
-    <button id="setIpBtn" onclick="setPrinterIP()" aria-label="ตั้งค่า IP เครื่องพิมพ์">
-      <i class="fa-solid fa-network-wired"></i>
-      <div style="text-align:left; line-height:1;">
-        <div style="font-weight:700; font-size:13px;">Set IP</div>
-        <small id="ipLabel">192.168.1.100</small>
-      </div>
-    </button>
   </header>
+
+  <!-- ปุ่ม Set IP นอก header แต่ให้อยู่มุมขวาล่างของ header -->
+  <button id="setIpBtn" onclick="setPrinterIP()" aria-label="ตั้งค่า IP เครื่องพิมพ์">
+    <i class="fa-solid fa-network-wired"></i>
+    <div style="text-align:left; line-height:1;">
+      <div style="font-weight:700; font-size:13px;">Set IP</div>
+      <small id="ipLabel">192.168.1.100</small>
+    </div>
+  </button>
   
   <!-- ปุ่ม Floating Action Button -->
   <button id="reportButton" onclick="openReport()">
