@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<title>Print POS ESC/POS Advance</title>
+<title>Print POS ESC/POS Full Advance</title>
 <style>
   body { font-family: "Tahoma", "Noto Sans Thai", sans-serif; font-size:12px; }
   pre { background:#f4f4f4; padding:10px; white-space: pre-wrap; word-wrap: break-word; border:1px solid #ccc; }
@@ -21,21 +21,33 @@ const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
 const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const SERVER_URL = 'https://192.168.1.88:8443';  // Node.js server
-const PRINTER_IP = '192.168.1.100';             // Printer IP
+const SERVER_URL = 'https://192.168.1.88:8443';
+const PRINTER_IP = '192.168.1.100';
 
 const urlParams = new URLSearchParams(window.location.search)
 const billId = urlParams.get('bill_id')
 
-let ESCString = ''  // จะเก็บ ESC/POS ทั้งหมด
+let ESCString = ''
 
 if(billId) loadAndPreview(billId)
 
+// --- ฟังก์ชัน wrap ชื่อสินค้า ---
+function wrapText(text, width){
+  const lines = [];
+  while(text.length>width){
+    lines.push(text.slice(0,width));
+    text = text.slice(width);
+  }
+  lines.push(text);
+  return lines;
+}
+
 async function loadAndPreview(billId){
-  // --- ดึงข้อมูลบิล ---
+  // ดึงข้อมูล bill
   const { data: bill } = await client.from('bills').select('*').eq('id', billId).single()
   const { data: items } = await client.from('bill_items').select('id, qty, price, total, menu_id').eq('bill_id', billId)
 
+  // ดึงชื่อเมนู
   let menuNames = {}
   if(items?.length>0){
     const menuIds = items.map(i=>i.menu_id).filter(Boolean)
@@ -46,13 +58,13 @@ async function loadAndPreview(billId){
   }
   bill.items = (items||[]).map(i=>({...i, menu_name: menuNames[i.menu_id]||"-"}))
 
-  // --- สร้าง ESC/POS advance ---
+  // --- สร้าง ESC/POS string ---
   ESCString = ''
   ESCString += '\x1B\x40';             // Init
   ESCString += '\x1B\x61\x01';         // Center
   ESCString += '\x1B\x21\x30';         // Bold+double height
   ESCString += 'ร้านเรือนชมพูเนื้อย่างเกาหลี\n';
-  ESCString += '\x1B\x21\x00';         // Normal
+  ESCString += '\x1B\x21\x00';
   ESCString += 'สาขานาเชือก\n';
   ESCString += 'โทร: 0885305228, 0621392902\n';
   ESCString += `บิลเลขที่: ${bill.billno||bill.id}\n`;
@@ -61,33 +73,40 @@ async function loadAndPreview(billId){
     ? new Date(bill.closed_at).toLocaleString('th-TH',{dateStyle:'short', timeStyle:'short'})
     : '-';
   ESCString += `เวลาเช็คบิล: ${closedText}\n`;
-  ESCString += '\x1B\x61\x00';         // Left
+  ESCString += '\x1B\x61\x00';         // Left align
   ESCString += '--------------------------------\n';
   ESCString += 'สินค้า           ราคา  จำนวน   รวม\n';
   ESCString += '--------------------------------\n';
 
+  // --- แสดงรายการสินค้า + wrap + จำนวนเต็ม ---
   bill.items.forEach(item=>{
-    const name = item.menu_name.length>15 ? item.menu_name.slice(0,15) : item.menu_name.padEnd(15,' ');
-    const price = Number(item.price).toFixed(2).padStart(5,' ');
-    const qty = String(item.qty).padStart(5,' ');
-    const total = Number(item.total).toFixed(2).padStart(6,' ');
-    ESCString += `${name}${price}${qty}${total}\n`;
+    const lines = wrapText(item.menu_name, 15);
+    lines.forEach((line,i)=>{
+      if(i===0){
+        const price = String(Math.round(item.price)).padStart(5,' ');
+        const qty = String(Math.round(item.qty)).padStart(5,' ');
+        const total = String(Math.round(item.total)).padStart(6,' ');
+        ESCString += line.padEnd(15,' ') + price + qty + total + '\n';
+      } else {
+        ESCString += line + '\n';
+      }
+    })
   })
 
   ESCString += '================================\n'; // Double line
   ESCString += '\x1B\x21\x08';  // Bold
-  ESCString += `ยอดรวม      : ${Number(bill.total||0).toFixed(2)}\n`;
-  ESCString += `รับเงินมา    : ${Number(bill.cash||0).toFixed(2)}\n`;
-  ESCString += `เงินทอน     : ${Number(bill.change||0).toFixed(2)}\n`;
+  ESCString += `ยอดรวม      : ${Math.round(bill.total||0)}\n`;
+  ESCString += `รับเงินมา    : ${Math.round(bill.cash||0)}\n`;
+  ESCString += `เงินทอน     : ${Math.round(bill.change||0)}\n`;
   ESCString += '\x1B\x21\x00';  // Normal
   ESCString += '--------------------------------\n';
   ESCString += '\n*** ขอบคุณที่อุดหนุน ***\n\n';
   ESCString += '\x1D\x56\x41'; // Cut
 
-  // --- แปลงเป็น preview readable ---
+  // --- แสดง preview readable ---
   const previewEl = document.getElementById('preview')
   let display = ESCString
-    .replace(/\x1B\x40/g,'')      // Remove init
+    .replace(/\x1B\x40/g,'[INIT]')
     .replace(/\x1B\x61\x01/g,'[CENTER]')
     .replace(/\x1B\x61\x00/g,'[LEFT]')
     .replace(/\x1B\x21\x30/g,'[BOLD DOUBLE]')
