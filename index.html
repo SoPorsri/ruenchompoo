@@ -37,7 +37,7 @@
     #setIpBtn {
       position: absolute;
       right: clamp(10px, 2vw, 16px);
-      bottom: clamp(8px, 1.5vw, 12px);
+      top: clamp(8px, 1.5vw, 12px); /* เปลี่ยนจาก bottom เป็น top */
       background: linear-gradient(135deg, #f59e0b, #d97706);
       color: #fff;
       border: none;
@@ -167,9 +167,9 @@
   <header>
     <img src="images/LOGO.png" alt="โลโก้ร้าน">
     <span>ร้านเรือนชมพูเนื้อย่างเกาหลี • สาขานาเชือก</span>
-  </header>
 
-  <!-- ปุ่ม Set IP อยู่มุมขวาล่างของ header -->
+
+    <!-- ปุ่ม Set IP อยู่ด้านบนขวา -->
     <button id="setIpBtn" onclick="setPrinterIP()" aria-label="ตั้งค่า IP เครื่องพิมพ์">
       <i class="fa-solid fa-network-wired"></i>
       <div style="text-align:left; line-height:1;">
