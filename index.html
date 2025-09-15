@@ -234,6 +234,7 @@
               <th>เวลาเปิดบิล</th>
               <th>เวลาปิดบิล</th>
               <th>พิมพ์</th>
+              <th>ESC/POS</th>
             </tr>
           </thead>
           <tbody id="salesHistory"></tbody>
@@ -344,7 +345,12 @@
       // เปิดหน้าพิมพ์บิลใหม่ พร้อมส่ง bill_id
       window.open(`printbill.html?bill_id=${billId}`, '_blank');
     }
-  
+
+    // --- ฟังก์ชันเปิดหน้าพิมพ์ ESC/POS ---
+    function openPOS(billId) {
+      window.open(`printPOS.html?bill_id=${billId}`, '_blank');
+    }
+      
     async function loadSalesSummary() {
       const { data: daily } = await client.rpc('get_daily_sales');
       const { data: monthly } = await client.rpc('get_monthly_sales');
@@ -454,6 +460,12 @@
               <button onclick="reprintBill(${bill.id})" 
                 style="background:#ec4899; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">
                 <i class="fa-solid fa-print"></i> พิมพ์บิล
+              </button>
+            </td>
+            <td>
+              <button onclick="openPOS(${bill.id})" 
+                style="background:#f59e0b; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">
+                <i class="fa-solid fa-receipt"></i> ESC/POS
               </button>
             </td>
           `;
