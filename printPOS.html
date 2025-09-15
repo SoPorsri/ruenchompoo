@@ -71,6 +71,21 @@ async function loadAndPrintBill(billId) {
   }))
 
   // 5️⃣ ส่ง POST ไป Node.js server
+  // เพิ่มโค้ดส่วนนี้เพื่อจำลองการแสดงผลการสั่งพิมพ์
+  const mockPrintContent = `
+  ======= ใบเสร็จ =======
+  
+  หมายเลขบิล: ${bill.id}
+  วันที่: ${new Date(bill.created_at).toLocaleDateString("th-TH")}
+  ---------------------
+  รายการสินค้า:
+  ${bill.items.map(item => `${item.menu_name} x ${item.qty} = ${item.total} บาท`).join("\n")}
+  ---------------------
+  ยอดรวม: ${bill.total} บาท
+  `;
+  
+  alert("หน้าตาใบเสร็จที่จะสั่งพิมพ์:\n" + mockPrintContent);
+  
   const response = await fetch(`${SERVER_URL}/print`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
