@@ -1,35 +1,90 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<title>ทดสอบพิมพ์</title>
+    <meta charset="UTF-8">
+    <title>ทดสอบสั่งพิมพ์ POS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+        }
+        .container {
+            background-color: white;
+            padding: 2.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+        input, textarea, button {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
-<input id="printerIp" placeholder="IP Printer" value="192.168.1.100">
-<textarea id="printContent" placeholder="เนื้อหาใบเสร็จ">สวัสดี\nทดสอบ</textarea>
-<button id="printButton">สั่งพิมพ์</button>
+    <div class="container">
+        <h1>ทดสอบสั่งพิมพ์ POS</h1>
+        <input id="printerIp" placeholder="IP Printer" value="192.168.1.100">
+        <textarea id="printContent" placeholder="เนื้อหาใบเสร็จ" rows="8">สวัสดี\nทดสอบ</textarea>
+        <button id="printButton">สั่งพิมพ์</button>
+    </div>
 
-<script>
-document.getElementById('printButton').addEventListener('click', async () => {
-  const ip = document.getElementById('printerIp').value;
-  const content = document.getElementById('printContent').value;
+    <script>
+        document.getElementById('printButton').addEventListener('click', async () => {
+            const ip = document.getElementById('printerIp').value;
+            const content = document.getElementById('printContent').value;
 
-  try {
-    const res = await fetch('https://my-pos-server-production.up.railway.app/print', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ip, content })
-    });
-    const data = await res.json();
+            try {
+                const res = await fetch('https://my-pos-server-production.up.railway.app/print', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ip, content })
+                });
+                const data = await res.json();
 
-    if (data.success) alert('สั่งพิมพ์สำเร็จ!');
-    else alert('Error: ' + data.message);
-
-  } catch (err) {
-    console.error(err);
-    alert('ไม่สามารถเชื่อมต่อ server ได้');
-  }
-});
-</script>
+                if (data.success) {
+                    alert('สั่งพิมพ์สำเร็จ!');
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('ไม่สามารถเชื่อมต่อ server ได้');
+            }
+        });
+    </script>
 </body>
 </html>
