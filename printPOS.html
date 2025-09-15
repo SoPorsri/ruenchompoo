@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8">
-  <title>พิมพ์บิล</title>
+<meta charset="utf-8">
+<title>Print POS ESC/POS</title>
 </head>
 <body>
 <script type="module">
@@ -12,91 +12,85 @@ const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
 const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// IP ของ Node.js server (PC)
-const SERVER_URL = 'https://192.168.1.88:8443';
+const SERVER_URL = 'https://192.168.1.88:8443';  // Node.js server
+const PRINTER_IP = '192.168.1.100';             // Printer IP
 
-// IP ของ Printer
-const PRINTER_IP = '192.168.1.100';
-
-// ดึง bill_id จาก query string
 const urlParams = new URLSearchParams(window.location.search)
 const billId = urlParams.get('bill_id')
 
-if (billId) {
-  loadAndPrintBill(billId)
-}
+if(billId) loadAndPrintBill(billId)
 
-// --- ฟังก์ชันดึงข้อมูลและสั่งพิมพ์ ---
-async function loadAndPrintBill(billId) {
-  // 1️⃣ ดึงข้อมูลบิล
+async function loadAndPrintBill(billId){
+  // --- 1. ดึงข้อมูลบิล ---
   const { data: bill, error: billError } = await client
-    .from('bills')
-    .select('*')
-    .eq('id', billId)
-    .single()
+    .from('bills').select('*').eq('id', billId).single()
+  if(billError || !bill){ alert("❌ ไม่พบบิล"); return; }
 
-  if (billError || !bill) {
-    alert("❌ ไม่พบบิล")
-    console.error(billError)
-    return
-  }
-
-  // 2️⃣ ดึงรายการสินค้า
+  // --- 2. ดึงรายการสินค้า ---
   const { data: items, error: itemsError } = await client
-    .from('bill_items')
-    .select('id, qty, price, total, menu_id')
-    .eq('bill_id', billId)
+    .from('bill_items').select('id, qty, price, total, menu_id').eq('bill_id', billId)
+  if(itemsError) console.error(itemsError)
 
-  if(itemsError){
-    console.error(itemsError)
-  }
-
-  // 3️⃣ ดึงชื่อเมนู
+  // --- 3. ดึงชื่อเมนู ---
   let menuNames = {}
-  if(items && items.length>0){
+  if(items?.length>0){
     const menuIds = items.map(i=>i.menu_id).filter(Boolean)
     if(menuIds.length>0){
       const { data: menus } = await client
-        .from('menu')
-        .select('id, name')
-        .in('id', menuIds)
-      menus?.forEach(m => menuNames[m.id] = m.name)
+        .from('menu').select('id,name').in('id', menuIds)
+      menus?.forEach(m=>menuNames[m.id]=m.name)
     }
   }
+  bill.items = (items||[]).map(i=>({...i, menu_name: menuNames[i.menu_id]||"-"}))
 
-  // 4️⃣ รวมรายการ
-  bill.items = (items||[]).map(i=>({
-    ...i,
-    menu_name: menuNames[i.menu_id] || "-"
-  }))
+  // --- 4. สร้าง ESC/POS string ---
+  let escpos = ''
+  escpos += '\x1B\x40';             // Initialize printer
+  escpos += '\x1B\x61\x01';         // Center align
+  escpos += '\x1B\x21\x30';         // Bold + Double Height
+  escpos += 'ร้านเรือนชมพูเนื้อย่างเกาหลี\n';
+  escpos += '\x1B\x21\x00';         // Normal
+  escpos += 'สาขานาเชือก\n';
+  escpos += 'โทร: 0885305228, 0621392902\n';
+  escpos += `บิลเลขที่: ${bill.billno || bill.id}\n`;
+  escpos += `โต๊ะ/ลูกค้า: ${bill.customer || '-'}\n`;
+  const closedText = bill.closed_at
+    ? new Date(bill.closed_at).toLocaleString('th-TH', { dateStyle:'short', timeStyle:'short' })
+    : '-';
+  escpos += `เวลาเช็คบิล: ${closedText}\n`;
+  escpos += '\x1B\x61\x00';         // Left align
+  escpos += '--------------------------------\n';
+  escpos += 'สินค้า           ราคา  จำนวน   รวม\n';
+  escpos += '--------------------------------\n';
 
-  // 5️⃣ ส่ง POST ไป Node.js server
-  // เพิ่มโค้ดส่วนนี้เพื่อจำลองการแสดงผลการสั่งพิมพ์
-  const mockPrintContent = `
-  ======= ใบเสร็จ =======
-  
-  หมายเลขบิล: ${bill.id}
-  วันที่: ${new Date(bill.created_at).toLocaleDateString("th-TH")}
-  ---------------------
-  รายการสินค้า:
-  ${bill.items.map(item => `${item.menu_name} x ${item.qty} = ${item.total} บาท`).join("\n")}
-  ---------------------
-  ยอดรวม: ${bill.total} บาท
-  `;
-  
-  alert("หน้าตาใบเสร็จที่จะสั่งพิมพ์:\n" + mockPrintContent);
-  
-  const response = await fetch(`${SERVER_URL}/print`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ printer_ip: PRINTER_IP, bill })
+  // --- 5. แสดงรายการสินค้า ---
+  bill.items.forEach(item=>{
+    const name = item.menu_name.padEnd(15,' ');
+    const price = Number(item.price).toFixed(2).padStart(5,' ');
+    const qty = String(item.qty).padStart(5,' ');
+    const total = Number(item.total).toFixed(2).padStart(6,' ');
+    escpos += `${name}${price}${qty}${total}\n`;
   })
 
-  const result = await response.json()
-  if(result.success){
-    alert("✅ สั่งพิมพ์สำเร็จ!")
-  } else {
-    alert("❌ เกิดข้อผิดพลาด: " + result.message)
+  escpos += '--------------------------------\n';
+  escpos += `ยอดรวม      : ${Number(bill.total||0).toFixed(2)}\n`;
+  escpos += `รับเงินมา    : ${Number(bill.cash||0).toFixed(2)}\n`;
+  escpos += `เงินทอน     : ${Number(bill.change||0).toFixed(2)}\n`;
+  escpos += '\n*** ขอบคุณที่อุดหนุน ***\n\n';
+  escpos += '\x1D\x56\x41';         // Cut paper
+
+  // --- 6. ส่งไป Node.js server ---
+  try {
+    const response = await fetch(`${SERVER_URL}/print`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({printer_ip:PRINTER_IP, escpos})
+    })
+    const result = await response.json()
+    if(result.success) alert('✅ สั่งพิมพ์สำเร็จ!');
+    else alert('❌ เกิดข้อผิดพลาด: '+result.message);
+  } catch(e){
+    console.error(e); alert('❌ ไม่สามารถเชื่อมต่อเครื่องพิมพ์ได้');
   }
 }
 </script>
