@@ -15,7 +15,7 @@ document.getElementById('printButton').addEventListener('click', async () => {
   const content = document.getElementById('printContent').value;
 
   try {
-    const res = await fetch('https://my-pos-server-production.up.railway.app//print', {
+    const res = await fetch('https://my-pos-server-production.up.railway.app/print', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ip, content })
