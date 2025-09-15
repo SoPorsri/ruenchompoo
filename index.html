@@ -32,6 +32,40 @@
     header span {
       vertical-align: middle;
     }
+
+    /* ===== Set IP button: มุมขวาล่างของ header ===== */
+    #setIpBtn {
+      position: absolute;
+      right: clamp(10px, 2vw, 16px);
+      bottom: clamp(8px, 1.5vw, 12px);
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 300;
+    }
+    #setIpBtn i { font-size: 14px; }
+    #setIpBtn small {
+      display:block;
+      font-weight:400;
+      font-size:11px;
+      opacity:0.95;
+    }
+    #setIpBtn:hover { transform: translateY(-2px); }
+
+    @media (max-width: 600px) {
+      header img { height: 72px; }
+      #setIpBtn { padding: 6px 10px; font-size:12px; right:10px; bottom:8px; }
+    }
+    /* ================================================ */
     
     /* ปุ่ม Floating Action Button แบบ Dynamic - ขนาดเล็กลง + สีสอดคล้องกราฟ */
     #reportButton {
@@ -133,6 +167,16 @@
   <header>
     <img src="images/LOGO.png" alt="โลโก้ร้าน">
     <span>ร้านเรือนชมพูเนื้อย่างเกาหลี • สาขานาเชือก</span>
+  </header>
+
+  <!-- ปุ่ม Set IP อยู่มุมขวาล่างของ header -->
+    <button id="setIpBtn" onclick="setPrinterIP()" aria-label="ตั้งค่า IP เครื่องพิมพ์">
+      <i class="fa-solid fa-network-wired"></i>
+      <div style="text-align:left; line-height:1;">
+        <div style="font-weight:700; font-size:13px;">Set IP</div>
+        <small id="ipLabel">192.168.1.100</small>
+      </div>
+    </button>
   </header>
   
   <!-- ปุ่ม Floating Action Button -->
@@ -503,6 +547,45 @@
       XLSX.writeFile(wb, "sales_history.xlsx");
     }
 
+    /* ======= ฟังก์ชัน Set IP (localStorage) ======= */
+    function validateIPv4(ip) {
+      const re = /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/;
+      return re.test(ip);
+    }
+
+    window.setPrinterIP = function() {
+      const currentIP = localStorage.getItem('PRINTER_IP') || '192.168.1.100';
+      const ip = prompt('กรอก IP เครื่องพิมพ์ (IPv4) — เว้นว่างเพื่อลบค่า:', currentIP);
+      if (ip === null) return; // cancel
+      const v = ip.trim();
+      if (v === '') {
+        localStorage.removeItem('PRINTER_IP');
+        alert('ลบค่า IP แล้ว จะกลับไปใช้ค่าเริ่มต้น 192.168.1.100');
+        updateIpLabel();
+        return;
+      }
+      if (!validateIPv4(v)) {
+        alert('รูปแบบ IP ไม่ถูกต้อง กรุณาใส่ IPv4 เช่น 192.168.1.100');
+        return;
+      }
+      localStorage.setItem('PRINTER_IP', v);
+      alert('บันทึก IP เรียบร้อย: ' + v);
+      updateIpLabel();
+    };
+
+    window.updateIpLabel = function() {
+      const label = document.getElementById('ipLabel');
+      const btn = document.getElementById('setIpBtn');
+      const ip = localStorage.getItem('PRINTER_IP') || '192.168.1.100';
+      if (label) label.textContent = ip;
+      if (btn) btn.title = 'Printer IP: ' + ip + ' — คลิกเพื่อแก้ไข';
+    };
+
+    // เรียกเมื่อโหลดหน้า
+    window.addEventListener('DOMContentLoaded', updateIpLabel);
+    // เรียกซ้ำอีกเผื่อสคริปต์รันหลัง DOM เหตุการณ์
+    updateIpLabel();
+    /* ================================================ */
 
     // เรียงลำดับการทำงาน
     (async () => {
