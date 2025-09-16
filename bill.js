@@ -916,8 +916,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (table_id) {
       const { error: updateError } = await client.from('tables').update({ status: 'ว่าง' }).eq('id', table_id);
       if (updateError) console.log('อัปเดตสถานะโต๊ะผิดพลาด', updateError);
-    }
-    if (table_id) {
+    
       const { data: draftData } = await client.from('drafts').select('id').eq('table_id', table_id).maybeSingle();
       if (draftData) {
         await client.from('draft_items').delete().eq('draft_id', draftData.id);
@@ -929,6 +928,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     el('cash').value = '';
     calc();
     alert('ยกเลิกบิลเรียบร้อยแล้ว');
+    window.location.href = 'index.html';
   });
 
   el('cash').addEventListener('input', calc);
