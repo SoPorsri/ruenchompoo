@@ -343,7 +343,7 @@
       // ฟังก์ชัน render ตาราง
       function renderTables(statusMap) {
         tables.forEach(t => {
-          const div = document.getElementById("table-" + encodeURIComponent(t.name));
+          const div = document.getElementById("table-" + t.name);
           if (!div) return;
           const status = statusMap[t.id] || "ว่าง";
     
@@ -388,8 +388,6 @@
       renderTables(statusMap);
       localStorage.setItem('tablesStatus', JSON.stringify(statusMap));
     }
-    ✅ จุดแตกต่างหลัก:
-
     let salesChart;
 
     function openReport() {
