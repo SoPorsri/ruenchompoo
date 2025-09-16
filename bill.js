@@ -573,15 +573,26 @@ async function saveBill() {
   w.document.write('</body></html>');
   w.document.close();
   w.focus();
-  w.print();
-  w.close();
 
-  // clear
-  //el('billno').value = await getNextBillNo();
-  el('billno').value = '';
-  document.querySelectorAll('#menuItems input').forEach(i => i.value = '');
-  el('cash').value = '';
-  calc();
+  // รอให้ปริ้นเสร็จแล้วค่อยทำต่อ
+  w.addEventListener('afterprint', () => {
+      w.close();
+  
+      // clear form หลังปริ้น
+      el('billno').value = '';
+      document.querySelectorAll('#menuItems input').forEach(i => i.value = '');
+      el('cash').value = '';
+      calc();
+  
+      // ถ้าอยาก redirect หรือทำอย่างอื่น ให้ทำที่นี่
+      window.location.href = 'index.html';
+  });
+  
+  // สำหรับ browser บางตัว (เช่น Chrome) ที่ไม่ fire afterprint ใน window เดิม
+  // สามารถ fallback ด้วย setTimeout
+  setTimeout(() => {
+      try { w.print(); } catch(e) { console.log(e); }
+  }, 100);
 }
 
 /* ---------------------------
