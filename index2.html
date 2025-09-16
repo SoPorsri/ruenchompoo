@@ -361,12 +361,6 @@
             // 3. Ensure tables exist in the database (optional but good practice)
             await ensureTablesExist();
 
-            // Setup other event listeners
-            document.getElementById('setIpBtn').addEventListener('click', openIpModal);
-            document.getElementById('reportButton').addEventListener('click', openReport);
-            document.getElementById('closeIpBtn').addEventListener('click', closeIpModal);
-            document.getElementById('saveIpBtn').addEventListener('click', saveIp);
-            document.getElementById('ipLabel').textContent = localStorage.getItem('PRINTER_IP') || '192.168.1.100';
         });
 
         // Realtime Subscription: listens for changes and invalidates cache
