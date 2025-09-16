@@ -927,7 +927,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     el('customer').value = '';
     el('cash').value = '';
     calc();
-    alert('ยกเลิกบิลเรียบร้อยแล้ว');
+    //alert('ยกเลิกบิลเรียบร้อยแล้ว');
     window.location.href = 'index.html';
   });
 
