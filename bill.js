@@ -488,6 +488,7 @@ async function saveDraft() {
     }
 
     alert('บันทึกฉบับร่างเรียบร้อย');
+    window.location.href = 'index.html';
   } catch (err) {
     console.log('saveDraft error:', err);
     alert('บันทึกฉบับร่างผิดพลาด');
