@@ -329,7 +329,7 @@ main{display:flex;flex-direction:row;height:100%;gap:10px;box-sizing:border-box}
   background: var(--accent);
   color: #fff;
 }
-.popup-actions #btnEditMenuCancel {
+.popup-actions #btnAddMenuCancel {
   background: #e5e7eb;
   color: #374151;
 }
