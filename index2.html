@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     
     <style>
+        /* CSS ของคุณ */
         body { font-family: system-ui, "Noto Sans Thai", sans-serif; margin: 0; background-color: #e6fff7; }
         header {
             background: linear-gradient(90deg, #ec4899, #d946ef);
@@ -34,9 +35,9 @@
 
         /* ===== Set IP button: มุมขวาล่างของ header ===== */
         #setIpBtn {
-            position: absolute;
+            position: absolute; /* หรือ fixed ถ้าต้องการให้เลื่อนตามหน้า */
             right: clamp(10px, 2vw, 16px);
-            top: calc(0 + clamp(0px, 2vw, 16px) + 100px);
+            top: calc(0 + clamp(0px, 2vw, 16px) + 100px); /* 100px = ความสูง header */
             background: linear-gradient(135deg, #f59e0b, #d97706);
             color: #fff;
             border: none;
@@ -64,7 +65,7 @@
             #setIpBtn {
                 padding: 6px 10px;
                 font-size:12px;
-                top: calc(0 + 72px + 8px);
+                top: calc(0 + 72px + 8px); /* ปรับตาม header บนมือถือ */
             }
         }
         /* ================================================ */
@@ -82,7 +83,7 @@
             cursor: pointer;
             font-size: clamp(12px, 1.8vw, 14px);
             font-weight: 600;
-            box-shadow: 0 6px 20px rgba(190,24,93,0.35);
+            box-shadow: 0 6px 20px rgba(190,24,93,0.35); /* เงาโทนเข้ม */
             display: flex;
             align-items: center;
             gap: 4px;
@@ -161,7 +162,7 @@
         
         .layout {
             position: relative;
-            z-index: 1;
+            z-index: 1; /* โต๊ะอยู่ข้างหน้า */
         }
     </style>
 </head>
@@ -249,46 +250,46 @@
             <h3 style="margin-top:0;">📈 กราฟยอดขาย</h3>
             <div style="margin-bottom:12px;">
                 <button onclick="loadSalesChart('daily')" 
-                    style="background:#24d67a; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">
-                    รายวัน
+                style="background:#24d67a; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">
+                รายวัน
                 </button>
                 <button onclick="loadSalesChart('monthly')" 
-                    style="background:#19d3d3; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">
-                    รายเดือน
+                style="background:#19d3d3; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">
+                รายเดือน
                 </button>
                 <button onclick="loadSalesChart('yearly')" 
-                    style="background:#3b82f6; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">
-                    รายปี
+                style="background:#3b82f6; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">
+                รายปี
                 </button>
             </div>
             <canvas id="salesChart" height="120"></canvas>
     
             <div style="margin-top:24px;">
                 <button onclick="toggleHistory()" 
-                    style="background:#ec4899; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer;">
-                    <i class="fa-solid fa-clock-rotate-left"></i> ดูประวัติการขาย
+                style="background:#ec4899; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer;">
+                <i class="fa-solid fa-clock-rotate-left"></i> ดูประวัติการขาย
                 </button>
                 <button onclick="exportToExcel()" 
-                    style="background:#10b981; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer;">
-                    <i class="fa-solid fa-file-excel"></i> Export Excel
+                style="background:#10b981; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer;">
+                <i class="fa-solid fa-file-excel"></i> Export Excel
                 </button>
             </div>
     
             <div id="historySection" style="display:none; margin-top:16px;">
                 <h3>🧾 ประวัติการขายล่าสุด</h3>
                 <table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse:collapse; font-size:14px;">
-                    <thead>
-                        <tr style="background:#f9fafb;">
-                            <th>เลขบิล</th>
-                            <th>ลูกค้า/โต๊ะ</th>
-                            <th>ยอดรวม</th>
-                            <th>เวลาเปิดบิล</th>
-                            <th>เวลาปิดบิล</th>
-                            <th>พิมพ์</th>
-                            <th>ESC/POS</th>
-                        </tr>
-                    </thead>
-                    <tbody id="salesHistory"></tbody>
+                <thead>
+                    <tr style="background:#f9fafb;">
+                        <th>เลขบิล</th>
+                        <th>ลูกค้า/โต๊ะ</th>
+                        <th>ยอดรวม</th>
+                        <th>เวลาเปิดบิล</th>
+                        <th>เวลาปิดบิล</th>
+                        <th>พิมพ์</th>
+                        <th>ESC/POS</th>
+                    </tr>
+                </thead>
+                <tbody id="salesHistory"></tbody>
                 </table>
             </div>
         </div>
@@ -310,71 +311,6 @@
             { id: 21, name: "B3" }, { id: 22, name: "B4" }
         ];
 
-        // --- Core Functions for Table Rendering ---
-
-        // Function to render a single table card
-        function renderTable(tblData) {
-            const el = document.getElementById('table-' + tblData.name);
-            if (el) {
-                el.className = 'table-card ' + (tblData.status === 'ว่าง' ? 'free' : 'busy');
-                el.innerHTML = `<i class="fa-solid ${tblData.status === 'ว่าง' ? 'fa-circle-check' : 'fa-circle-xmark'} status-icon"></i>${tblData.name} (${tblData.status})`;
-            }
-        }
-
-        // Function to load tables from local cache (for instant display)
-        function loadTablesFromCache() {
-            const cachedData = sessionStorage.getItem('table_status_cache');
-            if (cachedData) {
-                const tables = JSON.parse(cachedData);
-                tables.forEach(renderTable);
-                console.log('Tables loaded from cache.');
-            } else {
-                // If no cache, render initial state (all "ว่าง")
-                tables.forEach(t => renderTable({ name: t.name, status: 'ว่าง' }));
-                console.log('No cache found. Rendering default state.');
-            }
-        }
-
-        // Function to fetch the latest table data from Supabase and update cache
-        async function fetchAndUpdateTables() {
-            const { data, error } = await client.from('tables').select('*');
-            if (error) {
-                console.error('Error fetching table status:', error.message);
-                return;
-            }
-            if (data) {
-                data.forEach(renderTable);
-                // Save latest data to cache
-                sessionStorage.setItem('table_status_cache', JSON.stringify(data));
-                console.log('Tables updated from Supabase and cache refreshed.');
-            }
-        }
-
-        // --- Hybrid Caching & Realtime Logic ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            // 1. Load from cache for instant display
-            loadTablesFromCache();
-
-            // 2. Fetch latest data in the background and update the display
-            await fetchAndUpdateTables();
-
-            // 3. Ensure tables exist in the database (optional but good practice)
-            await ensureTablesExist();
-
-        });
-
-        // Realtime Subscription: listens for changes and invalidates cache
-        client.channel('tables-changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, payload => {
-                console.log('Change detected', payload);
-                // Render the specific table that changed
-                renderTable(payload.new);
-                // Invalidate the cache to ensure the next page load gets fresh data
-                sessionStorage.removeItem('table_status_cache');
-            })
-            .subscribe();
-
-        // --- Existing Functions (Unchanged) ---
         async function ensureTablesExist() {
             const { data: dbTables, error } = await client.from('tables').select('id');
             if (error) { console.error(error); return; }
@@ -383,56 +319,117 @@
 
             if (missing.length > 0) {
                 console.log("Insert missing tables:", missing);
-                const { error: upsertError } = await client.from('tables').upsert(
+                const { data, error: upsertError } = await client.from('tables').upsert(
                     missing.map(m => ({ id: m.id, name: m.name, status: "ว่าง" }))
                 );
-                if (upsertError) { console.error("Upsert error:", upsertError); }
+                if (upsertError) {
+                    console.error("Upsert error:", upsertError);
+                } else {
+                    console.log("Upsert success:", data);
+                }
             }
         }
 
-        function openIpModal() {
-            const modal = document.getElementById('ipModal');
-            const input = document.getElementById('printerIpInput');
-            const currentIP = localStorage.getItem('PRINTER_IP') || '192.168.1.100';
-            input.value = currentIP;
-            modal.style.display = 'flex';
+        async function loadTables() {
+            const { data, error } = await client.from('tables').select('id,name,status,bill_id');
+            if (error) { console.error(error); return; }
+
+            tables.forEach(t => {
+                const div = document.getElementById("table-" + t.name);
+                if (!div) return;
+
+                const record = data.find(d => d.name === t.name);
+                const status = record ? record.status : "ว่าง";
+                const billId = record ? record.bill_id : null;
+
+                div.className = 'table-card ' + (status === 'ว่าง' ? 'free' : 'busy');
+                div.innerHTML = '';
+
+                const icon = document.createElement('i');
+                icon.className = status === 'ว่าง'
+                ? 'fa-solid fa-circle-check status-icon free'
+                : 'fa-solid fa-circle-xmark status-icon busy';
+
+                const label = document.createElement('span');
+                label.textContent = `${t.name} (${status})`;
+
+                div.appendChild(icon);
+                div.appendChild(label);
+                
+                // แก้ไขการคลิกโต๊ะให้ถูกต้องตามเงื่อนไข
+                div.onclick = () => {
+                    if (status === 'ว่าง') {
+                        window.open(`bill.html?table_name=${encodeURIComponent(t.name)}`, '_blank');
+                    } else if (status === 'ไม่ว่าง' && billId) {
+                        window.open(`bill.html?bill_id=${billId}`, '_blank');
+                    }
+                };
+            });
         }
-        function closeIpModal() { document.getElementById('ipModal').style.display = 'none'; }
-        function saveIp() {
-            const input = document.getElementById('printerIpInput');
-            const ip = input.value.trim();
-            if (ip === '') { localStorage.removeItem('PRINTER_IP'); }
-            else if (!validateIPv4(ip)) { alert('รูปแบบ IP ไม่ถูกต้อง กรุณาใส่ IPv4 เช่น 192.168.1.100'); return; }
-            else { localStorage.setItem('PRINTER_IP', ip); }
-            document.getElementById('ipLabel').textContent = localStorage.getItem('PRINTER_IP') || '192.168.1.100';
-            closeIpModal();
+
+        let salesChart;
+
+        function openReport() {
+            document.getElementById('reportModal').style.display = 'flex';
+            loadSalesSummary();
+            loadSalesChart('daily'); // ค่าเริ่มต้น
         }
-        function validateIPv4(ip) { const re = /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/; return re.test(ip); }
-        function openReport() { document.getElementById('reportModal').style.display = 'flex'; loadSalesSummary(); loadSalesChart('daily'); }
-        function closeReport() { document.getElementById('reportModal').style.display = 'none'; }
+        function closeReport() {
+            document.getElementById('reportModal').style.display = 'none';
+        }
+        
         function toggleHistory() {
             const section = document.getElementById('historySection');
-            if (section.style.display === 'none') { section.style.display = 'block'; loadSalesHistory(); }
-            else { section.style.display = 'none'; }
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                loadSalesHistory();
+            } else {
+                section.style.display = 'none';
+            }
         }
-        function reprintBill(billId) { window.open(`printbill.html?bill_id=${billId}`, '_blank'); }
-        function openPOS(billId) { window.open(`printPOS.html?bill_id=${billId}`, '_blank'); }
+
+        function reprintBill(billId) {
+            // เปิดหน้าพิมพ์บิลใหม่ พร้อมส่ง bill_id
+            window.open(`printbill.html?bill_id=${billId}`, '_blank');
+        }
+
+        // --- ฟังก์ชันเปิดหน้าพิมพ์ ESC/POS ---
+        function openPOS(billId) {
+            window.open(`printPOS.html?bill_id=${billId}`, '_blank');
+        }
+            
         async function loadSalesSummary() {
             const { data: daily } = await client.rpc('get_daily_sales');
             const { data: monthly } = await client.rpc('get_monthly_sales');
             const { data: yearly } = await client.rpc('get_yearly_sales');
-            document.getElementById('dailySales').textContent = (daily?.[0]?.total_sales || 0).toLocaleString("th-TH");
-            document.getElementById('monthlySales').textContent = (monthly?.[0]?.total_sales || 0).toLocaleString("th-TH");
-            document.getElementById('yearlySales').textContent = (yearly?.[0]?.total_sales || 0).toLocaleString("th-TH");
+        
+            document.getElementById('dailySales').textContent = 
+                (daily?.[0]?.total_sales || 0).toLocaleString("th-TH");
+            document.getElementById('monthlySales').textContent = 
+                (monthly?.[0]?.total_sales || 0).toLocaleString("th-TH");
+            document.getElementById('yearlySales').textContent = 
+                (yearly?.[0]?.total_sales || 0).toLocaleString("th-TH");
         }
-        let salesChart;
+        
         async function loadSalesChart(mode = 'daily') {
             let fromDate;
-            if (mode === 'daily') { fromDate = new Date(Date.now() - 30*24*60*60*1000); }
-            else if (mode === 'monthly') { fromDate = new Date(new Date().getFullYear(), 0, 1); }
-            else { fromDate = new Date(new Date().getFullYear() - 4, 0, 1); }
-            const { data, error } = await client.from('bills').select('closed_at,total').eq('status','closed').gte('closed_at', fromDate.toISOString()).order('closed_at',{ascending:true});
+            if (mode === 'daily') {
+                fromDate = new Date(Date.now() - 30*24*60*60*1000); // 30 วัน
+            } else if (mode === 'monthly') {
+                fromDate = new Date(new Date().getFullYear(), 0, 1); // ตั้งแต่ต้นปี
+            } else {
+                fromDate = new Date(new Date().getFullYear() - 4, 0, 1); // 4 ปีหลัง
+            }
+        
+            const { data, error } = await client
+                .from('bills')
+                .select('closed_at,total')
+                .eq('status','closed')
+                .gte('closed_at', fromDate.toISOString())
+                .order('closed_at',{ascending:true});
+        
             if (error) { console.error(error); return; }
+        
             const grouped = {};
             data.forEach(b => {
                 const d = new Date(b.closed_at);
@@ -442,10 +439,13 @@
                 if (mode === 'yearly') key = d.getFullYear();
                 grouped[key] = (grouped[key] || 0) + Number(b.total);
             });
+        
             const labels = Object.keys(grouped);
             const totals = Object.values(grouped);
+        
             const ctx = document.getElementById('salesChart').getContext('2d');
             if (salesChart) salesChart.destroy();
+        
             salesChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -453,33 +453,162 @@
                     datasets: [{
                         label: 'ยอดขาย (บาท)',
                         data: totals,
-                        backgroundColor: mode === 'daily' ? '#24d67a' : mode === 'monthly' ? '#19d3d3' : '#3b82f6'
+                        backgroundColor: 
+                            mode === 'daily' ? '#24d67a' :
+                            mode === 'monthly' ? '#19d3d3' : '#3b82f6'
                     }]
                 },
-                options: { responsive: true, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return context.raw.toLocaleString("th-TH") + " บาท"; } } } }, scales: { y: { beginAtZero: true, ticks: { callback: function(value) { return value.toLocaleString("th-TH"); } } } } }
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.raw.toLocaleString("th-TH") + " บาท";
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString("th-TH");
+                                }
+                            }
+                        }
+                    }
+                }
             });
         }
+
         async function loadSalesHistory() {
-            const { data, error } = await client.from('bills').select('*').eq('status','closed').order('closed_at', { ascending: false }).limit(20);
+            const { data, error } = await client
+                .from('bills')
+                .select('*')
+                .eq('status','closed')
+                .order('closed_at', { ascending: false })
+                .limit(20);
+        
             const tbody = document.getElementById('salesHistory');
             tbody.innerHTML = '';
             if (!error && data) {
                 data.forEach(bill => {
                     const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${bill.billno}</td><td>${bill.customer || '-'}</td><td>${Number(bill.total).toLocaleString("th-TH")}</td><td>${bill.created_at ? new Date(bill.created_at).toLocaleString('th-TH') : '-'}</td><td>${bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH') : '-'}</td><td><button onclick="reprintBill(${bill.id})" style="background:#ec4899; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-print"></i> พิมพ์บิล</button></td><td><button onclick="openPOS(${bill.id})" style="background:#f59e0b; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-receipt"></i> ESC/POS</button></td>`;
+                    tr.innerHTML = `
+                        <td>${bill.billno}</td>
+                        <td>${bill.customer || '-'}</td>
+                        <td>${Number(bill.total).toLocaleString("th-TH")}</td>
+                        <td>${bill.created_at ? new Date(bill.created_at).toLocaleString('th-TH') : '-'}</td>
+                        <td>${bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH') : '-'}</td>
+                        <td>
+                            <button onclick="reprintBill(${bill.id})" 
+                            style="background:#ec4899; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">
+                            <i class="fa-solid fa-print"></i> พิมพ์บิล
+                            </button>
+                        </td>
+                        <td>
+                            <button onclick="openPOS(${bill.id})" 
+                            style="background:#f59e0b; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">
+                            <i class="fa-solid fa-receipt"></i> ESC/POS
+                            </button>
+                        </td>
+                    `;
                     tbody.appendChild(tr);
                 });
             }
         }
+
+
         async function exportToExcel() {
-            const { data, error } = await client.from('bills').select('*').eq('status','closed').order('closed_at', { ascending: false });
-            if (error) { alert("ไม่สามารถดึงข้อมูลได้"); return; }
-            const exportData = data.map(bill => ({ เลขบิล: bill.billno, ลูกค้า_โต๊ะ: bill.customer || '-', ยอดรวม: Number(bill.total).toLocaleString("th-TH"), เวลาเปิดบิล: bill.created_at ? new Date(bill.created_at).toLocaleString('th-TH') : '-', เวลาปิดบิล: bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH') : '-' }));
+            const { data, error } = await client
+                .from('bills')
+                .select('*')
+                .eq('status','closed')
+                .order('closed_at', { ascending: false });
+        
+            if (error) {
+                alert("ไม่สามารถดึงข้อมูลได้");
+                return;
+            }
+        
+            // แปลงข้อมูลเป็น array สำหรับ Excel
+            const exportData = data.map(bill => ({
+                เลขบิล: bill.billno,
+                ลูกค้า_โต๊ะ: bill.customer || '-',
+                ยอดรวม: Number(bill.total).toLocaleString("th-TH"),
+                เวลาเปิดบิล: bill.created_at ? new Date(bill.created_at).toLocaleString('th-TH') : '-',
+                เวลาปิดบิล: bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH') : '-'
+            }));
+                
             const ws = XLSX.utils.json_to_sheet(exportData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "SalesHistory");
+        
             XLSX.writeFile(wb, "sales_history.xlsx");
         }
+
+        /* ======= ฟังก์ชัน Set IP (localStorage) ======= */
+        function openIpModal() {
+            const modal = document.getElementById('ipModal');
+            const input = document.getElementById('printerIpInput');
+            const currentIP = localStorage.getItem('PRINTER_IP') || '192.168.1.100';
+            input.value = currentIP;
+            modal.style.display = 'flex';
+        }
+        
+        function closeIpModal() {
+            document.getElementById('ipModal').style.display = 'none';
+        }
+        
+        function saveIp() {
+            const input = document.getElementById('printerIpInput');
+            const ip = input.value.trim();
+            if (ip === '') {
+                localStorage.removeItem('PRINTER_IP');
+                alert('ลบค่า IP แล้ว จะกลับไปใช้ค่าเริ่มต้น 192.168.1.100');
+            } else if (!validateIPv4(ip)) {
+                alert('รูปแบบ IP ไม่ถูกต้อง กรุณาใส่ IPv4 เช่น 192.168.1.100');
+                return;
+            } else {
+                localStorage.setItem('PRINTER_IP', ip);
+                alert('บันทึก IP เรียบร้อย: ' + ip);
+            }
+            updateIpLabel();
+            closeIpModal();
+        }
+        
+        function validateIPv4(ip) {
+            const re = /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/;
+            return re.test(ip);
+        }
+        
+        function updateIpLabel() {
+            const label = document.getElementById('ipLabel');
+            const ip = localStorage.getItem('PRINTER_IP') || '192.168.1.100';
+            if (label) label.textContent = ip;
+        }
+
+        // เรียกเมื่อโหลดหน้า
+        window.addEventListener('DOMContentLoaded', updateIpLabel);
+        updateIpLabel();
+        /* ================================================ */
+
+        // Realtime update
+        client.channel('tables-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, payload => {
+                console.log('change detected', payload);
+                loadTables();
+            })
+            .subscribe();
+
+        // โหลดข้อมูลครั้งแรก
+        (async () => {
+            await ensureTablesExist();
+            await loadTables();
+        })();
     </script>
 </body>
 </html>
