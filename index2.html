@@ -340,45 +340,55 @@
     }
 
     async function loadTables() {
-      // ดึงข้อมูลจาก Supabase
+      // ฟังก์ชัน render ตาราง
+      function renderTables(statusMap) {
+        tables.forEach(t => {
+          const div = document.getElementById("table-" + t.name);
+          if (!div) return;
+          const status = statusMap[t.id] || "ว่าง";
+    
+          div.className = 'table-card ' + (status === 'ว่าง' ? 'free' : 'busy');
+          div.innerHTML = `
+            <i class="fa-solid ${status === 'ว่าง' ? 'fa-circle-check free' : 'fa-circle-xmark busy'} status-icon"></i>
+            <span>${t.name} (${status})</span>
+          `;
+    
+          div.onclick = async () => {
+            if (status === 'ว่าง') {
+              const { error: updateError } = await client.from('tables')
+                .update({ status: 'ไม่ว่าง' })
+                .eq('id', t.id);
+              if (updateError) {
+                console.error(updateError);
+                alert('อัปเดตสถานะโต๊ะผิดพลาด');
+                return;
+              }
+            }
+            window.location.href = `bill.html?table_id=${t.id}`;
+          };
+        });
+      }
+    
+      // โหลดจาก cache ก่อน
+      const cache = JSON.parse(localStorage.getItem('tablesStatus') || '{}');
+      renderTables(cache);
+    
+      // ดึงข้อมูลจาก Supabase แบบ background
       const { data, error } = await client.from('tables').select('id,status');
-      if (error) { 
-        console.error(error); 
-        return; 
+      if (error) {
+        console.error(error);
+        return;
       }
     
       // สร้าง map ของ id → status
       const statusMap = {};
       data.forEach(d => { statusMap[d.id] = d.status; });
     
-      tables.forEach(t => {
-        const div = document.getElementById("table-" + t.name);
-        if (!div) return;
-    
-        const status = statusMap[t.id] || "ว่าง";
-    
-        // อัปเดต class และ innerHTML แบบ batch
-        div.className = 'table-card ' + (status === 'ว่าง' ? 'free' : 'busy');
-        div.innerHTML = `
-          <i class="fa-solid ${status === 'ว่าง' ? 'fa-circle-check free' : 'fa-circle-xmark busy'} status-icon"></i>
-          <span>${t.name} (${status})</span>
-        `;
-    
-        div.onclick = async () => {
-          if (status === 'ว่าง') {
-            const { error: updateError } = await client.from('tables')
-              .update({ status: 'ไม่ว่าง' })
-              .eq('id', t.id);
-            if (updateError) {
-              console.error(updateError);
-              alert('อัปเดตสถานะโต๊ะผิดพลาด');
-              return;
-            }
-          }
-          window.location.href = `bill.html?table_id=${t.id}`;
-        };
-      });
+      // อัปเดต DOM และเก็บ cache
+      renderTables(statusMap);
+      localStorage.setItem('tablesStatus', JSON.stringify(statusMap));
     }
+    ✅ จุดแตกต่างหลัก:
 
     let salesChart;
 
@@ -619,8 +629,14 @@
     // realtime update
     client.channel('tables-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, payload => {
-        console.log('change detected', payload);
-        loadTables();
+        const div = document.getElementById("table-" + payload.new.id);
+        if (!div) return;
+        const status = payload.new.status || "ว่าง";
+        div.className = 'table-card ' + (status === 'ว่าง' ? 'free' : 'busy');
+        div.innerHTML = `
+          <i class="fa-solid ${status === 'ว่าง' ? 'fa-circle-check free' : 'fa-circle-xmark busy'} status-icon"></i>
+          <span>${payload.new.id} (${status})</span>
+        `;
       })
       .subscribe();
   </script>
