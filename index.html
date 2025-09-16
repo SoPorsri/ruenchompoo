@@ -352,39 +352,14 @@
             <i class="fa-solid ${status === 'ว่าง' ? 'fa-circle-check free' : 'fa-circle-xmark busy'} status-icon"></i>
             <span>${t.name} (${status})</span>
           `;
-    
           div.onclick = async () => {
             if (status === 'ว่าง') {
-              // 1️⃣ เปลี่ยน UI ทันที
-              div.className = 'table-card busy';
-              div.innerHTML = `
-                <i class="fa-solid fa-circle-xmark busy status-icon"></i>
-                <span>${t.name} (ไม่ว่าง)</span>
-              `;
-          
-              // 2️⃣ อัปเดต cache ทันที
-              const cache = JSON.parse(localStorage.getItem('tablesStatus') || '{}');
-              cache[t.id] = 'ไม่ว่าง';
-              localStorage.setItem('tablesStatus', JSON.stringify(cache));
-          
-              // 3️⃣ ส่ง request ไป server
               const { error: updateError } = await client.from('tables')
                 .update({ status: 'ไม่ว่าง' })
                 .eq('id', t.id);
-          
-              // 4️⃣ ถ้า error → undo UI
               if (updateError) {
                 console.error(updateError);
                 alert('อัปเดตสถานะโต๊ะผิดพลาด');
-                
-                // undo
-                div.className = 'table-card free';
-                div.innerHTML = `
-                  <i class="fa-solid fa-circle-check free status-icon"></i>
-                  <span>${t.name} (ว่าง)</span>
-                `;
-                cache[t.id] = 'ว่าง';
-                localStorage.setItem('tablesStatus', JSON.stringify(cache));
                 return;
               }
             }
