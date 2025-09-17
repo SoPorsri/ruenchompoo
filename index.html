@@ -517,11 +517,11 @@
     async function loadSalesHistory() {
       const fromDateInput = document.getElementById('fromDate')?.value;
       const toDateInput = document.getElementById('toDate')?.value;
-      const searchText = document.getElementById('searchHistory')?.value.trim();
+      const searchTextRaw = document.getElementById('searchHistory')?.value.trim();
+      const searchText = searchTextRaw.replace(/'/g, "''"); // ป้องกัน '
     
       let query = client.from('bills').select('*').eq('status','closed');
     
-      // ช่วงวันที่
       if (fromDateInput) {
         let fromDate = new Date(fromDateInput);
         fromDate.setHours(0,0,0,0);
@@ -533,14 +533,10 @@
         query = query.lte('closed_at', toDate.toISOString());
       }
     
-      // ค้นหา
       if (searchText) {
-        query = query.or(
-          `billno.ilike.%${searchText}%,customer.ilike.%${searchText}%,table_name.ilike.%${searchText}%`
-        );
+        query = query.or(`(billno.ilike.%${searchText}%,customer.ilike.%${searchText}%,table_name.ilike.%${searchText}%)`);
       }
     
-      // ถ้าไม่ใส่วันที่และไม่ใส่คำค้นหา → 10 ล่าสุด
       if (!fromDateInput && !toDateInput && !searchText) {
         query = query.order('closed_at', { ascending: false }).limit(10);
       } else {
@@ -551,30 +547,27 @@
       const tbody = document.getElementById('salesHistory');
       tbody.innerHTML = '';
     
-      if (!error && data) {
+      if (error) {
+        console.error(error);
+        return;
+      }
+    
+      if (data && data.length > 0) {
         data.forEach(bill => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>${bill.billno}</td>
             <td>${bill.customer || bill.table_name || '-'}</td>
             <td>${Number(bill.total).toLocaleString("th-TH")}</td>
-            <td>${bill.created_at ? new Date(bill.created_at).toLocaleTimeString('th-TH') : '-'}</td>
-            <td>${bill.closed_at ? new Date(bill.closed_at).toLocaleTimeString('th-TH') : '-'}</td>
-            <td>
-              <button onclick="reprintBill(${bill.id})" 
-                style="background:#ec4899; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">
-                <i class="fa-solid fa-print"></i> พิมพ์บิล
-              </button>
-            </td>
-            <td>
-              <button onclick="openPOS(${bill.id})" 
-                style="background:#f59e0b; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">
-                <i class="fa-solid fa-receipt"></i> ESC/POS
-              </button>
-            </td>
+            <td>${bill.created_at ? new Date(bill.created_at).toLocaleString('th-TH') : '-'}</td>
+            <td>${bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH') : '-'}</td>
+            <td><button onclick="reprintBill(${bill.id})">พิมพ์บิล</button></td>
+            <td><button onclick="openPOS(${bill.id})">ESC/POS</button></td>
           `;
           tbody.appendChild(tr);
         });
+      } else {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">ไม่พบข้อมูล</td></tr>`;
       }
     }
     
