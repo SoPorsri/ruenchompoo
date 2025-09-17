@@ -515,7 +515,7 @@
     }
 
     async function loadSalesHistory() {
-      const dateInput = document.getElementById('filterDate').value;
+      const dateInput = document.getElementById('filterDate')?.value;
       let fromDate, toDate;
     
       if (dateInput) {
@@ -529,17 +529,19 @@
       toDate = new Date(fromDate);
       toDate.setDate(fromDate.getDate() + 1);
     
+      // ดึงข้อมูล 10 รายการล่าสุดของวัน
       const { data, error } = await client
         .from('bills')
         .select('*')
         .eq('status','closed')
         .gte('closed_at', fromDate.toISOString())
         .lt('closed_at', toDate.toISOString())
-        .order('closed_at', { ascending: false })
-        .limit(10); // <-- แสดง 10 รายการล่าสุด
+        .order('closed_at', { ascending: false })  // เรียงจากล่าสุด
+        .limit(10);  // จำกัด 10 รายการ
     
       const tbody = document.getElementById('salesHistory');
       tbody.innerHTML = '';
+    
       if (!error && data) {
         data.forEach(bill => {
           const tr = document.createElement('tr');
