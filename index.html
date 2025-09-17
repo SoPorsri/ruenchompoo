@@ -285,16 +285,17 @@
       <!-- History Table -->
       <div id="historySection" style="display:none; margin-top:16px;">
         <h3>🧾 ประวัติการขาย</h3>
-        
-        <!-- เลือกวันที่ -->
-        <div style="margin-bottom:12px;">
-          <label>เลือกวันที่: </label>
-          <input type="date" id="filterDate" onchange="loadSalesHistory()">
-        </div>
       
-        <input type="text" id="searchHistory" placeholder="ค้นหาเลขบิล / ลูกค้า / โต๊ะ..." 
-               style="width:100%; padding:8px; margin-bottom:12px; border-radius:8px; border:1px solid #ccc;"
-               oninput="filterSalesHistory()">
+        <!-- ช่วงวันที่ + ค้นหา + Reset -->
+        <div style="margin-bottom:12px; display:flex; gap:8px; flex-wrap:wrap;">
+          <input type="date" id="fromDate" style="padding:6px 8px; border-radius:6px; border:1px solid #ccc;">
+          <input type="date" id="toDate" style="padding:6px 8px; border-radius:6px; border:1px solid #ccc;">
+          <input type="text" id="searchHistory" placeholder="ค้นหาเลขบิล / ลูกค้า / โต๊ะ..." 
+                 style="flex:1; padding:6px 8px; border-radius:6px; border:1px solid #ccc;">
+          <button id="resetHistory" style="padding:6px 12px; border-radius:6px; background:#10b981; color:white; border:none; cursor:pointer;">
+            Clear
+          </button>
+        </div>
       
         <table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse:collapse; font-size:14px;">
           <thead>
@@ -311,7 +312,6 @@
           <tbody id="salesHistory"></tbody>
         </table>
       </div>
-
 
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -515,30 +515,39 @@
     }
 
     async function loadSalesHistory() {
-      const dateInput = document.getElementById('filterDate')?.value;
-      let fromDate, toDate;
+      const fromDateInput = document.getElementById('fromDate')?.value;
+      const toDateInput = document.getElementById('toDate')?.value;
+      const searchText = document.getElementById('searchHistory')?.value.trim();
     
-      if (dateInput) {
-        fromDate = new Date(dateInput);
-      } else {
-        // ค่าเริ่มต้นวันนี้
-        fromDate = new Date();
+      let query = client.from('bills').select('*').eq('status','closed');
+    
+      // ช่วงวันที่
+      if (fromDateInput) {
+        let fromDate = new Date(fromDateInput);
+        fromDate.setHours(0,0,0,0);
+        query = query.gte('closed_at', fromDate.toISOString());
       }
-      fromDate.setHours(0,0,0,0);
+      if (toDateInput) {
+        let toDate = new Date(toDateInput);
+        toDate.setHours(23,59,59,999);
+        query = query.lte('closed_at', toDate.toISOString());
+      }
     
-      toDate = new Date(fromDate);
-      toDate.setDate(fromDate.getDate() + 1);
+      // ค้นหา
+      if (searchText) {
+        query = query.or(
+          `billno.ilike.%${searchText}%,customer.ilike.%${searchText}%,table_name.ilike.%${searchText}%`
+        );
+      }
     
-      // ดึงข้อมูล 10 รายการล่าสุดของวัน
-      const { data, error } = await client
-        .from('bills')
-        .select('*')
-        .eq('status','closed')
-        .gte('closed_at', fromDate.toISOString())
-        .lt('closed_at', toDate.toISOString())
-        .order('closed_at', { ascending: false })  // เรียงจากล่าสุด
-        .limit(10);  // จำกัด 10 รายการ
+      // ถ้าไม่ใส่วันที่และไม่ใส่คำค้นหา → 10 ล่าสุด
+      if (!fromDateInput && !toDateInput && !searchText) {
+        query = query.order('closed_at', { ascending: false }).limit(10);
+      } else {
+        query = query.order('closed_at', { ascending: false });
+      }
     
+      const { data, error } = await query;
       const tbody = document.getElementById('salesHistory');
       tbody.innerHTML = '';
     
@@ -547,7 +556,7 @@
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>${bill.billno}</td>
-            <td>${bill.customer || '-'}</td>
+            <td>${bill.customer || bill.table_name || '-'}</td>
             <td>${Number(bill.total).toLocaleString("th-TH")}</td>
             <td>${bill.created_at ? new Date(bill.created_at).toLocaleTimeString('th-TH') : '-'}</td>
             <td>${bill.closed_at ? new Date(bill.closed_at).toLocaleTimeString('th-TH') : '-'}</td>
@@ -568,15 +577,19 @@
         });
       }
     }
-
-    function filterSalesHistory() {
-      const filter = document.getElementById('searchHistory').value.toLowerCase();
-      const rows = document.querySelectorAll('#salesHistory tr');
-      rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(filter) ? '' : 'none';
-      });
-    }
+    
+    // Event listeners
+    document.getElementById('fromDate').addEventListener('change', loadSalesHistory);
+    document.getElementById('toDate').addEventListener('change', loadSalesHistory);
+    document.getElementById('searchHistory').addEventListener('input', loadSalesHistory);
+    
+    // ปุ่ม Clear / Reset
+    document.getElementById('resetHistory').addEventListener('click', () => {
+      document.getElementById('fromDate').value = '';
+      document.getElementById('toDate').value = '';
+      document.getElementById('searchHistory').value = '';
+      loadSalesHistory(); // โหลด 10 ล่าสุด
+    });
 
     async function exportToExcel() {
       const { data, error } = await client
