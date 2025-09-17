@@ -503,7 +503,7 @@
       });
     }
 
-    async function loadSalesHistory() {
+     async function loadSalesHistory() {
       const { data, error } = await client
         .from('bills')
         .select('*')
@@ -539,57 +539,6 @@
         });
       }
     }
-    
-      if (searchText) {
-        query = query.or(`(billno.ilike.%${searchText}%,customer.ilike.%${searchText}%,table_name.ilike.%${searchText}%)`);
-      }
-    
-      if (!fromDateInput && !toDateInput && !searchText) {
-        query = query.order('closed_at', { ascending: false }).limit(10);
-      } else {
-        query = query.order('closed_at', { ascending: false });
-      }
-    
-      const { data, error } = await query;
-      const tbody = document.getElementById('salesHistory');
-      tbody.innerHTML = '';
-    
-      if (error) {
-        console.error(error);
-        return;
-      }
-    
-      if (data && data.length > 0) {
-        data.forEach(bill => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${bill.billno}</td>
-            <td>${bill.customer || bill.table_name || '-'}</td>
-            <td>${Number(bill.total).toLocaleString("th-TH")}</td>
-            <td>${bill.created_at ? new Date(bill.created_at).toLocaleString('th-TH') : '-'}</td>
-            <td>${bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH') : '-'}</td>
-            <td><button onclick="reprintBill(${bill.id})">พิมพ์บิล</button></td>
-            <td><button onclick="openPOS(${bill.id})">ESC/POS</button></td>
-          `;
-          tbody.appendChild(tr);
-        });
-      } else {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">ไม่พบข้อมูล</td></tr>`;
-      }
-    }
-    
-    // Event listeners
-    document.getElementById('fromDate').addEventListener('change', loadSalesHistory);
-    document.getElementById('toDate').addEventListener('change', loadSalesHistory);
-    document.getElementById('searchHistory').addEventListener('input', loadSalesHistory);
-    
-    // ปุ่ม Clear / Reset
-    document.getElementById('resetHistory').addEventListener('click', () => {
-      document.getElementById('fromDate').value = '';
-      document.getElementById('toDate').value = '';
-      document.getElementById('searchHistory').value = '';
-      loadSalesHistory(); // โหลด 10 ล่าสุด
-    });
 
     async function exportToExcel() {
       const { data, error } = await client
