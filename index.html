@@ -284,7 +284,10 @@
   
       <!-- History Table -->
       <div id="historySection" style="display:none; margin-top:16px;">
-        <h3>🧾 ประวัติการขายล่าสุด</h3>
+        <h3>🧾 ประวัติการขายวันนี้</h3>
+        <input type="text" id="searchHistory" placeholder="ค้นหาเลขบิล / ลูกค้า / โต๊ะ..." 
+               style="width:100%; padding:8px; margin-bottom:12px; border-radius:8px; border:1px solid #ccc;"
+               oninput="filterSalesHistory()">
         <table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse:collapse; font-size:14px;">
           <thead>
             <tr style="background:#f9fafb;">
@@ -300,8 +303,6 @@
           <tbody id="salesHistory"></tbody>
         </table>
       </div>
-    </div>
-  </div>
 
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -505,12 +506,18 @@
     }
 
     async function loadSalesHistory() {
+      const today = new Date();
+      today.setHours(0,0,0,0); // เริ่มต้นวัน
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+    
       const { data, error } = await client
         .from('bills')
         .select('*')
         .eq('status','closed')
-        .order('closed_at', { ascending: false })
-        .limit(20);
+        .gte('closed_at', today.toISOString())
+        .lt('closed_at', tomorrow.toISOString())
+        .order('closed_at', { ascending: false });
     
       const tbody = document.getElementById('salesHistory');
       tbody.innerHTML = '';
@@ -521,8 +528,8 @@
             <td>${bill.billno}</td>
             <td>${bill.customer || '-'}</td>
             <td>${Number(bill.total).toLocaleString("th-TH")}</td>
-            <td>${bill.created_at ? new Date(bill.created_at).toLocaleString('th-TH') : '-'}</td>
-            <td>${bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH') : '-'}</td>
+            <td>${bill.created_at ? new Date(bill.created_at).toLocaleTimeString('th-TH') : '-'}</td>
+            <td>${bill.closed_at ? new Date(bill.closed_at).toLocaleTimeString('th-TH') : '-'}</td>
             <td>
               <button onclick="reprintBill(${bill.id})" 
                 style="background:#ec4899; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">
@@ -541,6 +548,14 @@
       }
     }
 
+    function filterSalesHistory() {
+      const filter = document.getElementById('searchHistory').value.toLowerCase();
+      const rows = document.querySelectorAll('#salesHistory tr');
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
+      });
+    }
 
     async function exportToExcel() {
       const { data, error } = await client
