@@ -284,10 +284,18 @@
   
       <!-- History Table -->
       <div id="historySection" style="display:none; margin-top:16px;">
-        <h3>🧾 ประวัติการขายวันนี้</h3>
+        <h3>🧾 ประวัติการขาย</h3>
+        
+        <!-- เลือกวันที่ -->
+        <div style="margin-bottom:12px;">
+          <label>เลือกวันที่: </label>
+          <input type="date" id="filterDate" onchange="loadSalesHistory()">
+        </div>
+      
         <input type="text" id="searchHistory" placeholder="ค้นหาเลขบิล / ลูกค้า / โต๊ะ..." 
                style="width:100%; padding:8px; margin-bottom:12px; border-radius:8px; border:1px solid #ccc;"
                oninput="filterSalesHistory()">
+      
         <table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse:collapse; font-size:14px;">
           <thead>
             <tr style="background:#f9fafb;">
@@ -303,6 +311,7 @@
           <tbody id="salesHistory"></tbody>
         </table>
       </div>
+
 
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -506,18 +515,28 @@
     }
 
     async function loadSalesHistory() {
-      const today = new Date();
-      today.setHours(0,0,0,0); // เริ่มต้นวัน
-      const tomorrow = new Date(today);
-      tomorrow.setDate(today.getDate() + 1);
+      const dateInput = document.getElementById('filterDate').value;
+      let fromDate, toDate;
+    
+      if (dateInput) {
+        fromDate = new Date(dateInput);
+      } else {
+        // ค่าเริ่มต้นวันนี้
+        fromDate = new Date();
+      }
+      fromDate.setHours(0,0,0,0);
+    
+      toDate = new Date(fromDate);
+      toDate.setDate(fromDate.getDate() + 1);
     
       const { data, error } = await client
         .from('bills')
         .select('*')
         .eq('status','closed')
-        .gte('closed_at', today.toISOString())
-        .lt('closed_at', tomorrow.toISOString())
-        .order('closed_at', { ascending: false });
+        .gte('closed_at', fromDate.toISOString())
+        .lt('closed_at', toDate.toISOString())
+        .order('closed_at', { ascending: false })
+        .limit(10); // <-- แสดง 10 รายการล่าสุด
     
       const tbody = document.getElementById('salesHistory');
       tbody.innerHTML = '';
