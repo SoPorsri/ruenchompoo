@@ -351,9 +351,7 @@
             <label><i class="fa-solid fa-magnifying-glass"></i> ค้นหาซุ้ม/เลขบิล</label>
             <input type="text" id="searchText" placeholder="ใส่ชื่อซุ้ม หรือ เลขบิล...">
           </div>
-          <button class="search-btn" onclick="loadSalesHistory()">
-            <i class="fa-solid fa-search"></i> ค้นหา
-          </button>
+          <button id="clearBtn"><i class="fa-solid fa-eraser"></i> ล้างค่า</button>
         </div>
       
         <table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse:collapse; font-size:14px;">
@@ -468,7 +466,15 @@
     function closeReport() {
       document.getElementById('reportModal').style.display = 'none';
     }
-  
+
+    // 🔹 ปุ่ม Clear รีเซ็ตค่าและโหลดข้อมูล
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      document.getElementById('fromDate').value = '';
+      document.getElementById('toDate').value = '';
+      document.getElementById('searchText').value = '';
+      loadSalesHistory(); // โหลดค่าเริ่มต้น (วันนี้)
+    });
+      
     function toggleHistory() {
       const section = document.getElementById('historySection');
       if (section.style.display === 'none') {
