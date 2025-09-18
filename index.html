@@ -164,6 +164,57 @@
       position: relative;
       z-index: 1; /* โต๊ะอยู่ข้างหน้า */
     }
+
+    .filter-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+      align-items: flex-end;
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+    }
+    .filter-box .field {
+      display: flex;
+      flex-direction: column;
+    }
+    .filter-box label {
+      font-size: 13px;
+      color: #374151;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .filter-box input[type="date"],
+    .filter-box input[type="text"] {
+      padding: 8px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .filter-box input:focus {
+      border-color: #3b82f6;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+    }
+    .search-btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .search-btn:hover {
+      background: #2563eb;
+    }
+    .search-btn:active {
+      transform: scale(0.96);
+    }
   </style>
 </head>
 <body>
@@ -287,14 +338,21 @@
         <h3>🧾 ประวัติการขายล่าสุด</h3>
       
         <!-- 🔍 ฟอร์มค้นหา -->
-        <div style="margin-bottom:12px; display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
-          <label>จากวันที่: <input type="date" id="fromDate"></label>
-          <label>ถึงวันที่: <input type="date" id="toDate"></label>
-          <input type="text" id="searchText" placeholder="ค้นหาซุ้ม/เลขบิล" 
-                 style="padding:6px; border:1px solid #ccc; border-radius:6px;">
-          <button onclick="loadSalesHistory()" 
-                  style="background:#3b82f6; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">
-            <i class="fa-solid fa-magnifying-glass"></i> ค้นหา
+        <div class="filter-box">
+          <div class="field">
+            <label><i class="fa-solid fa-calendar-day"></i> จากวันที่</label>
+            <input type="date" id="fromDate">
+          </div>
+          <div class="field">
+            <label><i class="fa-solid fa-calendar-check"></i> ถึงวันที่</label>
+            <input type="date" id="toDate">
+          </div>
+          <div class="field">
+            <label><i class="fa-solid fa-magnifying-glass"></i> ค้นหาซุ้ม/เลขบิล</label>
+            <input type="text" id="searchText" placeholder="ใส่ชื่อซุ้ม หรือ เลขบิล...">
+          </div>
+          <button class="search-btn" onclick="loadSalesHistory()">
+            <i class="fa-solid fa-search"></i> ค้นหา
           </button>
         </div>
       
