@@ -599,13 +599,18 @@
         .order('closed_at', { ascending: false })
         .limit(100);
     
-      // 🔎 กรองตามวันที่
-      if (fromDate) query = query.gte('closed_at', fromDate + " 00:00:00");
-      if (toDate) query = query.lte('closed_at', toDate + " 23:59:59");
+      // ถ้าไม่มีตัวกรอง แสดง 10 รายการล่าสุด
+      if (!fromDate && !toDate && !searchText) {
+        query = query.limit(10);
+      } else {
+        // 🔎 กรองตามวันที่
+        if (fromDate) query = query.gte('closed_at', fromDate + " 00:00:00");
+        if (toDate) query = query.lte('closed_at', toDate + " 23:59:59");
     
-      // 🔎 ค้นหาตามเลขบิลหรือชื่อลูกค้า/โต๊ะ
-      if (searchText) {
-        query = query.or(`billno.ilike.%${searchText}%,customer.ilike.%${searchText}%`);
+        // 🔎 ค้นหาตามเลขบิลหรือชื่อลูกค้า/โต๊ะ
+        if (searchText) {
+          query = query.or(`billno.ilike.%${searchText}%,customer.ilike.%${searchText}%`);
+        }
       }
     
       const { data, error } = await query;
