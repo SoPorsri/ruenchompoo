@@ -626,6 +626,14 @@
       }
     }
 
+    // 🔹 ทำให้ค้นหาอัตโนมัติเมื่อแก้ไข input
+    const filterInputs = document.querySelectorAll('#fromDate, #toDate, #searchText');
+    filterInputs.forEach(input => {
+      input.addEventListener('input', () => {
+        loadSalesHistory();
+      });
+    });
+
     async function exportToExcel() {
       const { data, error } = await client
         .from('bills')
