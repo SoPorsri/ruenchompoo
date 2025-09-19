@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<title>Print POS ESC/POS Full Advance</title>
+<title>Print POS ESC/POS Full Advance (Mobile Ready)</title>
 <style>
   body { font-family: "Tahoma", "Noto Sans Thai", sans-serif; font-size:12px; }
   pre { background:#f4f4f4; padding:10px; white-space: pre-wrap; word-wrap: break-word; border:1px solid #ccc; }
@@ -21,8 +21,8 @@ const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
 const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// เริ่มต้นด้วย HTTPS
-let SERVER_URL = 'https://192.168.1.88:8443';
+// สำหรับมือถือ-ready → ใช้ HTTP 8080
+let SERVER_URL = 'http://192.168.1.88:8080';
 const PRINTER_IP = localStorage.getItem('PRINTER_IP') || '192.168.1.100';
 
 const urlParams = new URLSearchParams(window.location.search)
@@ -43,20 +43,7 @@ function wrapText(text, width){
   return lines;
 }
 
-// --- ฟังก์ชันตรวจสอบ server (https ถ้า fail → http) ---
-async function getServerUrl() {
-  try {
-    const resp = await fetch(SERVER_URL + '/ping');
-    if (resp.ok) return SERVER_URL;
-  } catch (e) {
-    console.warn('⚠️ HTTPS ใช้ไม่ได้, fallback ไป HTTP');
-  }
-  SERVER_URL = 'http://192.168.1.88:8080';
-  return SERVER_URL;
-}
-
 async function loadAndPreview(billId){
-  // ดึงข้อมูล bill
   const { data: bill } = await client.from('bills').select('*').eq('id', billId).single()
   const { data: items } = await client.from('bill_items').select('id, qty, price, total, menu_id').eq('bill_id', billId)
 
@@ -91,7 +78,6 @@ async function loadAndPreview(billId){
   ESCString += 'สินค้า           ราคา  จำนวน   รวม\n';
   ESCString += '--------------------------------\n';
 
-  // --- แสดงรายการสินค้า + wrap + จำนวนเต็ม ---
   bill.items.forEach(item=>{
     const lines = wrapText(item.menu_name, 15);
     lines.forEach((line,i)=>{
@@ -131,8 +117,7 @@ async function loadAndPreview(billId){
 // --- ปุ่มสั่งพิมพ์จริง ---
 document.getElementById('printBtn').addEventListener('click', async ()=>{
   try{
-    const baseUrl = await getServerUrl();
-    const resp = await fetch(`${baseUrl}/print`,{
+    const resp = await fetch(`${SERVER_URL}/print`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({printer_ip:PRINTER_IP, escpos:ESCString})
