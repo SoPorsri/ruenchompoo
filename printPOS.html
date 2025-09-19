@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<title>Print POS ESC/POS Mobile Ready</title>
+<title>Print POS ESC/POS Mobile Ready (Mock)</title>
 <style>
   body { font-family: "Tahoma", "Noto Sans Thai", sans-serif; font-size:12px; }
   pre { background:#f4f4f4; padding:10px; white-space: pre-wrap; word-wrap: break-word; border:1px solid #ccc; }
@@ -21,18 +21,17 @@ const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
 const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// --- มือถือ-ready ใช้ HTTP 8080 ---
-const SERVER_URL = 'http://192.168.1.88:8080';
+const SERVER_URL = 'http://192.168.1.88:8080'; // มือถือ-ready
 const PRINTER_IP = localStorage.getItem('PRINTER_IP') || '192.168.1.100';
 
 const urlParams = new URLSearchParams(window.location.search)
 const billId = urlParams.get('bill_id')
 
-let ESCString = ''
+let ESCString = '';
 
 if(billId) loadAndPreview(billId);
 
-// --- ฟังก์ชัน wrap ชื่อสินค้า ---
+// --- wrap text ---
 function wrapText(text, width){
   const lines = [];
   while(text.length>width){
@@ -119,10 +118,10 @@ document.getElementById('printBtn').addEventListener('click', async ()=>{
       body:JSON.stringify({printer_ip:PRINTER_IP, escpos:ESCString})
     });
     const result = await resp.json();
-    if(result.success) alert('✅ สั่งพิมพ์สำเร็จ!');
+    if(result.success) alert('✅ สั่งพิมพ์สำเร็จ (mock)');
     else alert('❌ เกิดข้อผิดพลาด: '+result.message);
   }catch(e){
-    console.error(e); alert('❌ ไม่สามารถเชื่อมต่อเครื่องพิมพ์ได้');
+    console.error(e); alert('❌ ไม่สามารถเชื่อมต่อ server');
   }
 });
 </script>
