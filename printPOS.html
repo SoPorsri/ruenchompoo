@@ -12,34 +12,17 @@
 <body>
 <h3>Preview ใบเสร็จ (ESC/POS)</h3>
 <pre id="preview">ESC/POS preview here</pre>
-<button id="printBtn">สั่งพิมพ์จริง</button>
-
+<button onclick="testPing()">ทดสอบเชื่อมต่อ</button>
 <script>
-const SERVER_URL = 'http://192.168.1.88:8080'; // มือถือ-ready
-const PRINTER_IP = '192.168.1.100'; // mock IP
-
-// ตัวอย่าง ESC/POS string
-const ESCString = '*** ใบเสร็จตัวอย่าง ***\nสินค้า 1 x100\n================\n';
-
-// แสดง preview
-document.getElementById('preview').textContent = ESCString;
-
-// ปุ่มสั่งพิมพ์
-document.getElementById('printBtn').addEventListener('click', async ()=>{
+async function testPing(){
   try {
-    const resp = await fetch(`${SERVER_URL}/print`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({printer_ip: PRINTER_IP, escpos: ESCString})
-    });
-    const result = await resp.json();
-    if(result.success) alert('✅ สั่งพิมพ์สำเร็จ (mock)');
-    else alert('❌ เกิดข้อผิดพลาด: '+result.message);
+    const resp = await fetch('http://192.168.1.88:8080/ping');
+    const data = await resp.json();
+    alert('เชื่อมต่อสำเร็จ: ' + JSON.stringify(data));
   } catch(e) {
-    console.error(e);
-    alert('❌ ไม่สามารถเชื่อมต่อ server');
+    alert('เชื่อมต่อไม่ได้: ' + e);
   }
-});
+}
 </script>
 </body>
 </html>
