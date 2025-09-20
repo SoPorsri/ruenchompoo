@@ -22,7 +22,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // สำหรับมือถือ-ready → ใช้ HTTP 8443
-let SERVER_URL = 'http://192.168.1.88:8443';
+let SERVER_URL = 'https://192.168.1.88:8443';
 const PRINTER_IP = localStorage.getItem('PRINTER_IP') || '192.168.1.100';
 
 const urlParams = new URLSearchParams(window.location.search)
