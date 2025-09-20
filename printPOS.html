@@ -2,33 +2,34 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<title>Print POS ESC/POS Full Advance (Mobile Ready)</title>
+<title>Print POS ESC/POS (Mobile Ready + Mock)</title>
 <style>
-  body { font-family: "Tahoma", "Noto Sans Thai", sans-serif; font-size:12px; }
+  body { font-family: "Tahoma", "Noto Sans Thai", sans-serif; font-size:12px; padding:10px; }
   pre { background:#f4f4f4; padding:10px; white-space: pre-wrap; word-wrap: break-word; border:1px solid #ccc; }
   button { margin-top:10px; padding:5px 10px; font-size:14px; }
 </style>
 </head>
 <body>
+
 <h3>Preview ใบเสร็จ (ESC/POS)</h3>
 <pre id="preview">Loading...</pre>
-<button id="printBtn">สั่งพิมพ์จริง</button>
+
+<button id="printBtn">สั่งพิมพ์จริง (Mock)</button>
 <button onclick="testPing()">ทดสอบเชื่อมต่อ Server</button>
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
 const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
+const SUPABASE_KEY = 'YOUR_SUPABASE_KEY';
 const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// --- สำหรับมือถือ-ready → ใช้ HTTPS 8443 ---
-const SERVER_URL = 'https://192.168.1.88:8443';
+// มือถือ-ready → เชื่อม mock server LAN
+const SERVER_URL = 'http://192.168.1.88:8443';
 const PRINTER_IP = localStorage.getItem('PRINTER_IP') || '192.168.1.100';
 
 const urlParams = new URLSearchParams(window.location.search)
 const billId = urlParams.get('bill_id')
-
 let ESCString = ''
 
 if(billId) loadAndPreview(billId)
@@ -44,7 +45,7 @@ function wrapText(text, width){
   return lines;
 }
 
-// --- load data + preview ---
+// --- ดึงข้อมูลและ preview ---
 async function loadAndPreview(billId){
   const { data: bill } = await client.from('bills').select('*').eq('id', billId).single()
   const { data: items } = await client.from('bill_items').select('id, qty, price, total, menu_id').eq('bill_id', billId)
@@ -94,15 +95,16 @@ async function loadAndPreview(billId){
   })
 
   ESCString += '================================\n';
-  ESCString += '\x1B\x21\x08';  // Bold
+  ESCString += '\x1B\x21\x08';
   ESCString += `ยอดรวม      : ${Math.round(bill.total||0)}\n`;
   ESCString += `รับเงินมา    : ${Math.round(bill.cash||0)}\n`;
   ESCString += `เงินทอน     : ${Math.round(bill.change||0)}\n`;
-  ESCString += '\x1B\x21\x00';  // Normal
+  ESCString += '\x1B\x21\x00';
   ESCString += '--------------------------------\n';
   ESCString += '\n*** ขอบคุณที่อุดหนุน ***\n\n';
   ESCString += '\x1D\x56\x41'; // Cut
 
+  // --- preview readable ---
   const previewEl = document.getElementById('preview')
   let display = ESCString
     .replace(/\x1B\x40/g,'[INIT]')
@@ -123,23 +125,25 @@ document.getElementById('printBtn').addEventListener('click', async ()=>{
       body:JSON.stringify({printer_ip:PRINTER_IP, escpos:ESCString})
     })
     const result = await resp.json()
-    if(result.success) alert('✅ สั่งพิมพ์สำเร็จ!');
+    if(result.success) alert('✅ สั่งพิมพ์สำเร็จ (mock)!');
     else alert('❌ เกิดข้อผิดพลาด: '+result.message);
   }catch(e){
-    console.error(e); alert('❌ ไม่สามารถเชื่อมต่อ server: '+e);
+    console.error(e);
+    alert('❌ ไม่สามารถเชื่อมต่อ server: '+e);
   }
 })
 
-// --- ปุ่มทดสอบเชื่อมต่อ ---
+// --- ปุ่ม ping test ---
 async function testPing(){
   try{
     const resp = await fetch(`${SERVER_URL}/ping`);
     const data = await resp.json();
-    alert('เชื่อมต่อสำเร็จ: ' + JSON.stringify(data));
+    alert('✅ เชื่อมต่อ server สำเร็จ: '+JSON.stringify(data));
   }catch(e){
-    alert('เชื่อมต่อไม่ได้: '+e);
+    alert('❌ ไม่สามารถเชื่อมต่อ server: '+e);
   }
 }
 </script>
+
 </body>
 </html>
