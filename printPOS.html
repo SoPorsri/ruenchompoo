@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<title>Print POS Mobile Ready (Mock)</title>
+<title>Print POS ESC/POS Full Advance (Mobile Ready)</title>
 <style>
   body { font-family: "Tahoma", "Noto Sans Thai", sans-serif; font-size:12px; }
   pre { background:#f4f4f4; padding:10px; white-space: pre-wrap; word-wrap: break-word; border:1px solid #ccc; }
@@ -11,41 +11,133 @@
 </head>
 <body>
 <h3>Preview ใบเสร็จ (ESC/POS)</h3>
-<pre id="preview">ESC/POS preview here</pre>
+<pre id="preview">Loading...</pre>
+<button id="printBtn">สั่งพิมพ์จริง</button>
+<button onclick="testPing()">ทดสอบเชื่อมต่อ Server</button>
 
-<button onclick="testPing()">ทดสอบเชื่อมต่อ</button>
-<button onclick="mockPrint()">สั่งพิมพ์ Mock</button>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-<script>
-const SERVER_URL = 'https://192.168.1.88:8443'; // HTTPS server ของคุณ
+const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
+const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// --- ทดสอบเชื่อมต่อ ---
+// --- สำหรับมือถือ-ready → ใช้ HTTPS 8443 ---
+const SERVER_URL = 'https://192.168.1.88:8443';
+const PRINTER_IP = localStorage.getItem('PRINTER_IP') || '192.168.1.100';
+
+const urlParams = new URLSearchParams(window.location.search)
+const billId = urlParams.get('bill_id')
+
+let ESCString = ''
+
+if(billId) loadAndPreview(billId)
+
+// --- ฟังก์ชัน wrap ชื่อสินค้า ---
+function wrapText(text, width){
+  const lines = [];
+  while(text.length>width){
+    lines.push(text.slice(0,width));
+    text = text.slice(width);
+  }
+  lines.push(text);
+  return lines;
+}
+
+// --- load data + preview ---
+async function loadAndPreview(billId){
+  const { data: bill } = await client.from('bills').select('*').eq('id', billId).single()
+  const { data: items } = await client.from('bill_items').select('id, qty, price, total, menu_id').eq('bill_id', billId)
+
+  let menuNames = {}
+  if(items?.length>0){
+    const menuIds = items.map(i=>i.menu_id).filter(Boolean)
+    if(menuIds.length>0){
+      const { data: menus } = await client.from('menu').select('id,name').in('id', menuIds)
+      menus?.forEach(m=>menuNames[m.id]=m.name)
+    }
+  }
+  bill.items = (items||[]).map(i=>({...i, menu_name: menuNames[i.menu_id]||"-"}))
+
+  // --- สร้าง ESC/POS string ---
+  ESCString = ''
+  ESCString += '\x1B\x40';             // Init
+  ESCString += '\x1B\x61\x01';         // Center
+  ESCString += '\x1B\x21\x30';         // Bold+double height
+  ESCString += 'ร้านเรือนชมพูเนื้อย่างเกาหลี\n';
+  ESCString += '\x1B\x21\x00';
+  ESCString += 'สาขานาเชือก\n';
+  ESCString += 'โทร: 0885305228, 0621392902\n';
+  ESCString += `บิลเลขที่: ${bill.billno||bill.id}\n`;
+  ESCString += `โต๊ะ/ลูกค้า: ${bill.customer||'-'}\n`;
+  const closedText = bill.closed_at
+    ? new Date(bill.closed_at).toLocaleString('th-TH',{dateStyle:'short', timeStyle:'short'})
+    : '-';
+  ESCString += `เวลาเช็คบิล: ${closedText}\n`;
+  ESCString += '\x1B\x61\x00';         // Left align
+  ESCString += '--------------------------------\n';
+  ESCString += 'สินค้า           ราคา  จำนวน   รวม\n';
+  ESCString += '--------------------------------\n';
+
+  bill.items.forEach(item=>{
+    const lines = wrapText(item.menu_name, 15);
+    lines.forEach((line,i)=>{
+      if(i===0){
+        const price = String(Math.round(item.price)).padStart(5,' ');
+        const qty = String(Math.round(item.qty)).padStart(5,' ');
+        const total = String(Math.round(item.total)).padStart(6,' ');
+        ESCString += line.padEnd(15,' ') + price + qty + total + '\n';
+      } else {
+        ESCString += line + '\n';
+      }
+    })
+  })
+
+  ESCString += '================================\n';
+  ESCString += '\x1B\x21\x08';  // Bold
+  ESCString += `ยอดรวม      : ${Math.round(bill.total||0)}\n`;
+  ESCString += `รับเงินมา    : ${Math.round(bill.cash||0)}\n`;
+  ESCString += `เงินทอน     : ${Math.round(bill.change||0)}\n`;
+  ESCString += '\x1B\x21\x00';  // Normal
+  ESCString += '--------------------------------\n';
+  ESCString += '\n*** ขอบคุณที่อุดหนุน ***\n\n';
+  ESCString += '\x1D\x56\x41'; // Cut
+
+  const previewEl = document.getElementById('preview')
+  let display = ESCString
+    .replace(/\x1B\x40/g,'[INIT]')
+    .replace(/\x1B\x61\x01/g,'[CENTER]')
+    .replace(/\x1B\x61\x00/g,'[LEFT]')
+    .replace(/\x1B\x21\x30/g,'[BOLD DOUBLE]')
+    .replace(/\x1B\x21\x08/g,'[BOLD]')
+    .replace(/\x1D\x56\x41/g,'[CUT]')
+  previewEl.textContent = display
+}
+
+// --- ปุ่มสั่งพิมพ์จริง ---
+document.getElementById('printBtn').addEventListener('click', async ()=>{
+  try{
+    const resp = await fetch(`${SERVER_URL}/print`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({printer_ip:PRINTER_IP, escpos:ESCString})
+    })
+    const result = await resp.json()
+    if(result.success) alert('✅ สั่งพิมพ์สำเร็จ!');
+    else alert('❌ เกิดข้อผิดพลาด: '+result.message);
+  }catch(e){
+    console.error(e); alert('❌ ไม่สามารถเชื่อมต่อ server: '+e);
+  }
+})
+
+// --- ปุ่มทดสอบเชื่อมต่อ ---
 async function testPing(){
-  try {
+  try{
     const resp = await fetch(`${SERVER_URL}/ping`);
     const data = await resp.json();
     alert('เชื่อมต่อสำเร็จ: ' + JSON.stringify(data));
-  } catch(e) {
-    alert('เชื่อมต่อไม่ได้: ' + e);
-  }
-}
-
-// --- สั่งพิมพ์ mock ---
-async function mockPrint(){
-  const escposData = "\x1B\x40[INIT] ร้านเรือนชมพู\n[LEFT] ตัวอย่างใบเสร็จ\n[ CUT ]";
-  const printerIp = '192.168.1.100';
-
-  try{
-    const resp = await fetch(`${SERVER_URL}/print`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ printer_ip: printerIp, escpos: escposData })
-    });
-    const result = await resp.json();
-    if(result.success) alert('✅ ' + result.message);
-    else alert('❌ ' + result.message);
   }catch(e){
-    alert('❌ ไม่สามารถเชื่อมต่อ server: ' + e);
+    alert('เชื่อมต่อไม่ได้: '+e);
   }
 }
 </script>
