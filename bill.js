@@ -816,7 +816,8 @@ function closeOpenRow() {
    Init - wire up buttons
    ============================ */
 window.addEventListener('DOMContentLoaded', async () => {
-  el('today').textContent = todayText();
+  //el('today').textContent = todayText();
+  await showDraftCreatedAt(table_id);
   //el('billno').value = await getNextBillNo();
   await loadTableName();
   await loadMenu();
@@ -933,3 +934,41 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   el('cash').addEventListener('input', calc);
 });
+
+/* ---------------------------
+   แสดง created_at ของ draft
+   --------------------------- */
+async function showDraftCreatedAt(table_id) {
+  if (!table_id) return;
+
+  try {
+    const { data, error } = await client
+      .from('drafts')
+      .select('created_at')
+      .eq('table_id', table_id)
+      .maybeSingle();
+
+    if (error) {
+      console.error('โหลด created_at ไม่ได้:', error);
+      return;
+    }
+
+    if (data?.created_at) {
+      const d = new Date(data.created_at);
+
+      // ✅ format วันที่+เวลา ภาษาไทย พ.ศ.
+      const formatted = d.toLocaleString('th-TH', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      // ใส่ค่าลงใน <small id="today">
+      document.getElementById('today').textContent = formatted;
+    }
+  } catch (err) {
+    console.error('showDraftCreatedAt error:', err);
+  }
+}
