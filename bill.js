@@ -939,7 +939,15 @@ window.addEventListener('DOMContentLoaded', async () => {
    แสดง created_at ของ draft
    --------------------------- */
 async function showDraftCreatedAt(table_id) {
-  if (!table_id) return;
+  const elToday = document.getElementById('today');
+  if (!table_id) {
+    // fallback: แสดงวันที่ปัจจุบันถ้าไม่มี table_id
+    elToday.textContent = new Date().toLocaleString('th-TH', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+    return;
+  }
 
   try {
     const { data, error } = await client
@@ -950,25 +958,34 @@ async function showDraftCreatedAt(table_id) {
 
     if (error) {
       console.error('โหลด created_at ไม่ได้:', error);
+      // fallback: แสดงวันที่ปัจจุบัน
+      elToday.textContent = new Date().toLocaleString('th-TH', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
       return;
     }
 
     if (data?.created_at) {
       const d = new Date(data.created_at);
-
-      // ✅ format วันที่+เวลา ภาษาไทย พ.ศ.
-      const formatted = d.toLocaleString('th-TH', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
+      elToday.textContent = d.toLocaleString('th-TH', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
       });
-
-      // ใส่ค่าลงใน <small id="today">
-      document.getElementById('today').textContent = formatted;
+    } else {
+      // fallback: ถ้าไม่มี created_at
+      elToday.textContent = new Date().toLocaleString('th-TH', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
     }
+
   } catch (err) {
     console.error('showDraftCreatedAt error:', err);
+    // fallback: แสดงวันที่ปัจจุบัน
+    elToday.textContent = new Date().toLocaleString('th-TH', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
   }
 }
