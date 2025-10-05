@@ -15,6 +15,11 @@ const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 const urlParams = new URLSearchParams(window.location.search)
 const billId = urlParams.get('bill_id')
 
+// ✅ ฟังก์ชัน format ตัวเลข
+function formatNumber(num) {
+  return Number(num || 0).toLocaleString('th-TH');
+}
+
 if (billId) {
   loadBillFromHistory(billId)
 }
@@ -33,7 +38,7 @@ async function loadBillFromHistory(billId) {
     return
   }
 
-  // ✅ ดึง bill_items (ไม่ join menu)
+  // ✅ ดึง bill_items
   const { data: items, error: itemsError } = await client
     .from('bill_items')
     .select('id, qty, price, total, menu_id')
@@ -43,7 +48,7 @@ async function loadBillFromHistory(billId) {
     console.error("itemsError:", itemsError)
   }
 
-  // ✅ ดึงชื่อเมนูทั้งหมดที่เกี่ยวข้อง
+  // ✅ ดึงชื่อเมนู
   let menuNames = {}
   if (items && items.length > 0) {
     const menuIds = items.map(i => i.menu_id).filter(Boolean)
@@ -56,13 +61,11 @@ async function loadBillFromHistory(billId) {
     }
   }
 
-  // ✅ ผูกชื่อเมนูกลับไปที่ items
+  // ✅ ใส่ชื่อเมนูใน items
   bill.items = (items || []).map(i => ({
     ...i,
     menu_name: menuNames[i.menu_id] || "-"
   }))
-
-  console.log("✅ items with menu:", bill.items)
 
   // ✅ สร้าง HTML สำหรับพิมพ์
   const html = buildPrintView(bill)
@@ -123,16 +126,16 @@ function buildPrintView(bill) {
       <tbody>
   `
 
-  // ✅ แสดงรายการสินค้า
+  // ✅ รายการสินค้า
   if (bill.items.length === 0) {
     html += `<tr><td colspan="4" style="text-align:center">ไม่มีรายการ</td></tr>`
   } else {
     bill.items.forEach(item => {
       html += `<tr>
         <td>${item.menu_name}</td>
-        <td class="right">${Number(item.price).toFixed(2)}</td>
-        <td class="right">${item.qty}</td>
-        <td class="right">${Number(item.total).toFixed(2)}</td>
+        <td class="right">${formatNumber(item.price)}</td>
+        <td class="right">${formatNumber(item.qty)}</td>
+        <td class="right">${formatNumber(item.total)}</td>
       </tr>`
     })
   }
@@ -144,9 +147,9 @@ function buildPrintView(bill) {
   html += `</tbody></table>
     <div class="summary">
       <div class="line-double"></div>
-      <div><span>ยอดรวม</span><span class="big">${total.toFixed(2)}</span></div>
-      <div><span>รับเงินมา</span><span>${cash.toFixed(2)}</span></div>
-      <div><span>เงินทอน</span><span>${change.toFixed(2)}</span></div>
+      <div><span>ยอดรวม</span><span class="big">${formatNumber(total)}</span></div>
+      <div><span>รับเงินมา</span><span>${formatNumber(cash)}</span></div>
+      <div><span>เงินทอน</span><span>${formatNumber(change)}</span></div>
     </div>
     <div class="footer">
       *** ขอบคุณที่อุดหนุน ***
