@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Test Print Thai</title>
+</head>
+<body>
+<button id="printBtn">Print Thai</button>
+
+<script>
+document.getElementById('printBtn').addEventListener('click', () => {
+  fetch('https://192.168.1.88:8443/print-image', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      printer_ip: '192.168.1.100',
+      text: 'สวัสดีครับ ทดสอบภาษาไทย'
+    })
+  })
+  .then(res => res.json())
+  .then(data => alert(JSON.stringify(data)))
+  .catch(err => alert(err));
+});
+</script>
+</body>
+</html>
