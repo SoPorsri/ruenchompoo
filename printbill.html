@@ -97,6 +97,7 @@ function buildPrintView(bill) {
       th { font-size:11px; font-weight:700; text-align:left; border-bottom:1px dashed #000; padding-bottom:2px; }
       td { padding:2px 0; font-size:12px; }
       td.right, th.right { text-align:right; }
+      td.center, th.center {text-align: center;}
       .summary { margin-top:6px; width:100%; }
       .summary div { display:flex; justify-content:space-between; padding:2px 0; font-size:12px; }
       .line-double {border-top:1px dashed #000;margin:4px 0 2px 0;position: relative;}
@@ -119,7 +120,7 @@ function buildPrintView(bill) {
         <tr>
           <th>สินค้า</th>
           <th class="right">ราคา</th>
-          <th class="right">จำนวน</th>
+          <th class="center">จำนวน</th>
           <th class="right">รวม</th>
         </tr>
       </thead>
@@ -134,7 +135,7 @@ function buildPrintView(bill) {
       html += `<tr>
         <td>${item.menu_name}</td>
         <td class="right">${formatNumber(item.price)}</td>
-        <td class="right">${formatNumber(item.qty)}</td>
+        <td class="center">${formatNumber(item.qty)}</td>
         <td class="right">${formatNumber(item.total)}</td>
       </tr>`
     })
