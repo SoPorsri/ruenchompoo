@@ -61,6 +61,7 @@ async function loadAndPreview(billId){
   // --- สร้าง ESC/POS string ---
   ESCString = ''
   ESCString += '\x1B\x40';             // Init
+  ESCString += '\x1B\x74\x10';     // <<< ต้องมีบรรทัดนี้: เลือก Code Page 16 (Thai)
   ESCString += '\x1B\x61\x01';         // Center
   ESCString += '\x1B\x21\x30';         // Bold+double height
   ESCString += 'ร้านเรือนชมพูเนื้อย่างเกาหลี\n';
