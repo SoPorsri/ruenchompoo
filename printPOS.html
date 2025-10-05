@@ -61,8 +61,6 @@ async function loadAndPreview(billId){
   // --- สร้าง ESC/POS string ---
   ESCString = ''
   ESCString += '\x1B\x40';             // Init
-  ESCString += '\x1B\x52\x00'; // Select International character set 0 (optional)
-  ESCString += '\x1B\x52\x01'; // บางรุ่นต้องเลือก UTF-8
   ESCString += '\x1B\x61\x01';         // Center
   ESCString += '\x1B\x21\x30';         // Bold+double height
   ESCString += 'ร้านเรือนชมพูเนื้อย่างเกาหลี\n';
