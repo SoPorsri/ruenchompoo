@@ -100,7 +100,7 @@ async function loadAndPreview(billId){
   ESCString += '\x1B\x21\x00';  // Normal
   ESCString += '--------------------------------\n';
   ESCString += '\n*** ขอบคุณที่อุดหนุน ***\n\n';
-  ESCString += '\x1D\x56\x41'; // Cut
+  //ESCString += '\x1D\x56\x41'; // Cut
 
   // --- แสดง preview readable ---
   const previewEl = document.getElementById('preview')
@@ -110,7 +110,7 @@ async function loadAndPreview(billId){
     .replace(/\x1B\x61\x00/g,'[LEFT]')
     .replace(/\x1B\x21\x30/g,'[BOLD DOUBLE]')
     .replace(/\x1B\x21\x08/g,'[BOLD]')
-    .replace(/\x1D\x56\x41/g,'[CUT]')
+    //.replace(/\x1D\x56\x41/g,'[CUT]')
   previewEl.textContent = display
 }
 
