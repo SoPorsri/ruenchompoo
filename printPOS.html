@@ -92,7 +92,7 @@ async function loadAndPreview(billId){
           const total = String(Math.round(item.total)).padStart(5, ' ');
           
           // Pad End Item Name ให้ครบ 15 อักขระ
-          ESCString += line.padEnd(15, ' ') + price + qty + total + '\n';
+          ESCString += line.padEnd(17, ' ') + price + qty + total + '\n';
           } else {
           // สำหรับบรรทัดที่ขึ้นบรรทัดใหม่ของชื่อเมนู
           ESCString += line + '\n'; 
