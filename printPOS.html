@@ -78,22 +78,36 @@ async function loadAndPreview(billId){
   ESCString += 'สินค้า           ราคา  จำนวน   รวม\n';
   ESCString += '--------------------------------\n';
 
-  function padRight(str, len) {
+  function stringWidth(str) {
     let width = 0;
     for (let ch of str) {
-      width += (ch.charCodeAt(0) > 0xFF) ? 2 : 1; // ตัวไทย 2 ช่อง, ascii 1 ช่อง
+      width += (ch.charCodeAt(0) > 0xFF) ? 2 : 1;
     }
-    let padLength = len - width;
+    return width;
+  }
+  
+  // padRight ตามความกว้างจริง
+  function padRight(str, totalWidth) {
+    const width = stringWidth(str);
+    const padLength = totalWidth - width;
     return str + ' '.repeat(padLength > 0 ? padLength : 0);
   }
   
+  // padLeft ตามความกว้างจริง (ชิดขวา)
+  function padLeft(str, totalWidth) {
+    const width = stringWidth(str);
+    const padLength = totalWidth - width;
+    return ' '.repeat(padLength > 0 ? padLength : 0) + str;
+  }
+  
   bill.items.forEach(item => {
-    const lines = wrapText(item.menu_name, 15);
+    const lines = wrapText(item.menu_name, 15); // 15 ช่องสำหรับชื่อสินค้า
     lines.forEach((line, i) => {
       if(i === 0){
-        const price = String(Math.round(item.price)).padStart(6, ' ');
-        const qty   = String(Math.round(item.qty)).padStart(4, ' ');
-        const total = String(Math.round(item.total)).padStart(7, ' ');
+        const price = padLeft(String(Math.round(item.price)), 6);
+        const qty   = padLeft(String(Math.round(item.qty)), 4);
+        const total = padLeft(String(Math.round(item.total)), 7);
+  
         ESCString += padRight(line, 15) + price + qty + total + '\n';
       } else {
         ESCString += line + '\n';
