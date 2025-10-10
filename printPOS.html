@@ -4,20 +4,13 @@
 <meta charset="utf-8">
 <title>Print POS ESC/POS Full Advance (Mobile Ready)</title>
 <style>
-  body { font-family: "Tahoma", "Noto Sans Thai", sans-serif; font-size:12px; }
-  pre { background:#f4f4f4; padding:10px; white-space: pre-wrap; word-wrap: break-word; border:1px solid #ccc; }
-  button { margin-top:10px; padding:5px 10px; font-size:14px; }
-  /* สไตล์สำหรับโลโก้ใน Preview */
-  #logo-preview { 
-    display: block; 
-    margin: 0 auto 10px auto; 
-    width: 20px; /* กำหนดขนาดตามความเหมาะสมของใบเสร็จ (80mm) */
-  }
+  body { font-family: "Tahoma", "Noto Sans Thai", sans-serif; font-size:12px; }
+  pre { background:#f4f4f4; padding:10px; white-space: pre-wrap; word-wrap: break-word; border:1px solid #ccc; }
+  button { margin-top:10px; padding:5px 10px; font-size:14px; }
 </style>
 </head>
 <body>
 <h3>Preview ใบเสร็จ (ESC/POS)</h3>
-<img id="logo-preview" src="images/logo_bill.jpg" alt="LOGO" style="display:none;">
 <pre id="preview">Loading...</pre>
 <button id="printBtn">สั่งพิมพ์จริง</button>
 
@@ -41,128 +34,100 @@ if(billId) loadAndPreview(billId)
 
 // --- ฟังก์ชัน wrap ชื่อสินค้า ---
 function wrapText(text, width){
-  const lines = [];
-  while(text.length>width){
-    lines.push(text.slice(0,width));
-    text = text.slice(width);
-  }
-  lines.push(text);
-  return lines;
+  const lines = [];
+  while(text.length>width){
+    lines.push(text.slice(0,width));
+    text = text.slice(width);
+  }
+  lines.push(text);
+  return lines;
 }
 
 async function loadAndPreview(billId){
-  const { data: bill } = await client.from('bills').select('*').eq('id', billId).single()
-  const { data: items } = await client.from('bill_items').select('id, qty, price, total, menu_id').eq('bill_id', billId)
+  const { data: bill } = await client.from('bills').select('*').eq('id', billId).single()
+  const { data: items } = await client.from('bill_items').select('id, qty, price, total, menu_id').eq('bill_id', billId)
 
-  // ดึงชื่อเมนู
-  let menuNames = {}
-  if(items?.length>0){
-    const menuIds = items.map(i=>i.menu_id).filter(Boolean)
-    if(menuIds.length>0){
-      const { data: menus } = await client.from('menu').select('id,name').in('id', menuIds)
-      menus?.forEach(m=>menuNames[m.id]=m.name)
-    }
-  }
-  bill.items = (items||[]).map(i=>({...i, menu_name: menuNames[i.menu_id]||"-"}))
+  // ดึงชื่อเมนู
+  let menuNames = {}
+  if(items?.length>0){
+    const menuIds = items.map(i=>i.menu_id).filter(Boolean)
+    if(menuIds.length>0){
+      const { data: menus } = await client.from('menu').select('id,name').in('id', menuIds)
+      menus?.forEach(m=>menuNames[m.id]=m.name)
+    }
+  }
+  bill.items = (items||[]).map(i=>({...i, menu_name: menuNames[i.menu_id]||"-"}))
 
-  // --- สร้าง ESC/POS string ---
-  ESCString = ''
-  ESCString += '\x1B\x40';             // Init
-  ESCString += '\x1B\x61\x01';         // Center
+  // --- สร้าง ESC/POS string ---
+  ESCString = ''
+  ESCString += '\x1B\x40';             // Init
+  ESCString += '\x1B\x61\x01';         // Center
+  ESCString += '\x1B\x21\x30';         // Bold+double height
+  ESCString += 'ร้านเรือนชมพูเนื้อย่างเกาหลี\n';
+  ESCString += '\x1B\x21\x00';
+  ESCString += 'สาขานาเชือก\n';
+  ESCString += 'โทร: 0885305228, 0621392902\n';
+  ESCString += `บิลเลขที่: ${bill.billno||bill.id}\n`;
+  ESCString += `โต๊ะ/ลูกค้า: ${bill.customer||'-'}\n`;
+  const closedText = bill.closed_at
+    ? new Date(bill.closed_at).toLocaleString('th-TH',{dateStyle:'short', timeStyle:'short'})
+    : '-';
+  ESCString += `เวลาเช็คบิล: ${closedText}\n`;
+  ESCString += '\x1B\x61\x00';         // Left align
+  ESCString += '--------------------------------\n';
+  ESCString += 'สินค้า           ราคา  จำนวน   รวม\n';
+  ESCString += '--------------------------------\n';
 
-  // *** 1. เพิ่มโลโก้ (ต้องมีไฟล์ logo_bill.jpg ใน images/ ตามที่กำหนด และต้องแปลงเป็น Binary ในการพิมพ์จริง)
-  // NOTE: ESC/POS สำหรับพิมพ์ภาพ Bitmap ไม่ใช่ข้อความธรรมดา แต่โค้ดนี้จะใช้สำหรับเรียกโลโก้ที่ถูกอัปโหลดไว้แล้วในเครื่องพิมพ์
-  // ในการจำลอง: เราจะใช้คำสั่งนี้
-  ESCString += '\x1D\x2F\x00'; // *คำสั่งสมมติสำหรับเรียกโลโก้ที่ถูกดาวน์โหลดไว้ในเครื่องพิมพ์
-  ESCString += '\n';
+  bill.items.forEach(item=>{
+    const lines = wrapText(item.menu_name, 15);
+    lines.forEach((line,i)=>{
+      if(i===0){
+        const price = String(Math.round(item.price)).padStart(5,' ');
+        const qty = String(Math.round(item.qty)).padStart(5,' ');
+        const total = String(Math.round(item.total)).padStart(6,' ');
+        ESCString += line.padEnd(15,' ') + price + qty + total + '\n';
+      } else {
+        ESCString += line + '\n';
+      }
+    })
+  })
 
-  // *** 2. ลดขนาดข้อความชื่อร้าน
-  ESCString += '\x1B\x21\x01';         // Bold+Double Width (แต่ Normal Height)
-  // ESCString += '\x1B\x21\x00';         // หรือใช้ Normal Font ก็ได้ (ตามที่ระบุว่าอยากให้เล็กลง)
-  ESCString += 'ร้านเรือนชมพูเนื้อย่างเกาหลี\n';
-  ESCString += '\x1B\x21\x00';         // กลับเป็น Normal
+  ESCString += '================================\n'; // Double line
+  ESCString += '\x1B\x21\x08';  // Bold
+  ESCString += `ยอดรวม      : ${Math.round(bill.total||0)}\n`;
+  ESCString += `เงินสด    : ${Math.round(bill.cash||0)}\n`;
+  ESCString += `เงินทอน     : ${Math.round(bill.change||0)}\n`;
+  ESCString += '\x1B\x21\x00';  // Normal
+  ESCString += '--------------------------------\n';
+  ESCString += '\n*** ขอบคุณที่อุดหนุน ***\n\n';
+  //ESCString += '\x1D\x56\x41'; // Cut
 
-  ESCString += 'สาขานาเชือก\n';
-  ESCString += 'โทร: 0885305228, 0621392902\n';
-  ESCString += `บิลเลขที่: ${bill.billno||bill.id}\n`;
-  ESCString += `โต๊ะ/ลูกค้า: ${bill.customer||'-'}\n`;
-  const closedText = bill.closed_at
-    ? new Date(bill.closed_at).toLocaleString('th-TH',{dateStyle:'short', timeStyle:'short'})
-    : '-';
-  ESCString += `เวลาเช็คบิล: ${closedText}\n`;
-  ESCString += '\x1B\x61\x00';         // Left align
-  ESCString += '--------------------------------\n';
-  // ปรับ Header ให้ตรงกับ Item
-  ESCString += 'สินค้า           ราคา  จำนวน   รวม\n'; 
-  ESCString += '--------------------------------\n';
-
-  bill.items.forEach(item=>{
-    const lines = wrapText(item.menu_name, 15);
-    lines.forEach((line,i)=>{
-      if(i===0){
-        // *** 3. ปรับการจัดวางตัวเลข
-        const price = String(Math.round(item.price)).padStart(5,' '); // 5 ตัวอักษร
-        const qty = String(Math.round(item.qty)).padStart(6,' ');    // 6 ตัวอักษร
-        const total = String(Math.round(item.total)).padStart(6,' '); // 6 ตัวอักษร
-        // สินค้า(15) + ราคา(5) + จำนวน(6) + รวม(6) = 32 ตัวอักษร
-        ESCString += line.padEnd(15,' ') + price + qty + total + '\n';
-      } else {
-        // สำหรับบรรทัดต่อมาของชื่อสินค้า
-        ESCString += line + '\n';
-      }
-    })
-  })
-
-  ESCString += '================================\n'; // Double line
-  ESCString += '\x1B\x21\x08';  // Bold
-  // ปรับการจัดวางตัวเลขในส่วนสรุป
-  const totalRounded = String(Math.round(bill.total||0));
-  const cashRounded = String(Math.round(bill.cash||0));
-  const changeRounded = String(Math.round(bill.change||0));
-  
-  ESCString += 'ยอดรวม      : ' + totalRounded.padStart(32 - 'ยอดรวม      : '.length, ' ') + '\n';
-  ESCString += 'เงินสด    : ' + cashRounded.padStart(32 - 'เงินสด    : '.length, ' ') + '\n';
-  ESCString += 'เงินทอน     : ' + changeRounded.padStart(32 - 'เงินทอน     : '.length, ' ') + '\n';
-
-  ESCString += '\x1B\x21\x00';  // Normal
-  ESCString += '--------------------------------\n';
-  ESCString += '\n\x1B\x61\x01*** ขอบคุณที่อุดหนุน ***\x1B\x61\x00\n\n'; // Center text
-  //ESCString += '\x1D\x56\x41'; // Cut
-
-  // --- แสดง preview readable ---
-  const previewEl = document.getElementById('preview')
-  const logoEl = document.getElementById('logo-preview')
-  
-  // แสดงโลโก้ใน Preview
-  logoEl.style.display = 'block';
-
-  let display = ESCString
-    .replace(/\x1B\x40/g,'[INIT]')
-    .replace(/\x1B\x61\x01/g,'[CENTER]')
-    .replace(/\x1B\x61\x00/g,'[LEFT]')
-    .replace(/\x1B\x21\x30/g,'[BOLD DOUBLE-H/W]') // เปลี่ยนจาก 30 เป็น 01
-    .replace(/\x1B\x21\x01/g,'[BOLD DOUBLE-W]') // เพิ่มสำหรับชื่อร้าน
-    .replace(/\x1B\x21\x08/g,'[BOLD]')
-    .replace(/\x1B\x21\x00/g,'[NORMAL]') // เพิ่มสำหรับกลับเป็น Normal
-    .replace(/\x1D\x2F\x00/g,'[LOGO]\n'); // คำสั่งสมมติสำหรับโลโก้
-    
-  previewEl.textContent = display
+  // --- แสดง preview readable ---
+  const previewEl = document.getElementById('preview')
+  let display = ESCString
+    .replace(/\x1B\x40/g,'[INIT]')
+    .replace(/\x1B\x61\x01/g,'[CENTER]')
+    .replace(/\x1B\x61\x00/g,'[LEFT]')
+    .replace(/\x1B\x21\x30/g,'[BOLD DOUBLE]')
+    .replace(/\x1B\x21\x08/g,'[BOLD]')
+    //.replace(/\x1D\x56\x41/g,'[CUT]')
+  previewEl.textContent = display
 }
 
 // --- ปุ่มสั่งพิมพ์จริง ---
 document.getElementById('printBtn').addEventListener('click', async ()=>{
-  try{
-    const resp = await fetch(`${SERVER_URL}/print`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({printer_ip:PRINTER_IP, escpos:ESCString})
-    })
-    const result = await resp.json()
-    if(result.success) alert('✅ สั่งพิมพ์สำเร็จ!');
-    else alert('❌ เกิดข้อผิดพลาด: '+result.message);
-  }catch(e){
-    console.error(e); alert('❌ ไม่สามารถเชื่อมต่อเครื่องพิมพ์ได้');
-  }
+  try{
+    const resp = await fetch(`${SERVER_URL}/print`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({printer_ip:PRINTER_IP, escpos:ESCString})
+    })
+    const result = await resp.json()
+    if(result.success) alert('✅ สั่งพิมพ์สำเร็จ!');
+    else alert('❌ เกิดข้อผิดพลาด: '+result.message);
+  }catch(e){
+    console.error(e); alert('❌ ไม่สามารถเชื่อมต่อเครื่องพิมพ์ได้');
+  }
 })
 </script>
 </body>
