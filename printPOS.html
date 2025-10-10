@@ -21,7 +21,8 @@ const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
 const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let SERVER_URL = 'https://192.168.1.88:8443';  // server Node.js escpos
+// สำหรับมือถือ-ready → ใช้ HTTP 8443
+let SERVER_URL = 'https://192.168.1.88:8443';
 const PRINTER_IP = localStorage.getItem('PRINTER_IP') || '192.168.1.100';
 
 const urlParams = new URLSearchParams(window.location.search)
@@ -34,7 +35,7 @@ if(billId) loadAndPreview(billId)
 // --- ฟังก์ชัน wrap ชื่อสินค้า ---
 function wrapText(text, width){
   const lines = [];
-  while(text.length > width){
+  while(text.length>width){
     lines.push(text.slice(0,width));
     text = text.slice(width);
   }
@@ -44,29 +45,24 @@ function wrapText(text, width){
 
 async function loadAndPreview(billId){
   const { data: bill } = await client.from('bills').select('*').eq('id', billId).single()
-  const { data: items } = await client.from('bill_items')
-        .select('id, qty, price, total, menu_id').eq('bill_id', billId)
+  const { data: items } = await client.from('bill_items').select('id, qty, price, total, menu_id').eq('bill_id', billId)
 
-  // map ชื่อเมนู
+  // ดึงชื่อเมนู
   let menuNames = {}
   if(items?.length>0){
     const menuIds = items.map(i=>i.menu_id).filter(Boolean)
     if(menuIds.length>0){
       const { data: menus } = await client.from('menu').select('id,name').in('id', menuIds)
-      menus?.forEach(m=>menuNames[m.id] = m.name)
+      menus?.forEach(m=>menuNames[m.id]=m.name)
     }
   }
-  bill.items = (items||[]).map(i => ({...i, menu_name: menuNames[i.menu_id]||"-"}))
+  bill.items = (items||[]).map(i=>({...i, menu_name: menuNames[i.menu_id]||"-"}))
 
-  // --- ESC/POS ---
+  // --- สร้าง ESC/POS string ---
   ESCString = ''
   ESCString += '\x1B\x40';             // Init
-
-  // (logo แสดง preview เป็นข้อความ [LOGO])
-  ESCString += '[LOGO]\n';
-
   ESCString += '\x1B\x61\x01';         // Center
-  ESCString += '\x1B\x21\x08';         // Bold เล็ก
+  ESCString += '\x1B\x21\x10';         // Bold+double height
   ESCString += 'ร้านเรือนชมพูเนื้อย่างเกาหลี\n';
   ESCString += '\x1B\x21\x00';
   ESCString += 'สาขานาเชือก\n';
@@ -77,19 +73,18 @@ async function loadAndPreview(billId){
     ? new Date(bill.closed_at).toLocaleString('th-TH',{dateStyle:'short', timeStyle:'short'})
     : '-';
   ESCString += `เวลาเช็คบิล: ${closedText}\n`;
-
   ESCString += '\x1B\x61\x00';         // Left align
   ESCString += '--------------------------------\n';
-  ESCString += 'สินค้า           ราคา จำนวน   รวม\n';
+  ESCString += 'สินค้า           ราคา  จำนวน   รวม\n';
   ESCString += '--------------------------------\n';
 
   bill.items.forEach(item=>{
     const lines = wrapText(item.menu_name, 15);
     lines.forEach((line,i)=>{
       if(i===0){
-        const price = String(Math.round(item.price)).padStart(6,' ');
-        const qty   = String(Math.round(item.qty)).padStart(4,' ');
-        const total = String(Math.round(item.total)).padStart(7,' ');
+        const price = String(Math.round(item.price)).padStart(5,' ');
+        const qty = String(Math.round(item.qty)).padStart(5,' ');
+        const total = String(Math.round(item.total)).padStart(6,' ');
         ESCString += line.padEnd(15,' ') + price + qty + total + '\n';
       } else {
         ESCString += line + '\n';
@@ -97,17 +92,18 @@ async function loadAndPreview(billId){
     })
   })
 
-  ESCString += '================================\n';
-  ESCString += '\x1B\x21\x08';
-  ESCString += `ยอดรวม  : ${Math.round(bill.total||0)}\n`;
-  ESCString += `เงินสด   : ${Math.round(bill.cash||0)}\n`;
-  ESCString += `เงินทอน  : ${Math.round(bill.change||0)}\n`;
-  ESCString += '\x1B\x21\x00';
+  ESCString += '================================\n'; // Double line
+  ESCString += '\x1B\x21\x08';  // Bold
+  ESCString += `ยอดรวม   : ${Math.round(bill.total||0)}\n`;
+  ESCString += `เงินสด    : ${Math.round(bill.cash||0)}\n`;
+  ESCString += `เงินทอน   : ${Math.round(bill.change||0)}\n`;
+  ESCString += '\x1B\x21\x00';  // Normal
   ESCString += '--------------------------------\n';
+  ESCString += '\x1B\x61\x01';  
   ESCString += '\n*** ขอบคุณที่อุดหนุน ***\n\n';
   //ESCString += '\x1D\x56\x41'; // Cut
 
-  // --- preview ---
+  // --- แสดง preview readable ---
   const previewEl = document.getElementById('preview')
   let display = ESCString
     .replace(/\x1B\x40/g,'[INIT]')
@@ -115,20 +111,17 @@ async function loadAndPreview(billId){
     .replace(/\x1B\x61\x00/g,'[LEFT]')
     .replace(/\x1B\x21\x30/g,'[BOLD DOUBLE]')
     .replace(/\x1B\x21\x08/g,'[BOLD]')
+    //.replace(/\x1D\x56\x41/g,'[CUT]')
   previewEl.textContent = display
 }
 
-// --- ปุ่มสั่งพิมพ์ ---
+// --- ปุ่มสั่งพิมพ์จริง ---
 document.getElementById('printBtn').addEventListener('click', async ()=>{
   try{
-    const resp = await fetch(`${SERVER_URL}/print-bill`,{
+    const resp = await fetch(`${SERVER_URL}/print`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        printer_ip: PRINTER_IP,
-        escpos: ESCString,
-        logo_path: 'D:/my-pos-server/images/logo_bill.png'  // โลโก้บน server
-      })
+      body:JSON.stringify({printer_ip:PRINTER_IP, escpos:ESCString})
     })
     const result = await resp.json()
     if(result.success) alert('✅ สั่งพิมพ์สำเร็จ!');
