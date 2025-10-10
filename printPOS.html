@@ -79,14 +79,16 @@ async function loadAndPreview(billId){
   ESCString += '--------------------------------\n';
 
   bill.items.forEach(item => {
-    const lines = wrapText(item.menu_name, 15);
+    const lines = wrapText(item.menu_name, 15); // ชื่อสินค้าไม่เกิน 15 ตัว
     lines.forEach((line, i) => {
       if(i === 0){
-        const price = String(Math.round(item.price)).padStart(6, ' ');
-        const qty   = String(Math.round(item.qty)).padStart(4, ' ');
-        const total = String(Math.round(item.total)).padStart(6, ' ');
+        // ปรับความกว้างแต่ละ column ตามขนาดที่ต้องการ
+        const price = String(Math.round(item.price)).padStart(6, ' '); // ชิดขวา 6 ตัว
+        const qty   = String(Math.round(item.qty)).padStart(4, ' ');   // ชิดขวา 4 ตัว
+        const total = String(Math.round(item.total)).padStart(7, ' '); // ชิดขวา 7 ตัว
         ESCString += line.padEnd(15, ' ') + price + qty + total + '\n';
       } else {
+        // บรรทัดต่อของชื่อสิน้ายาว
         ESCString += line + '\n';
       }
     });
