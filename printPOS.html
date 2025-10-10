@@ -78,19 +78,19 @@ async function loadAndPreview(billId){
   ESCString += 'สินค้า           ราคา  จำนวน   รวม\n';
   ESCString += '--------------------------------\n';
 
-  bill.items.forEach(item=>{
+  bill.items.forEach(item => {
     const lines = wrapText(item.menu_name, 15);
-    lines.forEach((line,i)=>{
-      if(i===0){
-        const price = String(Math.round(item.price)).padStart(5,' ');
-        const qty = String(Math.round(item.qty)).padStart(5,' ');
-        const total = String(Math.round(item.total)).padStart(6,' ');
-        ESCString += line.padEnd(15,' ') + price + qty + total + '\n';
+    lines.forEach((line, i) => {
+      if(i === 0){
+        const price = String(Math.round(item.price)).padStart(6, ' ');
+        const qty   = String(Math.round(item.qty)).padStart(4, ' ');
+        const total = String(Math.round(item.total)).padStart(6, ' ');
+        ESCString += line.padEnd(15, ' ') + price + qty + total + '\n';
       } else {
         ESCString += line + '\n';
       }
-    })
-  })
+    });
+  });
 
   ESCString += '================================\n'; // Double line
   ESCString += '\x1B\x21\x08';  // Bold
