@@ -18,7 +18,7 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
 const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
 const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let SERVER_URL = 'https://192.168.1.88:8443';  // server Node.js escpos
@@ -62,7 +62,7 @@ async function loadAndPreview(billId){
   ESCString = ''
   ESCString += '\x1B\x40';             // Init
 
-  // (logo จะให้ server แทรกเอง ถ้าอยาก preview ใช้แทนข้อความ)
+  // (logo แสดง preview เป็นข้อความ [LOGO])
   ESCString += '[LOGO]\n';
 
   ESCString += '\x1B\x61\x01';         // Center
@@ -80,7 +80,7 @@ async function loadAndPreview(billId){
 
   ESCString += '\x1B\x61\x00';         // Left align
   ESCString += '--------------------------------\n';
-  ESCString += 'สินค้า             ราคา จำนวน   รวม\n';
+  ESCString += 'สินค้า           ราคา จำนวน   รวม\n';
   ESCString += '--------------------------------\n';
 
   bill.items.forEach(item=>{
@@ -99,9 +99,9 @@ async function loadAndPreview(billId){
 
   ESCString += '================================\n';
   ESCString += '\x1B\x21\x08';
-  ESCString += `ยอดรวม      : ${Math.round(bill.total||0)}\n`;
-  ESCString += `เงินสด       : ${Math.round(bill.cash||0)}\n`;
-  ESCString += `เงินทอน     : ${Math.round(bill.change||0)}\n`;
+  ESCString += `ยอดรวม  : ${Math.round(bill.total||0)}\n`;
+  ESCString += `เงินสด   : ${Math.round(bill.cash||0)}\n`;
+  ESCString += `เงินทอน  : ${Math.round(bill.change||0)}\n`;
   ESCString += '\x1B\x21\x00';
   ESCString += '--------------------------------\n';
   ESCString += '\n*** ขอบคุณที่อุดหนุน ***\n\n';
@@ -121,13 +121,13 @@ async function loadAndPreview(billId){
 // --- ปุ่มสั่งพิมพ์ ---
 document.getElementById('printBtn').addEventListener('click', async ()=>{
   try{
-    const resp = await fetch(`${SERVER_URL}/print`,{
+    const resp = await fetch(`${SERVER_URL}/print-bill`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         printer_ip: PRINTER_IP,
         escpos: ESCString,
-        logo: '/images/logo_bill.jpg'   // ส่ง path logo ให้ server แทรก
+        logo_path: 'D:/my-pos-server/images/logo_bill.png'  // โลโก้บน server
       })
     })
     const result = await resp.json()
