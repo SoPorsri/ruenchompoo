@@ -79,19 +79,26 @@ async function loadAndPreview(billId){
   ESCString += '--------------------------------\n';
   
   bill.items.forEach(item => {
-    const lines = wrapText(item.menu_name, 15);
-    lines.forEach((line, i) => {
-        if(i === 0){
-        const price = String(Math.round(item.price)).padStart(6, ' ');
-        const qty   = String(Math.round(item.qty)).padStart(4, ' ');
-        const total = String(Math.round(item.total)).padStart(6, ' ');
-        ESCString += line.padEnd(15, ' ') + price + qty + total + '\n';
-        } else {
-        ESCString += line + '\n';
-        }
-    });
+      // กำหนดความกว้างของ Menu Name เป็น 15
+      const lines = wrapText(item.menu_name, 15);
+      lines.forEach((line, i) => {
+          if(i === 0){
+          // ปรับความกว้างของคอลัมน์:
+          // Price: 5 (จากเดิม 6)
+          // Qty:   3 (จากเดิม 4)
+          // Total: 5 (จากเดิม 6)
+          const price = String(Math.round(item.price)).padStart(5, ' ');
+          const qty   = String(Math.round(item.qty)).padStart(3, ' ');
+          const total = String(Math.round(item.total)).padStart(5, ' ');
+          
+          // Pad End Item Name ให้ครบ 15 อักขระ
+          ESCString += line.padEnd(15, ' ') + price + qty + total + '\n';
+          } else {
+          // สำหรับบรรทัดที่ขึ้นบรรทัดใหม่ของชื่อเมนู
+          ESCString += line + '\n'; 
+          }
+      });
   });
-
 
   ESCString += '================================\n'; // Double line
   ESCString += '\x1B\x21\x08';  // Bold
