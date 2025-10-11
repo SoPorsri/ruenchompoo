@@ -79,31 +79,31 @@ async function loadAndPreview(billId){
   ESCString += '--------------------------------\n';
   
   
-  bill.items.forEach(item => {
-      // 1. ใช้ 18 ในการห่อข้อความ (wrapText) - เพื่อให้ชื่อเมนูไม่ถูกตัดสั้นเกินไป
-      const MENU_WRAP_WIDTH = 18;
-      const lines = wrapText(item.menu_name, MENU_WRAP_WIDTH);
+  function padThai(text, width) {
+    const len = Buffer.from(text, 'utf8').length; // นับ byte แทน
+    const spaceCount = Math.max(0, width - len);
+    return text + ' '.repeat(spaceCount);
+  }
   
-      lines.forEach((line, i) => {
-          if(i === 0){
-          // 2. ใช้ 16 ในการ PadEnd เพื่อบีบช่องว่างให้แคบลงอีก 1 ช่อง
-          const MENU_PAD_WIDTH = 16; 
-          
-          // 3. กำหนดความกว้างคงที่สำหรับตัวเลข (5, 3, 4)
-          const PRICE_WIDTH = 5;
-          const QTY_WIDTH   = 3; 
-          const TOTAL_WIDTH = 4;
+  bill.items.forEach(item => { 
+    const MENU_WRAP_WIDTH = 18;
+    const MENU_PAD_WIDTH = 16;
+    const PRICE_WIDTH = 5;
+    const QTY_WIDTH = 3; 
+    const TOTAL_WIDTH = 4;
   
-          const price = String(Math.round(item.price)).padStart(PRICE_WIDTH, ' ');
-          const qty   = String(Math.round(item.qty)).padStart(QTY_WIDTH, ' ');
-          const total = String(Math.round(item.total)).padStart(TOTAL_WIDTH, ' ');
-          
-          // บังคับให้ราคาวิ่งเข้ามาหาชื่อเมนูให้มากที่สุด
-          ESCString += line.padEnd(MENU_PAD_WIDTH, ' ') + price + qty + total + '\n';
-          } else {
-          ESCString += line + '\n'; 
-          }
-      });
+    const lines = wrapText(item.menu_name, MENU_WRAP_WIDTH);
+    lines.forEach((line, i) => {
+      if(i === 0){
+        const price = String(Math.round(item.price)).padStart(PRICE_WIDTH, ' ');
+        const qty   = String(Math.round(item.qty)).padStart(QTY_WIDTH, ' ');
+        const total = String(Math.round(item.total)).padStart(TOTAL_WIDTH, ' ');
+  
+        ESCString += padThai(line, MENU_PAD_WIDTH) + price + qty + total + '\n';
+      } else {
+        ESCString += line + '\n'; 
+      }
+    });
   });
 
   ESCString += '================================\n'; // Double line
