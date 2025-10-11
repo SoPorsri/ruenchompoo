@@ -80,32 +80,40 @@ async function loadAndPreview(billId){
   
   
   function padThai(text, width) {
-    // แปลงข้อความเป็น byte ด้วย TextEncoder
-    const encoder = new TextEncoder();
-    const len = encoder.encode(text).length; // นับจำนวน byte จริง
-    const spaceCount = Math.max(0, width - len);
-    return text + ' '.repeat(spaceCount);
+      // ใช้ TextEncoder เพื่อแปลงข้อความเป็นไบต์
+      const encoder = new TextEncoder();
+      const len = encoder.encode(text).length; // นับจำนวน byte จริง
+      // คำนวณจำนวนช่องว่างที่ต้องเติม (จากความกว้างที่ต้องการ - จำนวนไบต์จริง)
+      const spaceCount = Math.max(0, width - len);
+      return text + ' '.repeat(spaceCount);
   }
   
-  bill.items.forEach(item => { 
-    const MENU_WRAP_WIDTH = 18;
-    const MENU_PAD_WIDTH = 16;
-    const PRICE_WIDTH = 5;
-    const QTY_WIDTH = 3; 
-    const TOTAL_WIDTH = 4;
+  bill.items.forEach(item => {
+      // **สำคัญ:** ความกว้างของ Menu Name ต้องสัมพันธ์กับ Byte Length
+      // ถ้าชื่อเมนูยาวสุด 6 ตัวอักษรไทย (18 ไบต์) + 2 ช่องว่าง = 20 ไบต์
+      const MENU_WRAP_WIDTH = 6;  // จำนวนตัวอักษรสำหรับ wrapText
+      const MENU_PAD_WIDTH = 20;  // จำนวนไบต์สำหรับ padThai (ต้องลองปรับค่านี้) 
+      
+      // ความกว้างตัวเลขยังคงเป็นจำนวนตัวอักษร (1 ไบต์/อักขระ)
+      const PRICE_WIDTH = 5;
+      const QTY_WIDTH = 3;
+      const TOTAL_WIDTH = 4;
   
-    const lines = wrapText(item.menu_name, MENU_WRAP_WIDTH);
-    lines.forEach((line, i) => {
-      if(i === 0){
-        const price = String(Math.round(item.price)).padStart(PRICE_WIDTH, ' ');
-        const qty   = String(Math.round(item.qty)).padStart(QTY_WIDTH, ' ');
-        const total = String(Math.round(item.total)).padStart(TOTAL_WIDTH, ' ');
+      // wrapText ยังคงใช้จำนวนตัวอักษร
+      const lines = wrapText(item.menu_name, MENU_WRAP_WIDTH);
+      
+      lines.forEach((line, i) => {
+          if(i === 0){
+              const price = String(Math.round(item.price)).padStart(PRICE_WIDTH, ' ');
+              const qty   = String(Math.round(item.qty)).padStart(QTY_WIDTH, ' ');
+              const total = String(Math.round(item.total)).padStart(TOTAL_WIDTH, ' ');
   
-        ESCString += padThai(line, MENU_PAD_WIDTH) + price + qty + total + '\n';
-      } else {
-        ESCString += line + '\n'; 
-      }
-    });
+              // ใช้ padThai แทน padEnd
+              ESCString += padThai(line, MENU_PAD_WIDTH) + price + qty + total + '\n';
+          } else {
+              ESCString += line + '\n';
+          }
+      });
   });
 
   ESCString += '================================\n'; // Double line
