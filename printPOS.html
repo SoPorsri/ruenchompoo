@@ -78,37 +78,23 @@ async function loadAndPreview(billId){
   ESCString += 'สินค้า           ราคา  จำนวน   รวม\n';
   ESCString += '--------------------------------\n';
   
-  function padThai(text, width) {
-      // ใช้วิธีนับความยาวเป็นไบต์
-      const encoder = new TextEncoder();
-      const len = encoder.encode(text).length; 
-      const spaceCount = Math.max(0, width - len);
-      // เติมช่องว่างตามจำนวนไบต์ที่ต้องการ
-      return text + ' '.repeat(spaceCount);
-  }
-  
   bill.items.forEach(item => {
-      // ใช้ 6 ตัวอักษรในการห่อข้อความ (ให้พอดีกับชื่อเมนูส่วนใหญ่)
-      const MENU_WRAP_WIDTH = 6;  
-      
-      // **สำคัญ:** กำหนดความกว้างเป็น ไบต์ (50 ไบต์ สำหรับภาษาไทย/ละตินประมาณ 17-25 ตัวอักษร)
-      const MENU_PAD_WIDTH = 50; 
-      
-      // ความกว้างตัวเลขยังคงเป็นตัวอักษร (1 อักขระ = 1 ไบต์)
-      const PRICE_WIDTH = 5; 
-      const QTY_WIDTH = 3; 
-      const TOTAL_WIDTH = 4;
-  
+      const MENU_WRAP_WIDTH = 18;
       const lines = wrapText(item.menu_name, MENU_WRAP_WIDTH);
-      
+  
       lines.forEach((line, i) => {
           if(i === 0){
+              const MENU_PAD_WIDTH = 16;
+              
+              const PRICE_WIDTH = 5;
+              const QTY_WIDTH   = 3;
+              const TOTAL_WIDTH = 4;
+  
               const price = String(Math.round(item.price)).padStart(PRICE_WIDTH, ' ');
               const qty   = String(Math.round(item.qty)).padStart(QTY_WIDTH, ' ');
               const total = String(Math.round(item.total)).padStart(TOTAL_WIDTH, ' ');
-  
-              // ใช้ padThai เพื่อเติมช่องว่าง
-              ESCString += padThai(line, MENU_PAD_WIDTH) + price + qty + total + '\n';
+              
+              ESCString += line.padEnd(MENU_PAD_WIDTH, ' ') + price + qty + total + '\n';
           } else {
               ESCString += line + '\n';
           }
