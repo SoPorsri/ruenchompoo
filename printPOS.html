@@ -80,7 +80,9 @@ async function loadAndPreview(billId){
   
   
   function padThai(text, width) {
-    const len = Buffer.from(text, 'utf8').length; // นับ byte แทน
+    // แปลงข้อความเป็น byte ด้วย TextEncoder
+    const encoder = new TextEncoder();
+    const len = encoder.encode(text).length; // นับจำนวน byte จริง
     const spaceCount = Math.max(0, width - len);
     return text + ' '.repeat(spaceCount);
   }
