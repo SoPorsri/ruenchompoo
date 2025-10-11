@@ -80,13 +80,16 @@ async function loadAndPreview(billId){
   
   
   bill.items.forEach(item => {
-      // ปรับลดความกว้างของ Menu Name เป็น 18 เพื่อให้ชิดซ้ายเข้ามา
-      const MENU_WIDTH = 18; 
-      const lines = wrapText(item.menu_name, MENU_WIDTH);
+      // 1. ใช้ 18 ในการห่อข้อความ (wrapText)
+      const MENU_WRAP_WIDTH = 18;
+      const lines = wrapText(item.menu_name, MENU_WRAP_WIDTH);
   
       lines.forEach((line, i) => {
           if(i === 0){
-          // Price = 5 เพื่อให้หลักหน่วยตรงกัน (220, 35, 10)
+          // 2. ใช้ 17 ในการ PadEnd เพื่อบีบช่องว่างให้แคบลง 1 ช่อง
+          const MENU_PAD_WIDTH = 17; 
+          
+          // 3. กำหนดความกว้างคงที่สำหรับตัวเลข (Price = 5 เพื่อให้หลักหน่วยตรงกัน)
           const PRICE_WIDTH = 5;
           const QTY_WIDTH   = 3; 
           const TOTAL_WIDTH = 4;
@@ -95,8 +98,8 @@ async function loadAndPreview(billId){
           const qty   = String(Math.round(item.qty)).padStart(QTY_WIDTH, ' ');
           const total = String(Math.round(item.total)).padStart(TOTAL_WIDTH, ' ');
           
-          // PadEnd ชื่อเมนูให้เต็มความกว้าง (18)
-          ESCString += line.padEnd(MENU_WIDTH, ' ') + price + qty + total + '\n';
+          // บังคับให้ราคาวิ่งเข้ามาหาชื่อเมนูมากขึ้น
+          ESCString += line.padEnd(MENU_PAD_WIDTH, ' ') + price + qty + total + '\n';
           } else {
           ESCString += line + '\n'; 
           }
