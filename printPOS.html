@@ -79,17 +79,27 @@ async function loadAndPreview(billId){
   ESCString += '--------------------------------\n';
   
   bill.items.forEach(item => {
-      const MENU_WRAP_WIDTH = 18;
-      const lines = wrapText(item.menu_name, MENU_WRAP_WIDTH);
+      // ปรับลด MENU_WRAP_WIDTH ลง เพื่อให้ wrapText ทำงานตรงตามที่ตาเห็น
+      // เราจะใช้ 9 เพื่อให้แน่ใจว่าชื่อเมนู 7 ตัวอักษร ไม่ถูกตัด
+      const MENU_WRAP_WIDTH = 9; 
+      const lines = wrapText(item.menu_name, MENU_WRAP_WIDTH); 
   
       lines.forEach((line, i) => {
           if(i === 0){
-              const price = String(Math.round(item.price)).padStart(5, ' ');
-              const qty   = String(Math.round(item.qty)).padStart(3, ' ');
-              const total = String(Math.round(item.total)).padStart(4, ' ');
-              ESCString += line.padEnd(17, ' ') + price + qty + total + '\n';
+              // คงค่า 17 และ 5, 3, 4 ไว้ เพื่อให้ตัวเลขยังคงตรงกัน
+              const MENU_PAD_WIDTH = 17; 
+              const PRICE_WIDTH = 5; 
+              const QTY_WIDTH   = 3; 
+              const TOTAL_WIDTH = 4;
+  
+              const price = String(Math.round(item.price)).padStart(PRICE_WIDTH, ' ');
+              const qty   = String(Math.round(item.qty)).padStart(QTY_WIDTH, ' ');
+              const total = String(Math.round(item.total)).padStart(TOTAL_WIDTH, ' ');
+              
+              ESCString += line.padEnd(MENU_PAD_WIDTH, ' ') + price + qty + total + '\n';
           } else {
-              ESCString += line + '\n';
+              // โค้ดนี้ไม่ควรถูกเรียกใช้แล้ว! ถ้าเรียก แสดงว่า wrapText ยังตัดคำอยู่
+              ESCString += line + '\n'; 
           }
       });
   });
