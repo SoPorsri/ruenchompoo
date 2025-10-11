@@ -86,7 +86,7 @@ async function loadAndPreview(billId){
           if(i === 0){
               const price = String(Math.round(item.price)).padStart(5, ' ');
               const qty   = String(Math.round(item.qty)).padStart(4, ' ');
-              const total = String(Math.round(item.total)).padStart(4, ' ');
+              const total = String(Math.round(item.total)).padStart(5, ' ');
               ESCString += line.padEnd(16, ' ') + price + qty + total + '\n';
           } else {
               ESCString += line + '\n';
