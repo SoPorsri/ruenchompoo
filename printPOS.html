@@ -78,24 +78,24 @@ async function loadAndPreview(billId){
   ESCString += 'สินค้า           ราคา  จำนวน   รวม\n';
   ESCString += '--------------------------------\n';
   
+  
   bill.items.forEach(item => {
-      // กำหนดความกว้างสำหรับ Menu Name (ใช้พื้นที่ที่เหลือทั้งหมด)
-      const MENU_WIDTH = 20;
+      // ปรับลดความกว้างของ Menu Name เป็น 19
+      const MENU_WIDTH = 19; 
       const lines = wrapText(item.menu_name, MENU_WIDTH);
   
       lines.forEach((line, i) => {
           if(i === 0){
-          // กำหนดความกว้างคงที่และเหมาะสมสำหรับตัวเลข
-          const PRICE_WIDTH = 5; // รองรับถึง 99999
-          const QTY_WIDTH   = 3; // รองรับถึง 999 (รวมช่องว่าง 1)
-          const TOTAL_WIDTH = 4; // รองรับถึง 9999
+          // ปรับลดความกว้างของ Price เป็น 4
+          const PRICE_WIDTH = 4;
+          const QTY_WIDTH   = 3; 
+          const TOTAL_WIDTH = 4;
   
           const price = String(Math.round(item.price)).padStart(PRICE_WIDTH, ' ');
           const qty   = String(Math.round(item.qty)).padStart(QTY_WIDTH, ' ');
           const total = String(Math.round(item.total)).padStart(TOTAL_WIDTH, ' ');
           
-          // 1. PadEnd ชื่อเมนูให้เต็มความกว้าง (20)
-          // 2. ตามด้วยตัวเลขที่จัดชิดขวาด้วย padStart
+          // PadEnd ชื่อเมนูให้เต็มความกว้าง (19)
           ESCString += line.padEnd(MENU_WIDTH, ' ') + price + qty + total + '\n';
           } else {
           // สำหรับบรรทัดที่ขึ้นบรรทัดใหม่ของชื่อเมนู
