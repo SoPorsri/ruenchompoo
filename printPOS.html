@@ -80,13 +80,13 @@ async function loadAndPreview(billId){
   
   
   bill.items.forEach(item => {
-      // Menu Name คงเดิมที่ 19
-      const MENU_WIDTH = 19; 
+      // ปรับลดความกว้างของ Menu Name เป็น 18 เพื่อให้ชิดซ้ายเข้ามา
+      const MENU_WIDTH = 18; 
       const lines = wrapText(item.menu_name, MENU_WIDTH);
   
       lines.forEach((line, i) => {
           if(i === 0){
-          // ปรับเพิ่มความกว้างของ Price เป็น 5 (แก้ไขปัญหาการไม่ตรงกันของหลักหน่วย)
+          // Price = 5 เพื่อให้หลักหน่วยตรงกัน (220, 35, 10)
           const PRICE_WIDTH = 5;
           const QTY_WIDTH   = 3; 
           const TOTAL_WIDTH = 4;
@@ -95,10 +95,9 @@ async function loadAndPreview(billId){
           const qty   = String(Math.round(item.qty)).padStart(QTY_WIDTH, ' ');
           const total = String(Math.round(item.total)).padStart(TOTAL_WIDTH, ' ');
           
-          // PadEnd ชื่อเมนูให้เต็มความกว้าง (19)
+          // PadEnd ชื่อเมนูให้เต็มความกว้าง (18)
           ESCString += line.padEnd(MENU_WIDTH, ' ') + price + qty + total + '\n';
           } else {
-          // สำหรับบรรทัดที่ขึ้นบรรทัดใหม่ของชื่อเมนู
           ESCString += line + '\n'; 
           }
       });
