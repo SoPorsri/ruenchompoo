@@ -84,7 +84,7 @@ async function loadAndPreview(billId){
   }
   
   bill.items.forEach(item => {
-      const MENU_WRAP_WIDTH = 12;
+      const MENU_WRAP_WIDTH = 14;
       const lines = wrapText(item.menu_name, MENU_WRAP_WIDTH);
   
       lines.forEach((line, i) => {
@@ -94,9 +94,10 @@ async function loadAndPreview(billId){
               const QTY_WIDTH = 5;
               const TOTAL_WIDTH = 7;
   
-              const price = String(Math.round(item.price)).padStart(PRICE_WIDTH, ' ');
-              const qty = String(Math.round(item.qty)).padStart(QTY_WIDTH, ' ');
-              const total = String(Math.round(item.total)).padStart(TOTAL_WIDTH, ' ');
+              const price = item.price.toLocaleString('th-TH', { maximumFractionDigits: 0 }).padStart(PRICE_WIDTH, ' ');
+              const qty   = item.qty.toLocaleString('th-TH', { maximumFractionDigits: 0 }).padStart(QTY_WIDTH, ' ');
+              const total = item.total.toLocaleString('th-TH', { maximumFractionDigits: 0 }).padStart(TOTAL_WIDTH, ' ');
+
   
               // --- ส่วนที่แก้ไข ---
               const visualLength = getVisualLength(line);
@@ -114,9 +115,9 @@ async function loadAndPreview(billId){
 
   ESCString += '================================\n'; // Double line
   ESCString += '\x1B\x21\x08';  // Bold
-  ESCString += `ยอดรวม   : ${Math.round(bill.total||0)} บาท\n`;
-  ESCString += `เงินสด    : ${Math.round(bill.cash||0)} บาท\n`;
-  ESCString += `เงินทอน   : ${Math.round(bill.change||0)} บาท\n`;
+  ESCString += `ยอดรวม   : ${(bill.total||0).toLocaleString('th-TH', { maximumFractionDigits: 0 })} บาท\n`;
+  ESCString += `เงินสด    : ${(bill.cash||0).toLocaleString('th-TH', { maximumFractionDigits: 0 })} บาท\n`;
+  ESCString += `เงินทอน   : ${(bill.change||0).toLocaleString('th-TH', { maximumFractionDigits: 0 })} บาท\n`;
   ESCString += '\x1B\x21\x00';  // Normal
   ESCString += '--------------------------------\n';
   ESCString += '\x1B\x61\x01';  
