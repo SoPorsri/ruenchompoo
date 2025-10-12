@@ -89,24 +89,19 @@ async function loadAndPreview(billId){
   
       lines.forEach((line, i) => {
           if (i === 0) {
-              const MENU_PAD_WIDTH = 13;
-              const PRICE_WIDTH = 6;
+              const MENU_PAD_WIDTH = 14;
+              const PRICE_WIDTH = 5;
               const QTY_WIDTH = 5;
               const TOTAL_WIDTH = 7;
   
               const price = item.price.toLocaleString('th-TH', { maximumFractionDigits: 0 }).padStart(PRICE_WIDTH, ' ');
               const qty   = item.qty.toLocaleString('th-TH', { maximumFractionDigits: 0 }).padStart(QTY_WIDTH, ' ');
               const total = item.total.toLocaleString('th-TH', { maximumFractionDigits: 0 }).padStart(TOTAL_WIDTH, ' ');
-
   
-              // --- ส่วนที่แก้ไข ---
               const visualLength = getVisualLength(line);
               const paddingRequired = MENU_PAD_WIDTH - visualLength;
               const padding = ' '.repeat(Math.max(0, paddingRequired));
-  
               ESCString += line + padding + price + qty + total + '\n';
-              // --- จบส่วนที่แก้ไข ---
-  
           } else {
               ESCString += line + '\n';
           }
