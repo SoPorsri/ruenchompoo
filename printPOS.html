@@ -84,12 +84,12 @@ async function loadAndPreview(billId){
   }
   
   bill.items.forEach(item => {
-      const MENU_WRAP_WIDTH = 9;
+      const MENU_WRAP_WIDTH = 12;
       const lines = wrapText(item.menu_name, MENU_WRAP_WIDTH);
   
       lines.forEach((line, i) => {
           if (i === 0) {
-              const MENU_PAD_WIDTH = 17;
+              const MENU_PAD_WIDTH = 13;
               const PRICE_WIDTH = 5;
               const QTY_WIDTH = 4;
               const TOTAL_WIDTH = 7;
