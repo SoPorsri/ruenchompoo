@@ -114,9 +114,9 @@ async function loadAndPreview(billId){
 
   ESCString += '================================\n'; // Double line
   ESCString += '\x1B\x21\x08';  // Bold
-  ESCString += `ยอดรวม   : ${Math.round(bill.total||0)}\n`;
-  ESCString += `เงินสด    : ${Math.round(bill.cash||0)}\n`;
-  ESCString += `เงินทอน   : ${Math.round(bill.change||0)}\n`;
+  ESCString += `ยอดรวม   : ${Math.round(bill.total||0)}฿\n`;
+  ESCString += `เงินสด    : ${Math.round(bill.cash||0)}฿\n`;
+  ESCString += `เงินทอน   : ${Math.round(bill.change||0)}฿\n`;
   ESCString += '\x1B\x21\x00';  // Normal
   ESCString += '--------------------------------\n';
   ESCString += '\x1B\x61\x01';  
