@@ -12,7 +12,7 @@
 <body>
 <h3>Preview ใบเสร็จ (ESC/POS)</h3>
 <pre id="preview">Loading...</pre>
-document.getElementById('printBtn').disabled = true;
+
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
@@ -132,32 +132,28 @@ async function loadAndPreview(billId){
 
   // --- สั่งพิมพ์อัตโนมัติ (ย้ายโค้ดจากปุ่มมาไว้ตรงนี้) ---
   console.log('กำลังสั่งพิมพ์อัตโนมัติ...');
-  document.getElementById('printBtn').textContent = 'กำลังพิมพ์...';
-  document.getElementById('printBtn').disabled = true;
 
-  try {
-      const resp = await fetch(`${SERVER_URL}/print`,{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({printer_ip:PRINTER_IP, escpos:ESCString})
-      });
-      const result = await resp.json();
-      
-      if (result.success) {
-          console.log('✅ สั่งพิมพ์สำเร็จ!');
-          // (ทางเลือก) ปิดหน้าต่างนี้ไปเลยถ้าพิมพ์เสร็จ
-          window.close();
-      } else {
-          alert('❌ เกิดข้อผิดพลาด: ' + result.message);
-          document.getElementById('printBtn').textContent = 'ลองพิมพ์อีกครั้ง';
-          document.getElementById('printBtn').disabled = false;
-      }
-  } catch(e) {
-      console.error(e); 
-      alert('❌ ไม่สามารถเชื่อมต่อเครื่องพิมพ์ได้');
-      document.getElementById('printBtn').textContent = 'ลองพิมพ์อีกครั้ง';
-      document.getElementById('printBtn').disabled = false;
+  console.log('กำลังสั่งพิมพ์อัตโนมัติ...');
+
+try {
+  const resp = await fetch(`${SERVER_URL}/print`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ printer_ip: PRINTER_IP, escpos: ESCString })
+  });
+  const result = await resp.json();
+
+  if (result.success) {
+    console.log('✅ สั่งพิมพ์สำเร็จ!');
+    // ปิดหน้านี้หลังพิมพ์ 2 วิ
+    setTimeout(() => window.close(), 2000);
+  } else {
+    alert('❌ เกิดข้อผิดพลาด: ' + result.message);
   }
+} catch (e) {
+  console.error(e);
+  alert('❌ ไม่สามารถเชื่อมต่อเครื่องพิมพ์ได้');
+}
   // --- จบส่วนพิมพ์อัตโนมัติ ---
 }
 
