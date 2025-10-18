@@ -496,104 +496,85 @@ async function saveDraft() {
 }
 
 async function saveBill() {
-  const billno = (el('billno').value.startsWith('DRAFT-')) ? await getNextBillNo() : el('billno').value; // ถ้าเป็น draft → ขอเลขจริง
-  const customer = el('customer').value;
-  const total = safeEval(el('grand').textContent.replace(/[^\d.]/g, ''));
-  const cash = safeEval(el('cash').value);
-  const change = safeEval(el('change').value.replace(/[^\d.]/g, ''));
+    const billno = (el('billno').value.startsWith('DRAFT-')) ? await getNextBillNo() : el('billno').value; // ถ้าเป็น draft → ขอเลขจริง
+    const customer = el('customer').value;
+    const total = safeEval(el('grand').textContent.replace(/[^\d.]/g, ''));
+    const cash = safeEval(el('cash').value);
+    const change = safeEval(el('change').value.replace(/[^\d.]/g, ''));
 
-  let draftData = null;
-  if (billno) {
-    const { data, error } = await client
-      .from('drafts')
-      .select('*')
-      .eq('table_id', table_id)
-      .maybeSingle();
-  
-    if (!error && data) draftData = data;
-  }
-
-  const { data: bill, error: billError } = await client.from('bills').insert([{
-    billno,
-    customer,
-    table_id,
-    total,
-    cash,
-    change,
-    status: 'closed',
-    created_at: draftData?.created_at
-                 ? new Date(draftData.created_at)
-                 : new Date(),  // <— บังคับเป็น Date object
-    closed_at: new Date()
-  }]).select().maybeSingle();
-
-  if (billError) { alert('บันทึกบิลผิดพลาด'); console.log(billError); return; }
-
-  const items = [];
-  document.querySelectorAll('#menuItems input').forEach(inp => {
-    const qty = safeEval(inp.value);
-    if (qty <= 0) return;
-    const menu_id = parseInt(inp.dataset.id);
-    const menuItem = menuData.find(m => m.id === menu_id);
-    if (menuItem) items.push({ bill_id: bill.id, menu_id, qty, price: menuItem.price });
-  });
-
-  if (items.length > 0) {
-    const { error: itemError } = await client.from('bill_items').insert(items);
-    if (itemError) console.log('บันทึกรายการ bill_items ผิดพลาด', itemError);
-  }
-
-  if (table_id) {
-    const { error: updateError } = await client.from('tables').update({ status: 'ว่าง' }).eq('id', table_id);
-    if (updateError) console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
-  }
-
-  // ลบ draft โดยใช้ table_id
-  if (table_id) {
-    // หาว่า table_id นี้มี draft ไหม
-    const { data: d } = await client.from('drafts')
-      .select('id')
-      .eq('table_id', table_id)
-      .maybeSingle();
-
-    if (d) {
-      // ลบ draft_items ก่อน
-      const { error: diErr } = await client.from('draft_items').delete().eq('draft_id', d.id);
-      if (diErr) console.log('ลบ draft_items ผิดพลาด', diErr);
-
-      // ลบ draft
-      const { error: dErr } = await client.from('drafts').delete().eq('id', d.id);
-      if (dErr) console.log('ลบ drafts ผิดพลาด', dErr);
+    let draftData = null;
+    if (billno) {
+        const { data, error } = await client
+            .from('drafts')
+            .select('*')
+            .eq('table_id', table_id)
+            .maybeSingle();
+        
+        if (!error && data) draftData = data;
     }
-  }
 
-  // print
-  const w = window.open('', 'PRINT', 'height=600,width=800');
-  w.document.write('<html><head><title>พิมพ์บิล</title></head><body>');
-  w.document.write(buildPrintView(bill));
-  w.document.write('</body></html>');
-  w.document.close();
-  w.focus();
+    const { data: bill, error: billError } = await client.from('bills').insert([{
+        billno,
+        customer,
+        table_id,
+        total,
+        cash,
+        change,
+        status: 'closed',
+        created_at: draftData?.created_at
+                    ? new Date(draftData.created_at)
+                    : new Date(),  // <— บังคับเป็น Date object
+        closed_at: new Date()
+    }]).select().maybeSingle();
 
-  // รอให้ปริ้นเสร็จแล้วค่อยทำต่อ
-  w.addEventListener('afterprint', () => {
-      w.close();
-  
-      // clear form หลังปริ้น
-      el('billno').value = '';
-      document.querySelectorAll('#menuItems input').forEach(i => i.value = '');
-      el('cash').value = '';
-      calc();
-  
-      // ถ้าอยาก redirect หรือทำอย่างอื่น ให้ทำที่นี่
-      window.location.href = 'index.html';
-  });
-  
-  // สำหรับ browser บางตัว (เช่น Chrome) ที่ไม่ fire afterprint ใน window เดิม
-  // สามารถ fallback ด้วย setTimeout
-  setTimeout(() => {
-      try { w.print(); } catch(e) { console.log(e); }
-  }, 100);
+    if (billError) {
+        alert('บันทึกบิลผิดพลาด');
+        console.log(billError);
+        return null; // <--- แก้ไขจุดที่ 1: คืนค่า null ถ้าบันทึกบิลหลักไม่สำเร็จ
+    }
+
+    const items = [];
+    document.querySelectorAll('#menuItems input').forEach(inp => {
+        const qty = safeEval(inp.value);
+        if (qty <= 0) return;
+        const menu_id = parseInt(inp.dataset.id);
+        const menuItem = menuData.find(m => m.id === menu_id);
+        if (menuItem) items.push({ bill_id: bill.id, menu_id, qty, price: menuItem.price });
+    });
+
+    if (items.length > 0) {
+        const { error: itemError } = await client.from('bill_items').insert(items);
+        if (itemError) console.log('บันทึกรายการ bill_items ผิดพลาด', itemError);
+    }
+
+    if (table_id) {
+        const { error: updateError } = await client.from('tables').update({ status: 'ว่าง' }).eq('id', table_id);
+        if (updateError) console.log('อัปเดตโต๊ะว่างผิดพลาด', updateError);
+    }
+
+    // ลบ draft โดยใช้ table_id
+    if (table_id) {
+        // หาว่า table_id นี้มี draft ไหม
+        const { data: d } = await client.from('drafts')
+            .select('id')
+            .eq('table_id', table_id)
+            .maybeSingle();
+
+        if (d) {
+            // ลบ draft_items ก่อน
+            const { error: diErr } = await client.from('draft_items').delete().eq('draft_id', d.id);
+            if (diErr) console.log('ลบ draft_items ผิดพลาด', diErr);
+
+            // ลบ draft
+            const { error: dErr } = await client.from('drafts').delete().eq('id', d.id);
+            if (dErr) console.log('ลบ drafts ผิดพลาด', dErr);
+        }
+    }
+
+    // --- ลบโค้ดส่วน // print ทั้งหมดออก ---
+
+    // --- แก้ไขจุดที่ 2: คืนค่า ID ของบิลที่บันทึกได้ ---
+    return bill.id;
 }
 
 /* ---------------------------
@@ -908,7 +889,41 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   el('btnPrint').addEventListener('click', () => { el('previewContent').innerHTML = buildPreviewView(); el('previewModal').style.display = 'flex'; });
   el('btnCancelPreview').addEventListener('click', () => { el('previewModal').style.display = 'none'; });
-  el('btnConfirmPrint').addEventListener('click', () => { el('previewModal').style.display = 'none'; saveBill(); });
+  el('btnConfirmPrint').addEventListener('click', async () => {
+      el('previewModal').style.display = 'none';
+      
+      try {
+          // 1. เรียก saveBill() และรอรับ ID กลับมา
+          const savedBillId = await saveBill();
+  
+          // 2. ตรวจสอบว่าได้ ID
+          if (savedBillId) {
+          
+              // 3. เปิดหน้า printPOS.html (ตามเป้าหมายเดิม)
+              // หน้าต่างนี้จะจัดการการพิมพ์ของมันเอง
+              window.open(`printPOS.html?bill_id=${savedBillId}`, '_blank');
+              
+              // 4. (สำคัญ) ย้ายโค้ด "หลังพิมพ์เสร็จ" มาไว้ตรงนี้
+              // เพราะเราสั่งพิมพ์แล้ว ไม่ต้องรอ
+              
+              // clear form
+              el('billno').value = '';
+              document.querySelectorAll('#menuItems input').forEach(i => i.value = '');
+              el('cash').value = '';
+              calc(); // (เรียก calc() เพื่อรีเฟรชยอดรวม)
+              
+              // กลับไปหน้า index
+              window.location.href = 'index.html';
+              
+          } else {
+              alert('เกิดข้อผิดพลาด: ไม่สามารถบันทึกบิลได้');
+          }
+          
+      } catch (err) {
+          console.error('เกิดข้อผิดพลาดในการบันทึกหรือพิมพ์:', err);
+          alert('เกิดข้อผิดพลาด: ' + err.message);
+      }
+  });
 
   el('btnSave').addEventListener('click', saveDraft);
 
