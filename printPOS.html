@@ -7,44 +7,51 @@
   body { font-family: "Tahoma", "Noto Sans Thai", sans-serif; font-size:12px; }
   pre { background:#f4f4f4; padding:10px; white-space: pre-wrap; word-wrap: break-word; border:1px solid #ccc; }
   button { margin-top:10px; padding:5px 10px; font-size:14px; }
+  #qrcode { margin-top:10px; text-align:center; }
 </style>
 </head>
 <body>
 <h3>Preview ใบเสร็จ (ESC/POS)</h3>
 <pre id="preview">Loading...</pre>
-<div id="qrcode" style="margin-top:10px; text-align:center;"></div>
+<div id="qrcode"></div>
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 import QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm'
 
+// ------------------ Supabase Config ------------------
 const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
 const client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ------------------ Printer Config ------------------
 let SERVER_URL = 'https://192.168.1.88:8443';
 const PRINTER_IP = localStorage.getItem('PRINTER_IP') || '192.168.1.100';
+
+// ------------------ Params ------------------
 const urlParams = new URLSearchParams(window.location.search)
 const billId = urlParams.get('bill_id')
-
 let ESCString = ''
 
-if(billId) loadAndPreview(billId)
+if (billId) loadAndPreview(billId)
 
+// ------------------ ฟังก์ชันตัดคำสินค้า ------------------
 function wrapText(text, width){
   const lines = [];
-  while(text.length>width){
-    lines.push(text.slice(0,width));
+  while(text.length > width){
+    lines.push(text.slice(0, width));
     text = text.slice(width);
   }
   lines.push(text);
   return lines;
 }
 
+// ------------------ โหลดข้อมูลและแสดงใบเสร็จ ------------------
 async function loadAndPreview(billId){
   const { data: bill } = await client.from('bills').select('*').eq('id', billId).single()
   const { data: items } = await client.from('bill_items').select('id, qty, price, total, menu_id').eq('bill_id', billId)
 
+  // ดึงชื่อเมนู
   let menuNames = {}
   if(items?.length>0){
     const menuIds = items.map(i=>i.menu_id).filter(Boolean)
@@ -55,7 +62,7 @@ async function loadAndPreview(billId){
   }
   bill.items = (items||[]).map(i=>({...i, menu_name: menuNames[i.menu_id]||"-"}))
 
-  // --- เริ่มสร้าง ESC/POS string ---
+  // ------------------ สร้าง ESC/POS String ------------------
   ESCString = ''
   ESCString += '\x1B\x40';             // Init
   ESCString += '\x1B\x61\x01';         // Center
@@ -70,7 +77,7 @@ async function loadAndPreview(billId){
     ? new Date(bill.closed_at).toLocaleString('th-TH',{dateStyle:'short', timeStyle:'short'})
     : '-';
   ESCString += `เวลาเช็คบิล: ${closedText}\n`;
-  ESCString += '\x1B\x61\x00';         
+  ESCString += '\x1B\x61\x00';         // Left align
   ESCString += '--------------------------------\n';
   ESCString += 'สินค้า           ราคา  จำนวน   รวม\n';
   ESCString += '--------------------------------\n';
@@ -83,15 +90,18 @@ async function loadAndPreview(billId){
   bill.items.forEach(item => {
       const MENU_WRAP_WIDTH = 14;
       const lines = wrapText(item.menu_name, MENU_WRAP_WIDTH);
+  
       lines.forEach((line, i) => {
           if (i === 0) {
               const MENU_PAD_WIDTH = 14;
               const PRICE_WIDTH = 5;
               const QTY_WIDTH = 5;
               const TOTAL_WIDTH = 7;
+  
               const price = item.price.toLocaleString('th-TH', { maximumFractionDigits: 0 }).padStart(PRICE_WIDTH, ' ');
               const qty   = item.qty.toLocaleString('th-TH', { maximumFractionDigits: 0 }).padStart(QTY_WIDTH, ' ');
               const total = item.total.toLocaleString('th-TH', { maximumFractionDigits: 0 }).padStart(TOTAL_WIDTH, ' ');
+  
               const visualLength = getVisualLength(line);
               const paddingRequired = MENU_PAD_WIDTH - visualLength;
               const padding = ' '.repeat(Math.max(0, paddingRequired));
@@ -102,25 +112,18 @@ async function loadAndPreview(billId){
       });
   });
 
-  ESCString += '================================\n';
-  ESCString += '\x1B\x21\x08';  
+  ESCString += '================================\n'; // Double line
+  ESCString += '\x1B\x21\x08';  // Bold
   ESCString += `ยอดรวม   : ${(bill.total||0).toLocaleString('th-TH', { maximumFractionDigits: 0 })} บาท\n`;
   ESCString += `เงินสด    : ${(bill.cash||0).toLocaleString('th-TH', { maximumFractionDigits: 0 })} บาท\n`;
   ESCString += `เงินทอน   : ${(bill.change||0).toLocaleString('th-TH', { maximumFractionDigits: 0 })} บาท\n`;
-  ESCString += '\x1B\x21\x00';  
+  ESCString += '\x1B\x21\x00';  // Normal
   ESCString += '--------------------------------\n';
   ESCString += '\x1B\x61\x01';  
-
-  // --- พิมพ์ QR Code (Facebook Page) ---
-  const qrText = 'https://www.facebook.com/profile.php?id=100063455082074';
-  const storeLen = qrText.length + 3;
-  ESCString += '\x1D\x28\x6B' + String.fromCharCode(storeLen & 0xFF, (storeLen >> 8) & 0xFF) + '\x31\x50\x30' + qrText;
-  ESCString += '\x1D\x28\x6B\x03\x00\x31\x51\x30'; // Print QR
-  
-  // --- ข้อความท้ายบิล ---
   ESCString += '\n*** ขอบคุณที่อุดหนุน ***\n\n';
+  ESCString += 'ติดตามเพจของเราได้ที่ QR Code นี้\n\n';
 
-  // --- แสดง Preview ---
+  // ------------------ แสดง Preview ------------------
   const previewEl = document.getElementById('preview')
   let display = ESCString
     .replace(/\x1B\x40/g,'[INIT]')
@@ -128,16 +131,27 @@ async function loadAndPreview(billId){
     .replace(/\x1B\x61\x00/g,'[LEFT]')
     .replace(/\x1B\x21\x30/g,'[BOLD DOUBLE]')
     .replace(/\x1B\x21\x08/g,'[BOLD]')
-    .replace(/\x1D\x28\x6B/g,'[QR]')
   previewEl.textContent = display
 
-  // --- แสดง QR Code บนหน้าเว็บ ---
+  // ------------------ แสดง QR Code ใต้ใบเสร็จ ------------------
   const qrContainer = document.getElementById('qrcode')
   const canvas = document.createElement('canvas')
   qrContainer.appendChild(canvas)
-  await QRCode.toCanvas(canvas, qrText, { width: 128 })
+  const qrLink = 'https://www.facebook.com/profile.php?id=100063455082074'
+  QRCode.toCanvas(canvas, qrLink, { width: 128 }, function (error) {
+    if (!error) {
+      const text = document.createElement('div')
+      text.textContent = 'ติดตามเพจของเราได้ที่ QR Code นี้'
+      text.style.fontFamily = '"Tahoma", "Noto Sans Thai", sans-serif'
+      text.style.fontSize = '12px'
+      text.style.marginTop = '6px'
+      text.style.textAlign = 'center'
+      qrContainer.appendChild(text)
+    }
+  })
 
-  // --- สั่งพิมพ์อัตโนมัติ ---
+  // ------------------ สั่งพิมพ์อัตโนมัติ ------------------
+  console.log('กำลังสั่งพิมพ์อัตโนมัติ...');
   try {
     const resp = await fetch(`${SERVER_URL}/print`, {
       method: 'POST',
