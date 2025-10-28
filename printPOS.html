@@ -110,7 +110,7 @@ async function loadAndPreview(billId){
 
   ESCString += '================================\n'; // Double line
   //ESCString += '\x1B\x21\x08';  // Bold
-  ESCString += '\x1B\x21\x30';  // Bold
+  ESCString += '\x1B\x21\x20';  // Bold
   ESCString += `ยอดรวม: ${(bill.total||0).toLocaleString('th-TH', { maximumFractionDigits: 0 })} บาท\n`;
   ESCString += `เงินสด : ${(bill.cash||0).toLocaleString('th-TH', { maximumFractionDigits: 0 })} บาท\n`;
   ESCString += `เงินทอน: ${(bill.change||0).toLocaleString('th-TH', { maximumFractionDigits: 0 })} บาท\n`;
