@@ -25,7 +25,7 @@ if (billId) {
 }
 
 async function loadBillFromHistory(billId) {
-  // ✅ ดึงข้อมูลบิล
+  // ✅ ดึงข้อมูลบิล (เหมือนเดิม)
   const { data: bill, error: billError } = await client
     .from('bills')
     .select('*')
@@ -38,7 +38,7 @@ async function loadBillFromHistory(billId) {
     return
   }
 
-  // ✅ ดึง bill_items
+  // ✅ ดึง bill_items (เหมือนเดิม)
   const { data: items, error: itemsError } = await client
     .from('bill_items')
     .select('id, qty, price, total, menu_id')
@@ -48,7 +48,7 @@ async function loadBillFromHistory(billId) {
     console.error("itemsError:", itemsError)
   }
 
-  // ✅ ดึงชื่อเมนู
+  // ✅ ดึงชื่อเมนู (เหมือนเดิม)
   let menuNames = {}
   if (items && items.length > 0) {
     const menuIds = items.map(i => i.menu_id).filter(Boolean)
@@ -61,20 +61,24 @@ async function loadBillFromHistory(billId) {
     }
   }
 
-  // ✅ ใส่ชื่อเมนูใน items
+  // ✅ ใส่ชื่อเมนูใน items (เหมือนเดิม)
   bill.items = (items || []).map(i => ({
     ...i,
     menu_name: menuNames[i.menu_id] || "-"
   }))
 
-  // ✅ สร้าง HTML สำหรับพิมพ์
+  // ✅ สร้าง HTML สำหรับพิมพ์ (เหมือนเดิม)
   const html = buildPrintView(bill)
 
-  const printWindow = window.open('', '_blank')
-  printWindow.document.write(html)
-  printWindow.document.close()
-  printWindow.focus()
-  printWindow.print()
+  // --- 💡 ส่วนที่แก้ไข ---
+  // 1. เขียน HTML ลงในหน้าปัจจุบัน
+  document.body.innerHTML = html;
+  
+  // 2. สั่งพิมพ์หน้าปัจจุบัน
+  window.print();
+  
+  // 3. ปิดหน้าต่างนี้หลังพิมพ์
+  window.close();
 }
 
 function buildPrintView(bill) {
@@ -91,6 +95,13 @@ function buildPrintView(bill) {
       body { font-family: "Tahoma", "Noto Sans Thai", sans-serif; font-size: 12px; color:#111; }
       h1,h2,h3,p { margin:0; padding:0; }
       .header { text-align:center; margin-bottom:8px; }
+      /* --- 💡 1. เพิ่ม CSS สำหรับโลโก้ --- */
+      .header img {
+        width: 80px; /* <-- ปรับขนาดความกว้างได้ตามต้องการ */
+        height: auto;
+        margin-bottom: 4px;
+      }
+      /* ------------------------------ */
       .header h1 { font-size:18px; font-weight:700; }
       .header p { font-size:11px; margin:2px 0; }
       table { width:100%; border-collapse: collapse; margin-top:4px; }
@@ -108,6 +119,7 @@ function buildPrintView(bill) {
   </head>
   <body>
     <div class="header">
+      <img src="images/logo_bill.jpg" alt="Logo">
       <h1>ร้านเรือนชมพูเนื้อย่างเกาหลี</h1>
       <p>สาขานาเชือก</p>
       <p>โทร: 0885305228, 0621392902</p>
@@ -148,9 +160,9 @@ function buildPrintView(bill) {
   html += `</tbody></table>
     <div class="summary">
       <div class="line-double"></div>
-      <div><span>ยอดรวม</span><span class="big">${formatNumber(total)}</span></div>
-      <div><span>รับเงินมา</span><span>${formatNumber(cash)}</span></div>
-      <div><span>เงินทอน</span><span>${formatNumber(change)}</span></div>
+      <div><span>ยอดรวม</span><span class="big">${formatNumber(total)} บาท</span></div>
+      <div><span>รับเงินมา</span><span>${formatNumber(cash)} บาท</span></div>
+      <div><span>เงินทอน</span><span>${formatNumber(change)} บาท</span></div>
     </div>
     <div class="footer">
       *** ขอบคุณที่อุดหนุน ***
