@@ -71,13 +71,8 @@ async function loadBillFromHistory(billId) {
   const html = buildPrintView(bill)
 
   // --- 💡 ส่วนที่แก้ไข ---
-  // 1. เขียน HTML ลงในหน้าปัจจุบัน
   document.body.innerHTML = html;
-  
-  // 2. สั่งพิมพ์หน้าปัจจุบัน
   window.print();
-  
-  // 3. ปิดหน้าต่างนี้หลังพิมพ์
   window.close();
 }
 
@@ -119,7 +114,7 @@ function buildPrintView(bill) {
   </head>
   <body>
     <div class="header">
-      <img src="images/logo_bill.jpg" alt="Logo">
+      <img src="https://raw.githubusercontent.com/SoPorsri/ruenchompoo/main/images/logo_bill.jpg" alt="Logo">
       <h1>ร้านเรือนชมพูเนื้อย่างเกาหลี</h1>
       <p>สาขานาเชือก</p>
       <p>โทร: 0885305228, 0621392902</p>
