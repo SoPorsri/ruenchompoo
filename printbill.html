@@ -25,55 +25,95 @@ if (billId) {
 }
 
 async function loadBillFromHistory(billId) {
-  // ✅ ดึงข้อมูลบิล (เหมือนเดิม)
-  const { data: bill, error: billError } = await client
-    .from('bills')
-    .select('*')
-    .eq('id', billId)
-    .single()
+    // ✅ ส่วนการดึงข้อมูลบิลและ items (เหมือนเดิม)
+    // ... (โค้ดดึงข้อมูล bill, items, menuNames เหมือนเดิมทั้งหมด) ...
+    
+    // ✅ ดึงข้อมูลบิล (เหมือนเดิม)
+    const { data: bill, error: billError } = await client
+        .from('bills')
+        .select('*')
+        .eq('id', billId)
+        .single()
 
-  if (billError || !bill) {
-    document.body.innerHTML = "<h3>❌ ไม่พบบิล</h3>"
-    console.error("billError:", billError)
-    return
-  }
-
-  // ✅ ดึง bill_items (เหมือนเดิม)
-  const { data: items, error: itemsError } = await client
-    .from('bill_items')
-    .select('id, qty, price, total, menu_id')
-    .eq('bill_id', billId)
-
-  if (itemsError) {
-    console.error("itemsError:", itemsError)
-  }
-
-  // ✅ ดึงชื่อเมนู (เหมือนเดิม)
-  let menuNames = {}
-  if (items && items.length > 0) {
-    const menuIds = items.map(i => i.menu_id).filter(Boolean)
-    if (menuIds.length > 0) {
-      const { data: menus } = await client
-        .from('menu')
-        .select('id, name')
-        .in('id', menuIds)
-      menus?.forEach(m => { menuNames[m.id] = m.name })
+    if (billError || !bill) {
+        document.body.innerHTML = "<h3>❌ ไม่พบบิล</h3>"
+        console.error("billError:", billError)
+        return
     }
-  }
 
-  // ✅ ใส่ชื่อเมนูใน items (เหมือนเดิม)
-  bill.items = (items || []).map(i => ({
-    ...i,
-    menu_name: menuNames[i.menu_id] || "-"
-  }))
+    // ✅ ดึง bill_items (เหมือนเดิม)
+    const { data: items, error: itemsError } = await client
+        .from('bill_items')
+        .select('id, qty, price, total, menu_id')
+        .eq('bill_id', billId)
 
-  // ✅ สร้าง HTML สำหรับพิมพ์ (เหมือนเดิม)
-  const html = buildPrintView(bill)
+    if (itemsError) {
+        console.error("itemsError:", itemsError)
+    }
 
-  // --- 💡 ส่วนที่แก้ไข ---
-  document.body.innerHTML = html;
-  window.print();
-  window.close();
+    // ✅ ดึงชื่อเมนู (เหมือนเดิม)
+    let menuNames = {}
+    if (items && items.length > 0) {
+        const menuIds = items.map(i => i.menu_id).filter(Boolean)
+        if (menuIds.length > 0) {
+            const { data: menus } = await client
+                .from('menu')
+                .select('id, name')
+                .in('id', menuIds)
+            menus?.forEach(m => { menuNames[m.id] = m.name })
+        }
+    }
+
+    // ✅ ใส่ชื่อเมนูใน items (เหมือนเดิม)
+    bill.items = (items || []).map(i => ({
+        ...i,
+        menu_name: menuNames[i.menu_id] || "-"
+    }))
+
+    // ✅ สร้าง HTML สำหรับพิมพ์ (เหมือนเดิม)
+    const html = buildPrintView(bill)
+
+
+    // --- 💡 ส่วนที่แก้ไข (เริ่ม) ---
+    
+    // 1. เขียน HTML ลงในหน้าปัจจุบัน
+    document.body.innerHTML = html;
+
+    // 2. (แนะนำ) ตั้งค่าให้ปิดหน้าต่าง *หลังจาก* พิมพ์เสร็จ
+    window.onafterprint = () => {
+        window.close();
+    };
+    
+    // 3. ค้นหาโลโก้ใน HTML ที่เพิ่งใส่เข้าไป
+    const logoImg = document.querySelector('.header img');
+    
+    // 4. สร้างฟังก์ชันสำหรับสั่งพิมพ์
+    const triggerPrint = () => {
+        window.print();
+    };
+
+    if (logoImg) {
+        // 5. ตรวจสอบว่ารูปโหลดเสร็จยัง (เผื่อมันโหลดเร็วมาก หรือมาจาก cache)
+        if (logoImg.complete) {
+            // ถ้าเสร็จแล้ว -> พิมพ์เลย
+            triggerPrint();
+        } else {
+            // 6. ถ้ารูปยังไม่เสร็จ -> ให้รอ "onload" (โหลดสำเร็จ)
+            logoImg.onload = triggerPrint;
+            
+            // 7. (สำคัญ) ให้รอ "onerror" (โหลดล้มเหลว) ด้วย
+            // ไม่งั้นถ้ารูปเสีย/เน็ตล่ม หน้าพิมพ์จะไม่เด้งขึ้นมาเลย
+            logoImg.onerror = () => {
+                console.error('ไม่สามารถโหลดโลโก้ได้, แต่จะพิมพ์ต่อไป');
+                triggerPrint(); // พิมพ์ต่อไปแม้รูปจะไม่ขึ้น
+            };
+        }
+    } else {
+        // 8. ถ้าหาแท็ก <img> ไม่เจอ (เผื่อโค้ด HTML ผิด)
+        // ก็สั่งพิมพ์ไปเลย
+        triggerPrint();
+    }
+    // --- 💡 ส่วนที่แก้ไข (จบ) ---
 }
 
 function buildPrintView(bill) {
