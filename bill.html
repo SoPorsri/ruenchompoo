@@ -8,13 +8,25 @@
 <!-- ⬇️ เพิ่มโค้ดนี้ -->
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const version = Date.now();
-    document.querySelectorAll('link[rel="stylesheet"], script[src]').forEach(el => {
-      let attr = el.tagName === "LINK" ? "href" : "src";
-      if (el[attr]) {
-        el[attr] = el[attr] + (el[attr].includes("?") ? "&" : "?") + "v=" + version;
+      // --- เพิ่ม version ให้ CSS/JS ---
+      const version = Date.now();
+      document.querySelectorAll('link[rel="stylesheet"], script[src]').forEach(el => {
+        let attr = el.tagName === "LINK" ? "href" : "src";
+        if (el[attr]) {
+          el[attr] = el[attr] + (el[attr].includes("?") ? "&" : "?") + "v=" + version;
+        }
+      });
+  
+      // --- ตรวจสอบอุปกรณ์และเลือก radio button ---
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      const usbRadio = document.querySelector('input[name="printType"][value="USB"]');
+      const wifiRadio = document.querySelector('input[name="printType"][value="WIFI"]');
+  
+      if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+        wifiRadio.checked = true;
+      } else {
+        usbRadio.checked = true;
       }
-    });
   });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -97,10 +109,10 @@
     <div style="margin-bottom:16px; font-family:Tahoma, sans-serif; font-size:13px;">
       <label><strong>เลือกวิธีการพิมพ์:</strong></label><br>
       <label style="margin-right:16px;">
-        <input type="radio" name="printType" value="USB" checked> USB
+        <input type="radio" name="printType" value="USB" checked> คอมพิวเตอร์
       </label>
       <label>
-        <input type="radio" name="printType" value="WIFI"> WIFI
+        <input type="radio" name="printType" value="WIFI"> สมาร์ทโฟน
       </label>
     </div>
     <div id="previewContent"></div>
