@@ -73,23 +73,18 @@ async function loadBillFromHistory(billId) {
     // ✅ สร้าง HTML สำหรับพิมพ์ (เหมือนเดิม)
     const html = buildPrintView(bill)
 
-    // --- 💡 ส่วนที่แก้ไข (เริ่ม) ---
     // 1. เขียน HTML ลงในหน้าปัจจุบัน
     document.body.innerHTML = html;
-
     // 2. (แนะนำ) ตั้งค่าให้ปิดหน้าต่าง *หลังจาก* พิมพ์เสร็จ
     window.onafterprint = () => {
         window.close();
     };
-    
     // 3. ค้นหาโลโก้ใน HTML ที่เพิ่งใส่เข้าไป
     const logoImg = document.querySelector('.header img');
-    
     // 4. สร้างฟังก์ชันสำหรับสั่งพิมพ์
     const triggerPrint = () => {
         window.print();
     };
-
     if (logoImg) {
         // 5. ตรวจสอบว่ารูปโหลดเสร็จยัง (เผื่อมันโหลดเร็วมาก หรือมาจาก cache)
         if (logoImg.complete) {
@@ -100,7 +95,6 @@ async function loadBillFromHistory(billId) {
             logoImg.onload = triggerPrint;
             
             // 7. (สำคัญ) ให้รอ "onerror" (โหลดล้มเหลว) ด้วย
-            // ไม่งั้นถ้ารูปเสีย/เน็ตล่ม หน้าพิมพ์จะไม่เด้งขึ้นมาเลย
             logoImg.onerror = () => {
                 console.error('ไม่สามารถโหลดโลโก้ได้, แต่จะพิมพ์ต่อไป');
                 triggerPrint(); // พิมพ์ต่อไปแม้รูปจะไม่ขึ้น
@@ -111,7 +105,6 @@ async function loadBillFromHistory(billId) {
         // ก็สั่งพิมพ์ไปเลย
         triggerPrint();
     }
-    // --- 💡 ส่วนที่แก้ไข (จบ) ---
 }
 
 function buildPrintView(bill) {
@@ -148,6 +141,7 @@ function buildPrintView(bill) {
       .line-double {border-top:1px dashed #000;margin:4px 0 2px 0;position: relative;}
       .line-double::after {content: "";display: block;border-top:1px dashed #000;margin-top:2px;}
       .big { font-weight:700; font-size:18px; }
+      .fm { font-weight:700; font-size:16px; }
       .footer { text-align:center; margin-top:8px; font-size:11px; }
     </style>
   </head>
@@ -194,9 +188,9 @@ function buildPrintView(bill) {
   html += `</tbody></table>
     <div class="summary">
       <div class="line-double"></div>
-      <div><span>ยอดรวม</span><span class="big">${formatNumber(total)} บาท</span></div>
-      <div><span>เงินสด</span><span>${formatNumber(cash)} บาท</span></div>
-      <div><span>เงินทอน</span><span>${formatNumber(change)} บาท</span></div>
+      <div><span class="fm">ยอดรวม</span><span class="big">${formatNumber(total)} บาท</span></div>
+      <div><span class="fm">เงินสด</span><span class="fm">${formatNumber(cash)} บาท</span></div>
+      <div><span class="fm">เงินทอน</span><span class="fm">${formatNumber(change)} บาท</span></div>
     </div>
     <div class="footer">
       *** ขอบคุณที่อุดหนุน ***
