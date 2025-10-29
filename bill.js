@@ -890,40 +890,61 @@ window.addEventListener('DOMContentLoaded', async () => {
   el('btnPrint').addEventListener('click', () => { el('previewContent').innerHTML = buildPreviewView(); el('previewModal').style.display = 'flex'; });
   el('btnCancelPreview').addEventListener('click', () => { el('previewModal').style.display = 'none'; });
   el('btnConfirmPrint').addEventListener('click', async () => {
-      el('previewModal').style.display = 'none';
-      
-      try {
-          // 1. เรียก saveBill() และรอรับ ID กลับมา
-          const savedBillId = await saveBill();
-  
-          // 2. ตรวจสอบว่าได้ ID
-          if (savedBillId) {
-          
-              // 3. เปิดหน้า printPOS.html (ตามเป้าหมายเดิม)
-              // หน้าต่างนี้จะจัดการการพิมพ์ของมันเอง
-              window.open(`printPOS.html?bill_id=${savedBillId}`, '_blank');
-              
-              // 4. (สำคัญ) ย้ายโค้ด "หลังพิมพ์เสร็จ" มาไว้ตรงนี้
-              // เพราะเราสั่งพิมพ์แล้ว ไม่ต้องรอ
-              
-              // clear form
-              el('billno').value = '';
-              document.querySelectorAll('#menuItems input').forEach(i => i.value = '');
-              el('cash').value = '';
-              calc(); // (เรียก calc() เพื่อรีเฟรชยอดรวม)
-              
-              // กลับไปหน้า index
-              window.location.href = 'index.html';
-              
-          } else {
-              alert('เกิดข้อผิดพลาด: ไม่สามารถบันทึกบิลได้');
-          }
-          
-      } catch (err) {
-          console.error('เกิดข้อผิดพลาดในการบันทึกหรือพิมพ์:', err);
-          alert('เกิดข้อผิดพลาด: ' + err.message);
-      }
-  });
+    el('previewModal').style.display = 'none';
+    
+    try {
+        // 1. เรียก saveBill() และรอรับ ID กลับมา
+        const savedBillId = await saveBill();
+
+        // 2. ตรวจสอบว่าได้ ID
+        if (savedBillId) {
+            
+            // *** เริ่มส่วนที่แก้ไข ***
+            // 3. ตรวจสอบว่าเลือกวิธีพิมพ์แบบไหน
+            const selectedPrintType = document.querySelector('input[name="printType"]:checked').value;
+
+            let targetUrl = '';
+
+            // 4. กำหนด URL ปลายทางตามที่เลือก
+            if (selectedPrintType === 'USB') {
+                // ถ้าเลือก "คอมพิวเตอร์" (USB)
+                targetUrl = `printbill.html?bill_id=${savedBillId}`;
+            } else if (selectedPrintType === 'WIFI') {
+                // ถ้าเลือก "สมาร์ทโฟน" (WIFI)
+                targetUrl = `printPOS.html?bill_id=${savedBillId}`;
+            }
+
+            // 5. เปิดหน้าต่างใหม่ตาม URL ที่กำหนด
+            if (targetUrl) {
+                window.open(targetUrl, '_blank');
+            } else {
+                // กรณีเผื่อไว้ หากไม่มีการเลือก (ซึ่งไม่ควรเกิดเพราะมี checked default)
+                alert('กรุณาเลือกวิธีการพิมพ์');
+                return; // ไม่ต้องทำต่อ
+            }
+            // *** จบส่วนที่แก้ไข ***
+            
+            // 6. (สำคัญ) ย้ายโค้ด "หลังพิมพ์เสร็จ" มาไว้ตรงนี้
+            // (โค้ดส่วนนี้เหมือนเดิม)
+            
+            // clear form
+            el('billno').value = '';
+            document.querySelectorAll('#menuItems input').forEach(i => i.value = '');
+            el('cash').value = '';
+            calc(); // (เรียก calc() เพื่อรีเฟรชยอดรวม)
+            
+            // กลับไปหน้า index
+            window.location.href = 'index.html';
+            
+        } else {
+            alert('เกิดข้อผิดพลาด: ไม่สามารถบันทึกบิลได้');
+        }
+        
+    } catch (err) {
+        console.error('เกิดข้อผิดพลาดในการบันทึกหรือพิมพ์:', err);
+        alert('เกิดข้อผิดพลาด: ' + err.message);
+    }
+});
 
   el('btnSave').addEventListener('click', saveDraft);
 
