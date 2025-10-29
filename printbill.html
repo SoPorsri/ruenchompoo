@@ -73,9 +73,7 @@ async function loadBillFromHistory(billId) {
     // ✅ สร้าง HTML สำหรับพิมพ์ (เหมือนเดิม)
     const html = buildPrintView(bill)
 
-
     // --- 💡 ส่วนที่แก้ไข (เริ่ม) ---
-    
     // 1. เขียน HTML ลงในหน้าปัจจุบัน
     document.body.innerHTML = html;
 
@@ -135,6 +133,7 @@ function buildPrintView(bill) {
         width: 80px; /* <-- ปรับขนาดความกว้างได้ตามต้องการ */
         height: auto;
         margin-bottom: 4px;
+        filter: grayscale(100%);
       }
       /* ------------------------------ */
       .header h1 { font-size:18px; font-weight:700; }
