@@ -25,9 +25,6 @@ if (billId) {
 }
 
 async function loadBillFromHistory(billId) {
-    // ✅ ส่วนการดึงข้อมูลบิลและ items (เหมือนเดิม)
-    // ... (โค้ดดึงข้อมูล bill, items, menuNames เหมือนเดิมทั้งหมด) ...
-    
     // ✅ ดึงข้อมูลบิล (เหมือนเดิม)
     const { data: bill, error: billError } = await client
         .from('bills')
