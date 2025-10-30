@@ -96,7 +96,7 @@ header {
 }
 
 /* --- Input Fields --- */
-input[type="number"],
+input[type="text"],
 .input-field {
     padding: 10px 12px;
     border: 1px solid var(--border-color);
@@ -106,20 +106,20 @@ input[type="number"],
     font-family: 'Prompt', sans-serif;
 }
 
-input[type="number"]:focus,
+input[type="text"]:focus,
 .input-field:focus {
     border-color: var(--primary-color);
     outline: none;
     box-shadow: 0 0 0 3px rgba(229, 115, 115, 0.2);
 }
 
-/* ลบปุ่มลูกศรใน input type="number" */
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button { 
+/* ลบปุ่มลูกศรใน input type="text" */
+input[type=text]::-webkit-inner-spin-button, 
+input[type=text]::-webkit-outer-spin-button { 
     -webkit-appearance: none; 
     margin: 0; 
 }
-input[type=number] {
+input[type=text] {
     -moz-appearance: textfield;
     text-align: right;
     width: 100%;
