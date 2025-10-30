@@ -43,24 +43,19 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="menu-item">
             <div class="item-name">${m.name}</div>
             <div class="item-price text-right">${m.price ? m.price.toLocaleString('th-TH') : "-"}</div>
-            <input type="number" readonly min="0" step="1" id="qty${i}" class="menu-qty" value="${qtys[i] || ""}"> 
+            <input type="text" readonly min="0" step="1" id="qty${i}" class="menu-qty" value="${qtys[i] || ""}"> 
         </div>
     `).join("");
 
     function evaluateExpression(expr) {
-        // ถ้าไม่มีค่าเข้ามา หรือไม่ใช่ string ให้คืนค่า 0
         if (!expr || typeof expr !== 'string') {
             return 0;
         }
 
         try {
-            // ใช้ Function constructor ซึ่งปลอดภัยกว่า eval() เล็กน้อย
-            // เพื่อแปลงสตริงให้เป็นโค้ดที่รันได้และคืนค่าผลลัพธ์
             const result = new Function('return ' + expr)();
-            // ตรวจสอบว่าผลลัพธ์เป็นตัวเลขที่ถูกต้องหรือไม่
             return isNaN(result) ? 0 : result;
         } catch (e) {
-            // หากเกิดข้อผิดพลาดในการคำนวณ (เช่น "1++2") ให้คืนค่า 0
             console.error("Invalid expression:", expr);
             return 0;
         }
@@ -69,10 +64,9 @@ document.addEventListener("DOMContentLoaded", () => {
     function calc() {
         let total = 0;
         qtys = {};
-
         menu.forEach((m, i) => {
             const rawValue = document.getElementById("qty" + i).value || '0';
-            const q = evaluateExpression(rawValue); // <-- ใช้ฟังก์ชันใหม่
+            const q = evaluateExpression(rawValue);
 
             qtys[i] = q; // เก็บค่าที่คำนวณแล้ว
             if (!isNaN(q)) { // ตรวจสอบว่าเป็นตัวเลขที่ถูกต้อง
@@ -82,12 +76,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         grand.textContent = "฿" + total.toLocaleString('th-TH', { maximumFractionDigits: 2 }); // ปรับให้แสดงทศนิยมได้
         localStorage.setItem("takehomeQtys", JSON.stringify(qtys));
-
-        // --- ส่วนที่แก้ไข (2) ---
-        // ของเดิม: const cashValue = parseFloat(cash.value.replace(/,/g, '') || 0);
         const rawCashValue = cash.value.replace(/,/g, '') || '0';
-        const cashValue = evaluateExpression(rawCashValue); // <-- ใช้ฟังก์ชันใหม่กับช่องรับเงินด้วย
-
+        const cashValue = evaluateExpression(rawCashValue);
         const changeValue = cashValue - total;
 
         if (!isNaN(changeValue)) {
@@ -95,25 +85,20 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             change.value = '';
         }
-
-        // ส่วนนี้ไม่ต้องแก้ไข
         if (cash.value !== '') {
-            // จัดรูปแบบการแสดงผลช่องรับเงิน แต่ไม่เปลี่ยนค่าจริง
             const displayCash = parseFloat(cash.value.replace(/,/g, '')) || 0;
             cash.value = displayCash.toLocaleString('th-TH', { maximumFractionDigits: 0 });
         }
     }
-    // ผูก Event Listeners
+
     menu.forEach((m, i) => {
         const qtyInput = document.getElementById("qty" + i);
-        qtyInput.addEventListener("input", calc); // ตัวเดิมสำหรับคำนวณ
-        // ⬇️ เพิ่มส่วนนี้ ⬇️
+        qtyInput.addEventListener("input", calc);
         qtyInput.addEventListener("click", () => {
             openCustomKeypad(qtyInput);
         });
     });
-    cash.addEventListener("input", calc); // ตัวเดิมสำหรับคำนวณ
-    // ⬇️ เพิ่มส่วนนี้ ⬇️
+    cash.addEventListener("input", calc);
     cash.addEventListener("click", () => {
         openCustomKeypad(cash);
     });
@@ -182,11 +167,11 @@ document.addEventListener("DOMContentLoaded", () => {
       keypad.innerHTML = '';
     
       const closeBtn = document.createElement("button");
-      closeBtn.className = "close-keypad-btn"; // ใช้ชื่อ class ที่แก้ไขแล้ว
+      closeBtn.className = "close-keypad-btn";
       closeBtn.innerHTML = "&#x2328;"; // ใช้สัญลักษณ์คีย์บอร์ด
       closeBtn.addEventListener("click", (e) => {
-        e.stopPropagation(); // หยุดการทำงานของ event click
-        closeCustomKeypad(); // เรียกฟังก์ชันปิด keypad ที่เราสร้างไว้
+        e.stopPropagation();
+        closeCustomKeypad();
       });
       keypad.appendChild(closeBtn);
       
