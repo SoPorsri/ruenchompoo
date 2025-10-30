@@ -113,6 +113,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("changeValue").textContent = formatNumber(change) + " บาท";
   document.getElementById("printTime").textContent = new Date().toLocaleString('th-TH',{ dateStyle:'short', timeStyle:'short' });
 
+  localStorage.removeItem("takehomeQtys");
+
   const logoImg = document.querySelector('.header img');
   const triggerPrint = ()=>window.print();
   if(logoImg.complete){ triggerPrint(); }
