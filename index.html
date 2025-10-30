@@ -222,6 +222,33 @@
     .btn-clear:active {
       transform: scale(0.95);
     }
+
+    .floating-btn {
+      position: fixed;
+      bottom: 20px;
+      padding: 10px 20px;
+      font-family: Tahoma, sans-serif;
+      font-size: 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 999;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: all 0.2s ease-in-out;
+      display: flex;
+      align-items: center;
+      gap: 8px; /* ระยะห่างระหว่าง icon กับข้อความ */
+    }
+    .floating-btn.left {
+      left: 20px;
+      background-color: #ffb347;
+      color: #000;
+    }
+    .floating-btn.left:hover {
+      background-color: #ffa31a;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    }
   </style>
 </head>
 <body>
@@ -238,7 +265,10 @@
       <small id="ipLabel">192.168.1.100</small>
     </div>
   </button>
-  
+
+  <button id="btnTakeHome" class="floating-btn left">
+    <i class="fa-solid fa-bag-shopping"></i> ซื้อกลับบ้าน
+  </button>
   <!-- ปุ่ม Floating Action Button -->
   <button id="reportButton" onclick="openReport()">
     <i class="fa-solid fa-chart-line"></i> ดูรายงาน
