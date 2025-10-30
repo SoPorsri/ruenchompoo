@@ -218,13 +218,8 @@ document.addEventListener("DOMContentLoaded", () => {
           cashInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 200);
       });
-    
-      cashInput.addEventListener('blur', () => {
-        container.style.paddingBottom = '0';
-      });
     }
 
-    
     document.getElementById("btnHome").addEventListener("click", () => window.location.href = "index.html");
     previewModal.style.display = "none"; // เริ่มต้น modal ปิด
 });
