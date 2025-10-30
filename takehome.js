@@ -1,5 +1,14 @@
 // script.js
 document.addEventListener("DOMContentLoaded", () => {
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    const usbRadio = document.querySelector('input[name="printType"][value="USB"]');
+    const wifiRadio = document.querySelector('input[name="printType"][value="WIFI"]');
+    if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+        wifiRadio.checked = true;
+    } else {
+        usbRadio.checked = true;
+    }
+    
     const menu = [
         { name: "กิโล (กลับบ้าน)", price: 220 },
         { name: "ขีด (กลับบ้าน)", price: 22 },
