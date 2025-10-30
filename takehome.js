@@ -122,8 +122,6 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("takehomeCash", cash.value || 0);
         localStorage.setItem("takehomeChange", change.value.replace(/,/g,'') || 0);
 
-        localStorage.removeItem("takehomeQtys"); // ล้างจำนวนหลังพิมพ์
-
         if (type === "USB") {
             window.open('takehomePrint.html', '_blank');
         } else if (type === "WIFI") {
