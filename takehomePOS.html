@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>กำลังพิมพ์ (POS - WIFI)...</title>
+<style>
+  body { font-family: "Tahoma", "Noto Sans Thai", sans-serif; font-size:12px; background: #f0f0f0; }
+  pre { background:#fff; padding:15px; margin: 15px; white-space: pre-wrap; word-wrap: break-word; border:1px solid #ccc; border-radius: 5px; }
+  h3 { margin-left: 15px; }
+</style>
+</head>
+<body>
+<h3>Preview ใบเสร็จ (ESC/POS)</h3>
+<pre id="preview">กำลังเตรียมข้อมูล...</pre>
+
+<script>
+// --- การตั้งค่าเครื่องพิมพ์ (เหมือน printPOS.html) ---
+// ‼️ Q: แก้ไข SERVER_URL ให้ตรงกับ IP ของคอมพิวเตอร์ที่รันเซิร์ฟเวอร์พิมพ์
+let SERVER_URL = 'https://192.168.1.88:8443'; 
+const PRINTER_IP = localStorage.getItem('PRINTER_IP') || '192.168.1.100';
+
+// --- ฟังก์ชันจาก takehomePrint.html ---
+function formatNumber(num) {
+  return Number(num || 0).toLocaleString('th-TH');
+}
+
+// --- ฟังก์ชันจาก printPOS.html ---
+function wrapText(text, width){
+  const lines = [];
+  let currentText = text.toString(); // แปลงเป็น string ก่อน
+  while(currentText.length > width){
+    lines.push(currentText.slice(0,width));
+    currentText = currentText.slice(width);
+  }
+  lines.push(currentText);
+  return lines;
+}
+
+function getVisualLength(text) {
+  const combiningCharsRegex = /[\u0e31\u0e34-\u0e3a\u0e47-\u0e4e]/g;
+  return text.replace(combiningCharsRegex, '').length;
+}
+
+// --- ฟังก์ชันสำหรับปิดหน้าต่าง (ตามที่คุณขอ) ---
+function finishAndClose(delay = 2000) {
+  // หน่วงเวลาเล็กน้อยเพื่อให้ผู้ใช้เห็นข้อความ
+  setTimeout(() => {
+    if (window.opener && !window.opener.closed) {
+      window.opener.location.reload();
+    }
+    window.close();
+  }, delay);
+}
+
+
+// --- เริ่มทำงานหลักเมื่อหน้าเว็บโหลด ---
+document.addEventListener("DOMContentLoaded", () => {
+  const previewEl = document.getElementById('preview');
+  
+  // 1. โหลดข้อมูลจาก localStorage (เหมือน takehomePrint.html)
+  const qtysRaw = JSON.parse(localStorage.getItem("takehomeQtys") || "{}");
+  const qtys = {};
+  for (const key in qtysRaw) {
+    qtys[parseInt(key,10)] = Number(qtysRaw[key]) || 0;
+  }
+  
+  // ลบข้อมูลทันทีหลังจากอ่านค่ามาแล้ว
+  localStorage.removeItem("takehomeQtys");
+
+  const cashRaw = localStorage.getItem("takehomeCash") || "0";
+  const changeRaw = localStorage.getItem("takehomeChange") || "0";
+  const cash = Number(cashRaw.toString().replace(/,/g,'')) || 0;
+  const change = Number(changeRaw.toString().replace(/,/g,'')) || 0;
+
+  const menu = [
+    { name: "กิโล (กลับบ้าน)", price: 220 },
+    { name: "ขีด (กลับบ้าน)", price: 22 },
+    { name: "น้ำจิ้ม", price: 40 },
+    { name: "วุ้นเส้น (ร้าน)", price: 20 },
+    { name: "วุ้นเส้นถุง (ใหญ่)", price: 20 },
+    { name: "วุ้นเส้นถุง (เล็ก)", price: 10 },
+    { name: "เห็ดเข็ม (ถุง)", price: 20 },
+    { name: "ข้าวโพด", price: 10 }
+  ];
+
+  // 2. สร้าง ESC/POS String (นำเนื้อหาจาก takehomePrint มาใส่)
+  let ESCString = '';
+  let total = 0;
+  
+  ESCString += '\x1B\x40';             // Init
+  ESCString += '\x1B\x61\x01';         // Center
+  ESCString += '\x1B\x21\x10';         // Bold+double height
+  ESCString += 'ร้านเรือนชมพูเนื้อย่างเกาหลี\n';
+  ESCString += '\x1B\x21\x00';
+  ESCString += 'สาขานาเชือก\n';
+  ESCString += 'โทร: 0885305228, 0621392902\n';
+  ESCString += '\x1B\x21\x08'; // Bold
+  ESCString += 'ซื้อกลับบ้าน\n';
+  ESCString += '\x1B\x21\x00'; // Normal
+  ESCString += new Date().toLocaleString('th-TH',{ dateStyle:'short', timeStyle:'short' }) + '\n';
+  ESCString += '\x1B\x61\x00';         // Left align
+  ESCString += '--------------------------------\n';
+  ESCString += 'สินค้า           ราคา  จำนวน   รวม\n'; // ปรับค่า space ให้ตรง
+  ESCString += '--------------------------------\n';
+
+  // วนลูปรายการสินค้า
+  menu.forEach((m, i) => {
+    const q = qtys[i] || 0;
+    if (q > 0) {
+      const sum = q * m.price;
+      total += sum;
+
+      const MENU_WRAP_WIDTH = 14;
+      const lines = wrapText(m.name, MENU_WRAP_WIDTH);
+
+      lines.forEach((line, i) => {
+          if (i === 0) {
+              const MENU_PAD_WIDTH = 14;
+              const PRICE_WIDTH = 5;
+              const QTY_WIDTH = 5;
+              const TOTAL_WIDTH = 7;
+  
+            // ใช้ toLocaleString และ padStart เพื่อจัดคอลัมน์ให้ตรง
+              const price = m.price.toLocaleString('th-TH').padStart(PRICE_WIDTH, ' ');
+              const qty   = q.toLocaleString('th-TH').padStart(QTY_WIDTH, ' ');
+              const subtotal = sum.toLocaleString('th-TH').padStart(TOTAL_WIDTH, ' ');
+  
+              const visualLength = getVisualLength(line);
+              const paddingRequired = MENU_PAD_WIDTH - visualLength;
+              const padding = ' '.repeat(Math.max(0, paddingRequired));
+              ESCString += line + padding + price + qty + subtotal + '\n';
+          } else {
+              ESCString += line + '\n';
+          }
+      });
+    }
+  });
+
+  // ส่วนสรุปท้ายบิล
+  ESCString += '================================\n';
+  ESCString += '\x1B\x21\x20';  // Bold
+  const totalStr = total.toLocaleString('th-TH');
+  const cashStr = cash.toLocaleString('th-TH');
+  const changeStr = change.toLocaleString('th-TH');
+
+  // จัดขวาโดยคำนวณ padding
+  ESCString += 'ยอดรวม:'.padEnd(25 - totalStr.length) + totalStr + ' บาท\n';
+  ESCString += 'เงินสด :'.padEnd(25 - cashStr.length) + cashStr + ' บาท\n';
+  ESCString += 'เงินทอน:'.padEnd(25 - changeStr.length) + changeStr + ' บาท\n';
+
+  ESCString += '\x1B\x21\x00';  // Normal
+  ESCString += '--------------------------------\n';
+  ESCString += '\x1B\x61\x01';  // Center
+  ESCString += '\n*** ขอบคุณที่อุดหนุน ***\n\n\n\n';
+  // ESCString += '\x1D\x56\x41'; // Cut (ถ้าต้องการตัดกระดาษ)
+
+  // 3. แสดง Preview
+  let display = ESCString
+    .replace(/\x1B\x40/g,'[INIT]')
+    .replace(/\x1B\x61\x01/g,'[CENTER]')
+    .replace(/\x1B\x61\x00/g,'[LEFT]')
+    .replace(/\x1B\x21\x10/g,'[BOLD DOUBLE H]')
+    .replace(/\x1B\x21\x20/g,'[BOLD DOUBLE W]')
+    .replace(/\x1B\x21\x08/g,'[BOLD]')
+    .replace(/\x1B\x21\x00/g,'[NORMAL]')
+  previewEl.textContent = display;
+
+  // 4. สั่งพิมพ์อัตโนมัติ (Async Function)
+  async function autoPrint() {
+    console.log('กำลังสั่งพิมพ์อัตโนมัติ...');
+    previewEl.textContent += '\n\n---\nกำลังส่งข้อมูลไปที่เครื่องพิมพ์...';
+
+    try {
+      const resp = await fetch(`${SERVER_URL}/print`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ printer_ip: PRINTER_IP, escpos: ESCString })
+      });
+      const result = await resp.json();
+    
+      if (result.success) {
+        console.log('✅ สั่งพิมพ์สำเร็จ!');
+        previewEl.textContent += '\n✅ สั่งพิมพ์สำเร็จ! กำลังปิดหน้าต่าง...';
+        finishAndClose(2000); // ปิดหลังสำเร็จ 2 วิ
+      } else {
+        alert('❌ เกิดข้อผิดพลาด: ' + result.message);
+        previewEl.textContent += '\n❌ เกิดข้อผิดพลาด: ' + result.message;
+        finishAndClose(5000); // ปิดหลัง error 5 วิ (ให้เวลาอ่าน)
+      }
+    } catch (e) {
+      console.error(e);
+      alert('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์พิมพ์ได้ (โปรดตรวจสอบ IP และว่าเซิร์ฟเวอร์รันอยู่)');
+      previewEl.textContent += '\n❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์พิมพ์ได้: ' + e.message;
+      finishAndClose(5000); // ปิดหลัง error 5 วิ
+    }
+  }
+
+  // สั่งพิมพ์ทันที
+  autoPrint();
+
+});
+</script>
+
+</body>
+</html>
