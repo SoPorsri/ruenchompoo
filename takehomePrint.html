@@ -67,11 +67,11 @@ function formatNumber(num) {
 document.addEventListener("DOMContentLoaded", () => {
   // โหลด qty จาก localStorage
   const qtysRaw = JSON.parse(localStorage.getItem("takehomeQtys") || "{}");
-  // แปลง key จาก string เป็น number
   const qtys = {};
-  Object.keys(qtysRaw).forEach(k => { qtys[parseInt(k)] = parseFloat(qtysRaw[k]); });
+  for (const key in qtysRaw) {
+    qtys[parseInt(key,10)] = Number(qtysRaw[key]) || 0;
+  }
 
-  // ราคาตรงกับหน้า main page
   const menu = [
     { name: "กิโล (กลับบ้าน)", price: 220 },
     { name: "ขีด (กลับบ้าน)", price: 22 },
@@ -84,15 +84,17 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   // โหลดเงินสดและเงินทอน
-  const cash = parseFloat((localStorage.getItem("takehomeCash") || '0').replace(/,/g,''));
-  const change = parseFloat((localStorage.getItem("takehomeChange") || '0').replace(/,/g,''));
+  const cashRaw = localStorage.getItem("takehomeCash") || "0";
+  const changeRaw = localStorage.getItem("takehomeChange") || "0";
+  const cash = Number(cashRaw.toString().replace(/,/g,'')) || 0;
+  const change = Number(changeRaw.toString().replace(/,/g,'')) || 0;
 
   const tbody = document.querySelector("#billTable tbody");
   let total = 0;
 
   menu.forEach((m,i)=>{
     const q = qtys[i] || 0;
-    if(q>0){
+    if(q > 0){
       const sum = q*m.price;
       total += sum;
       const tr = document.createElement("tr");
@@ -112,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("printTime").textContent = new Date().toLocaleString('th-TH',{ dateStyle:'short', timeStyle:'short' });
 
   const logoImg = document.querySelector('.header img');
-  const triggerPrint = () => window.print();
+  const triggerPrint = ()=>window.print();
   if(logoImg.complete){ triggerPrint(); }
   else { logoImg.onload=triggerPrint; logoImg.onerror=triggerPrint; }
 
