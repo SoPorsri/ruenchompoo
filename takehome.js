@@ -46,38 +46,31 @@ document.addEventListener("DOMContentLoaded", () => {
     `).join("");
 
     // ฟังก์ชันคำนวณยอดรวมและเงินทอน
-    function calc() {
+        function calc() {
         let total = 0;
         qtys = {};
+
         menu.forEach((m, i) => {
             const q = parseFloat(document.getElementById("qty" + i).value || 0);
             qtys[i] = q;
             total += q * m.price;
         });
-        
-        // แสดงยอดรวม
+
         grand.textContent = "฿" + total.toLocaleString('th-TH', { maximumFractionDigits: 0 });
         localStorage.setItem("takehomeQtys", JSON.stringify(qtys));
-        
-        // คำนวณเงินทอน
-        const c = parseFloat(cash.value.replace(/,/g, '') || 0);
-        let changeValue = c > 0 ? (c - total) : NaN;
 
-        // ฟอร์แมตและแสดงเงินทอน
-        if (!isNaN(changeValue) && changeValue >= 0) {
-            change.value = changeValue.toLocaleString('th-TH', { maximumFractionDigits: 0 });
-        } else if (changeValue < 0) {
-            change.value = "ไม่พอ!"; // แสดงสถานะเงินไม่พอ
+        const cashValue = parseFloat(cash.value.replace(/,/g, '') || 0);
+        const changeValue = cashValue - total;
+
+        if (!isNaN(changeValue)) {
+            change.value = changeValue >= 0 ? changeValue.toLocaleString('th-TH') : "ไม่พอ!";
         } else {
             change.value = '';
         }
 
-        // ฟอร์แมตช่องรับเงิน (เพื่อให้มี , เมื่อพิมพ์)
+        // ฟอร์แมตเลขช่องรับเงิน
         if (cash.value !== '') {
-            const currentCash = parseFloat(cash.value.replace(/,/g, '') || 0);
-            if (!isNaN(currentCash)) {
-                cash.value = currentCash.toLocaleString('th-TH', { maximumFractionDigits: 0 });
-            }
+            cash.value = cashValue.toLocaleString('th-TH', { maximumFractionDigits: 0 });
         }
     }
 
