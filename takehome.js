@@ -208,6 +208,19 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("ล้างข้อมูลเรียบร้อยแล้ว");
         location.reload();
     });
+
+    const cashInput = document.getElementById('cash');
+    const footerBar = document.getElementById('footerBar');
+    
+    cashInput.addEventListener('focus', () => {
+      footerBar.classList.add('show');
+    });
+    
+    cashInput.addEventListener('blur', () => {
+      // ถ้าอยากให้ footer หายเมื่อเลิกโฟกัส
+      setTimeout(() => footerBar.classList.remove('show'), 200);
+    });
+
     
     document.getElementById("btnHome").addEventListener("click", () => window.location.href = "index.html");
     previewModal.style.display = "none"; // เริ่มต้น modal ปิด
