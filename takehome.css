@@ -218,8 +218,7 @@ input[type=number] {
 
 /* --- Modal Styles --- */
 .modal-overlay {
-    /* เปลี่ยน 'flex' เป็น 'none' */
-    **display: none;** position: fixed;
+    display: none; position: fixed;
     top: 0;
     left: 0;
     width: 100%;
