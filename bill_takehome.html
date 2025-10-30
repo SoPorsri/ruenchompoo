@@ -89,8 +89,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.getElementById("btnConfirmPrint").addEventListener("click",()=>{
-    window.print();
+    const type = document.querySelector('input[name="printType"]:checked').value;
     document.getElementById("previewModal").style.display="none";
+    if(type === "USB") {
+      window.open('takehomePrint.html', '_blank');   // เปิดแท็บใหม่สำหรับพิมพ์ผ่านคอม
+    } else if(type === "WIFI") {
+      window.open('takehomePOS.html', '_blank');     // เปิดแท็บใหม่สำหรับสมาร์ทโฟน
+    }
   });
 });
 </script>
