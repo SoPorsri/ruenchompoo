@@ -210,16 +210,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const cashInput = document.getElementById('cash');
-    const footerBar = document.getElementById('footerBar');
+    const container = document.querySelector('.container');
+    if (cashInput && container) {
+      cashInput.addEventListener('focus', () => {
+        container.style.paddingBottom = '250px';
+        setTimeout(() => {
+          cashInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 200);
+      });
     
-    cashInput.addEventListener('focus', () => {
-      footerBar.classList.add('show');
-    });
-    
-    cashInput.addEventListener('blur', () => {
-      // ถ้าอยากให้ footer หายเมื่อเลิกโฟกัส
-      setTimeout(() => footerBar.classList.remove('show'), 200);
-    });
+      cashInput.addEventListener('blur', () => {
+        container.style.paddingBottom = '0';
+      });
+    }
 
     
     document.getElementById("btnHome").addEventListener("click", () => window.location.href = "index.html");
