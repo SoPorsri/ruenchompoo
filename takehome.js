@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="menu-item">
             <div class="item-name">${m.name}</div>
             <div class="item-price text-right">${m.price ? m.price.toLocaleString('th-TH') : "-"}</div>
-            <input type="number" min="0" step="1" id="qty${i}" value="${qtys[i] || 0}">
+            <input type="number" min="0" step="1" id="qty${i}" value="${qtys[i] || ""}">
         </div>
     `).join("");
 
