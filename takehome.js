@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
         usbRadio.checked = true;
     }
-    
     const menu = [
         { name: "กิโล(กลับบ้าน)", price: 220 },
         { name: "ขีด(กลับบ้าน)", price: 22 },
@@ -19,7 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
         { name: "เห็ดเข็ม(ถุง)", price: 20 },
         { name: "ข้าวโพด", price: 10 }
     ];
-
     const menuDiv = document.getElementById("menuItems");
     const grand = document.getElementById("grand");
     const cash = document.getElementById("cash");
@@ -27,17 +25,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const change = document.getElementById("change");
     const today = document.getElementById("today");
     const previewModal = document.getElementById("previewModal");
-    
-    // ตั้งค่าวันที่ปัจจุบัน
     today.textContent = new Date().toLocaleDateString('th-TH', { 
         day: '2-digit', 
         month: '2-digit', 
         year: 'numeric' 
     });
-
     // โหลดจาก localStorage ถ้ามี
     let qtys = JSON.parse(localStorage.getItem("takehomeQtys") || "{}");
-
     // Render เมนู
     menuDiv.innerHTML = menu.map((m, i) => `
         <div class="menu-item">
@@ -46,12 +40,11 @@ document.addEventListener("DOMContentLoaded", () => {
             <input type="text" readonly min="0" step="1" id="qty${i}" class="menu-qty" value="${qtys[i] || ""}"> 
         </div>
     `).join("");
-
+    
     function evaluateExpression(expr) {
         if (!expr || typeof expr !== 'string') {
             return 0;
         }
-
         try {
             const result = new Function('return ' + expr)();
             return isNaN(result) ? 0 : result;
@@ -60,26 +53,22 @@ document.addEventListener("DOMContentLoaded", () => {
             return 0;
         }
     }
-    
     function calc() {
         let total = 0;
         qtys = {};
         menu.forEach((m, i) => {
             const rawValue = document.getElementById("qty" + i).value || '0';
             const q = evaluateExpression(rawValue);
-
-            qtys[i] = q; // เก็บค่าที่คำนวณแล้ว
-            if (!isNaN(q)) { // ตรวจสอบว่าเป็นตัวเลขที่ถูกต้อง
+            qtys[i] = q;
+            if (!isNaN(q)) {
                  total += q * m.price;
             }
         });
-
         grand.textContent = "฿" + total.toLocaleString('th-TH', { maximumFractionDigits: 2 }); // ปรับให้แสดงทศนิยมได้
         localStorage.setItem("takehomeQtys", JSON.stringify(qtys));
         const rawCashValue = cash.value.replace(/,/g, '') || '0';
         const cashValue = evaluateExpression(rawCashValue);
         const changeValue = cashValue - total;
-
         if (!isNaN(changeValue)) {
             change.value = changeValue >= 0 ? changeValue.toLocaleString('th-TH', { maximumFractionDigits: 2 }) : "ไม่พอ!";
         } else {
@@ -90,7 +79,6 @@ document.addEventListener("DOMContentLoaded", () => {
             cash.value = displayCash.toLocaleString('th-TH', { maximumFractionDigits: 0 });
         }
     }
-
     menu.forEach((m, i) => {
         const qtyInput = document.getElementById("qty" + i);
         qtyInput.addEventListener("input", calc);
@@ -103,12 +91,9 @@ document.addEventListener("DOMContentLoaded", () => {
         openCustomKeypad(cash);
     });
     calc();
-
-    // --- ปุ่มพิมพ์บิล ---
+    
     document.getElementById("btnPrint").addEventListener("click", () => {
-        // แสดง modal
         previewModal.style.display = "flex";
-
         let html = `
             <table style='width:100%;font-size:14px;border-collapse:collapse; text-align:right;'>
                 <thead>
@@ -116,7 +101,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 </thead>
                 <tbody>`;
         let total = 0;
-        
         menu.forEach((m, i) => {
             const q = qtys[i] || 0;
             if (q > 0) {
@@ -129,31 +113,25 @@ document.addEventListener("DOMContentLoaded", () => {
                          </tr>`;
             }
         });
-        
         html += `</tbody></table>
                  <hr>
                  <div class="total-preview">**ยอดรวมสุทธิ:** **${grand.textContent}**</div>`;
         document.getElementById("previewContent").innerHTML = html;
     });
-
     document.getElementById("btnCancelPreview").addEventListener("click", () => {
         previewModal.style.display = "none";
     });
-
     document.getElementById("btnConfirmPrint").addEventListener("click", () => {
         const type = document.querySelector('input[name="printType"]:checked').value;
         previewModal.style.display = "none";
-
         localStorage.setItem("takehomeCash", cash.value || 0);
         localStorage.setItem("takehomeChange", change.value.replace(/,/g,'') || 0);
-
         if (type === "USB") {
             window.open('takehomePrint.html', '_blank');
         } else if (type === "WIFI") {
             window.open('takehomePOS.html', '_blank');
         }
     });
-
     /*===========Custom Keypad=========*/
     let activeInput = null;
     function openCustomKeypad(input) {
@@ -165,7 +143,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.appendChild(keypad);
       }
       keypad.innerHTML = '';
-    
       const closeBtn = document.createElement("button");
       closeBtn.className = "close-keypad-btn";
       closeBtn.innerHTML = "&#x2328;"; // ใช้สัญลักษณ์คีย์บอร์ด
@@ -174,7 +151,6 @@ document.addEventListener("DOMContentLoaded", () => {
         closeCustomKeypad();
       });
       keypad.appendChild(closeBtn);
-      
       const keys = ['1', '2', '3', '+', '4', '5', '6', '.', '7', '8', '9', '⌫', 'empty', '0', 'empty', 'C'];
       keys.forEach(k => {
           let element;
@@ -192,11 +168,9 @@ document.addEventListener("DOMContentLoaded", () => {
           }
           keypad.appendChild(element);
       });
-    
       // แสดง keypad ด้วย animation
       keypad.classList.add('show');
     }
-    
     // ปิด keypad
     function closeCustomKeypad() {
       const keypad = document.getElementById('customKeypad');
@@ -204,11 +178,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (activeInput) activeInput.classList.remove('highlight'); // เอา highlight ออก
       activeInput = null;
     }
-    
     // กดปุ่ม keypad
     function handleKey(input, key) {
       if (!input) return;
-    
       if (key === '⌫') {
         input.value = input.value.slice(0, -1);
       } else if (key === 'C') {
@@ -216,7 +188,6 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         input.value += key;
       }
-    
       // sanitize
       input.value = input.value.replace(/[^0-9.+]/g,'');
       calc();
