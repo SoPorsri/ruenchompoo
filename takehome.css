@@ -532,23 +532,6 @@ button:hover,
 }
 /* Container หลักของ Keypad */
 
-.footer-bar {
-  position: fixed;
-  bottom: -80px; /* เริ่มซ่อน */
-  left: 0;
-  width: 100%;
-  background-color: #4CAF50;
-  color: white;
-  text-align: center;
-  padding: 15px 0;
-  transition: bottom 0.3s ease;
-  box-shadow: 0 -2px 6px rgba(0,0,0,0.2);
-}
-
-.footer-bar.show {
-  bottom: 0; /* เลื่อนขึ้นมา */
-}
-
 /* --- Responsive adjustments --- */
 @media (max-width: 600px) {
     body {
