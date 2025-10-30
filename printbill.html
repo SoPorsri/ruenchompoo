@@ -73,7 +73,7 @@ async function loadBillFromHistory(billId) {
     document.body.innerHTML = html;
     // 2. (แนะนำ) ตั้งค่าให้ปิดหน้าต่าง *หลังจาก* พิมพ์เสร็จ
     window.onafterprint = () => {
-        window.close();
+        //window.close();
     };
     // 3. ค้นหาโลโก้ใน HTML ที่เพิ่งใส่เข้าไป
     const logoImg = document.querySelector('.header img');
@@ -89,7 +89,6 @@ async function loadBillFromHistory(billId) {
         } else {
             // 6. ถ้ารูปยังไม่เสร็จ -> ให้รอ "onload" (โหลดสำเร็จ)
             logoImg.onload = triggerPrint;
-            
             // 7. (สำคัญ) ให้รอ "onerror" (โหลดล้มเหลว) ด้วย
             logoImg.onerror = () => {
                 console.error('ไม่สามารถโหลดโลโก้ได้, แต่จะพิมพ์ต่อไป');
@@ -160,7 +159,6 @@ function buildPrintView(bill) {
       </thead>
       <tbody>
   `
-
   // ✅ รายการสินค้า
   if (bill.items.length === 0) {
     html += `<tr><td colspan="4" style="text-align:center">ไม่มีรายการ</td></tr>`
