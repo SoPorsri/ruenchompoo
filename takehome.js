@@ -121,18 +121,21 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("previewModal").style.display = "none";
     });
 
-    document.getElementById("btnConfirmPrint").addEventListener("click", () => {
-        const type = document.querySelector('input[name="printType"]:checked').value;
-        document.getElementById("previewModal").style.display = "none";
-        
-        // ล้างจำนวนหลังจากพิมพ์ (เป็นทางเลือกที่ดีสำหรับการใช้งานจริง)
-        localStorage.removeItem("takehomeQtys"); 
-        
-        if (type === "USB") {
-            window.open('takehomePrint.html', '_blank'); // คอมพิวเตอร์
-        } else if (type === "WIFI") {
-            window.open('takehomePOS.html', '_blank');   // สมาร์ทโฟน
-        }
+   document.getElementById("btnConfirmPrint").addEventListener("click", () => {
+      const type = document.querySelector('input[name="printType"]:checked').value;
+      document.getElementById("previewModal").style.display = "none";
+    
+      localStorage.setItem("takehomeCash", document.getElementById("cash").value || 0);
+      localStorage.setItem("takehomeChange", document.getElementById("change").value.replace(/[,]/g,'') || 0);
+    
+      // ล้างจำนวนหลังจากพิมพ์
+      localStorage.removeItem("takehomeQtys"); 
+
+      if (type === "USB") {
+        window.open('takehomePrint.html', '_blank'); // คอมพิวเตอร์
+      } else if (type === "WIFI") {
+        window.open('takehomePOS.html', '_blank');   // สมาร์ทโฟน
+      }
     });
     
     // ปุ่มกลับหน้าหลัก
