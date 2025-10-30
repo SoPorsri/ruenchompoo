@@ -228,6 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
         location.reload();
       }
     });
+    
     document.getElementById("btnHome").addEventListener("click", () => window.location.href = "index.html");
     previewModal.style.display = "none"; // เริ่มต้น modal ปิด
 });
