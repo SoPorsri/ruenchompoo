@@ -168,23 +168,50 @@ input[type=number] {
 
 
 /* --- Buttons --- */
+.header-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* ปุ่มพิมพ์บิล — สีเขียว */
 .print-btn {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.3s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  background-color: #4CAF50; /* เขียวหลัก */
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .print-btn:hover {
-    background-color: #c62828; /* เข้มขึ้นเมื่อโฮเวอร์ */
+  background-color: #388E3C; /* เขียวเข้มเมื่อ hover */
+}
+
+/* ปุ่มล้างบิล — สีแดง */
+.clear-btn {
+  background-color: #E53935; /* แดงหลัก */
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clear-btn:hover {
+  background-color: #B71C1C; /* แดงเข้มเมื่อ hover */
 }
 
 /* --- Floating Button --- */
@@ -506,27 +533,6 @@ button:hover,
   filter: brightness(1.05);
 }
 /* Container หลักของ Keypad */
-
-.header-buttons {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.clear-btn {
-  background-color: #d9534f;
-  border: none;
-  color: white;
-  padding: 8px 14px;
-  font-size: 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.clear-btn:hover {
-  background-color: #c9302c;
-}
 
 /* --- Responsive adjustments --- */
 @media (max-width: 600px) {
