@@ -50,7 +50,6 @@ async function loadBillFromHistory(billId) {
     if (itemsError) {
         console.error("itemsError:", itemsError)
     }
-
     // ✅ ดึงชื่อเมนู (เหมือนเดิม)
     let menuNames = {}
     if (items && items.length > 0) {
@@ -63,16 +62,13 @@ async function loadBillFromHistory(billId) {
             menus?.forEach(m => { menuNames[m.id] = m.name })
         }
     }
-
     // ✅ ใส่ชื่อเมนูใน items (เหมือนเดิม)
     bill.items = (items || []).map(i => ({
         ...i,
         menu_name: menuNames[i.menu_id] || "-"
     }))
-
     // ✅ สร้าง HTML สำหรับพิมพ์ (เหมือนเดิม)
     const html = buildPrintView(bill)
-
     // 1. เขียน HTML ลงในหน้าปัจจุบัน
     document.body.innerHTML = html;
     // 2. (แนะนำ) ตั้งค่าให้ปิดหน้าต่าง *หลังจาก* พิมพ์เสร็จ
@@ -111,7 +107,6 @@ function buildPrintView(bill) {
   const closedText = bill.closed_at 
     ? new Date(bill.closed_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' }) 
     : '-'
-
   let html = `
   <html>
   <head>
@@ -123,10 +118,9 @@ function buildPrintView(bill) {
       .header { text-align:center; margin-bottom:8px; }
       /* --- 💡 1. เพิ่ม CSS สำหรับโลโก้ --- */
       .header img {
-        width: 80px; /* <-- ปรับขนาดความกว้างได้ตามต้องการ */
+        width: 100px; /* <-- ปรับขนาดความกว้างได้ตามต้องการ */
         height: auto;
         margin-bottom: 4px;
-        filter: grayscale(100%);
       }
       /* ------------------------------ */
       .header h1 { font-size:18px; font-weight:700; }
@@ -147,7 +141,7 @@ function buildPrintView(bill) {
   </head>
   <body>
     <div class="header">
-      <img src="https://raw.githubusercontent.com/SoPorsri/ruenchompoo/main/images/LOGO.png" alt="Logo">
+      <img src="https://raw.githubusercontent.com/SoPorsri/ruenchompoo/main/images/logo_bill.png" alt="Logo">
       <h1>ร้านเรือนชมพูเนื้อย่างเกาหลี</h1>
       <p>สาขานาเชือก</p>
       <p>โทร: 0885305228, 0621392902</p>
