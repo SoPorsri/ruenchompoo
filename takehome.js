@@ -10,13 +10,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     const menu = [
-        { name: "กิโล (กลับบ้าน)", price: 220 },
-        { name: "ขีด (กลับบ้าน)", price: 22 },
+        { name: "กิโล(กลับบ้าน)", price: 220 },
+        { name: "ขีด(กลับบ้าน)", price: 22 },
         { name: "น้ำจิ้ม", price: 40 },
-        { name: "วุ้นเส้น (ร้าน)", price: 20 },
-        { name: "วุ้นเส้นถุง (ใหญ่)", price: 20 },
-        { name: "วุ้นเส้นถุง (เล็ก)", price: 10 },
-        { name: "เห็ดเข็ม (ถุง)", price: 20 },
+        { name: "วุ้นเส้น(ร้าน)", price: 20 },
+        { name: "วุ้นเส้นถุง(ใหญ่)", price: 20 },
+        { name: "วุ้นเส้นถุง(เล็ก)", price: 10 },
+        { name: "เห็ดเข็ม(ถุง)", price: 20 },
         { name: "ข้าวโพด", price: 10 }
     ];
 
@@ -25,6 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const cash = document.getElementById("cash");
     const change = document.getElementById("change");
     const today = document.getElementById("today");
+    const previewModal = document.getElementById("previewModal");
     
     // ตั้งค่าวันที่ปัจจุบัน
     today.textContent = new Date().toLocaleDateString('th-TH', { 
@@ -46,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     `).join("");
 
     // ฟังก์ชันคำนวณยอดรวมและเงินทอน
-        function calc() {
+    function calc() {
         let total = 0;
         qtys = {};
 
@@ -68,7 +69,6 @@ document.addEventListener("DOMContentLoaded", () => {
             change.value = '';
         }
 
-        // ฟอร์แมตเลขช่องรับเงิน
         if (cash.value !== '') {
             cash.value = cashValue.toLocaleString('th-TH', { maximumFractionDigits: 0 });
         }
@@ -76,13 +76,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ผูก Event Listeners
     menu.forEach((m, i) => document.getElementById("qty" + i).addEventListener("input", calc));
-    cash.addEventListener("input", calc); // ใช้ input สำหรับรับเงิน
-    calc(); // รันครั้งแรกเมื่อโหลด
+    cash.addEventListener("input", calc);
+    calc();
 
-    // --- การจัดการ Popup พิมพ์บิล ---
+    // --- ปุ่มพิมพ์บิล ---
     document.getElementById("btnPrint").addEventListener("click", () => {
-        document.getElementById("previewModal").style.display = "flex";
-        
+        // แสดง modal
+        previewModal.style.display = "flex";
+
         let html = `
             <table style='width:100%;font-size:14px;border-collapse:collapse; text-align:right;'>
                 <thead>
@@ -111,26 +112,28 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.getElementById("btnCancelPreview").addEventListener("click", () => {
-        document.getElementById("previewModal").style.display = "none";
+        previewModal.style.display = "none";
     });
 
-   document.getElementById("btnConfirmPrint").addEventListener("click", () => {
-      const type = document.querySelector('input[name="printType"]:checked').value;
-      document.getElementById("previewModal").style.display = "none";
-    
-      localStorage.setItem("takehomeCash", document.getElementById("cash").value || 0);
-      localStorage.setItem("takehomeChange", document.getElementById("change").value.replace(/[,]/g,'') || 0);
-    
-      // ล้างจำนวนหลังจากพิมพ์
-      localStorage.removeItem("takehomeQtys"); 
+    document.getElementById("btnConfirmPrint").addEventListener("click", () => {
+        const type = document.querySelector('input[name="printType"]:checked').value;
+        previewModal.style.display = "none";
 
-      if (type === "USB") {
-        window.open('takehomePrint.html', '_blank'); // คอมพิวเตอร์
-      } else if (type === "WIFI") {
-        window.open('takehomePOS.html', '_blank');   // สมาร์ทโฟน
-      }
+        localStorage.setItem("takehomeCash", cash.value || 0);
+        localStorage.setItem("takehomeChange", change.value.replace(/,/g,'') || 0);
+
+        localStorage.removeItem("takehomeQtys"); // ล้างจำนวนหลังพิมพ์
+
+        if (type === "USB") {
+            window.open('takehomePrint.html', '_blank');
+        } else if (type === "WIFI") {
+            window.open('takehomePOS.html', '_blank');
+        }
     });
-    
+
     // ปุ่มกลับหน้าหลัก
     document.getElementById("btnHome").addEventListener("click", () => window.location.href = "index.html");
+
+    // ✅ ป้องกัน modal เด้งตอนโหลด
+    previewModal.style.display = "none"; // เริ่มต้น modal ปิด
 });
