@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const menuDiv = document.getElementById("menuItems");
     const grand = document.getElementById("grand");
     const cash = document.getElementById("cash");
+    cash.readOnly = true;
     const change = document.getElementById("change");
     const today = document.getElementById("today");
     const previewModal = document.getElementById("previewModal");
@@ -42,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="menu-item">
             <div class="item-name">${m.name}</div>
             <div class="item-price text-right">${m.price ? m.price.toLocaleString('th-TH') : "-"}</div>
-            <input type="number" min="0" step="1" id="qty${i}" value="${qtys[i] || ""}">
+            <input type="number" readonly min="0" step="1" id="qty${i}" value="${qtys[i] || ""}"> 
         </div>
     `).join("");
 
@@ -75,8 +76,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ผูก Event Listeners
-    menu.forEach((m, i) => document.getElementById("qty" + i).addEventListener("input", calc));
-    cash.addEventListener("input", calc);
+    menu.forEach((m, i) => {
+        const qtyInput = document.getElementById("qty" + i);
+        qtyInput.addEventListener("input", calc); // ตัวเดิมสำหรับคำนวณ
+        // ⬇️ เพิ่มส่วนนี้ ⬇️
+        qtyInput.addEventListener("click", () => {
+            openCustomKeypad(qtyInput);
+        });
+    });
+    cash.addEventListener("input", calc); // ตัวเดิมสำหรับคำนวณ
+    // ⬇️ เพิ่มส่วนนี้ ⬇️
+    cash.addEventListener("click", () => {
+        openCustomKeypad(cash);
+    });
     calc();
 
     // --- ปุ่มพิมพ์บิล ---
@@ -128,6 +140,83 @@ document.addEventListener("DOMContentLoaded", () => {
             window.open('takehomePOS.html', '_blank');
         }
     });
+
+    /*===========Custom Keypad=========*/
+    let activeInput = null;
+    function openCustomKeypad(input) {
+      activeInput = input;
+      let keypad = document.getElementById('customKeypad');
+      if (!keypad) {
+        keypad = document.createElement('div');
+        keypad.id = 'customKeypad';
+        document.body.appendChild(keypad);
+      }
+      keypad.innerHTML = '';
+    
+      const closeBtn = document.createElement("button");
+      closeBtn.className = "close-keypad-btn"; // ใช้ชื่อ class ที่แก้ไขแล้ว
+      closeBtn.innerHTML = "&#x2328;"; // ใช้สัญลักษณ์คีย์บอร์ด
+      closeBtn.addEventListener("click", (e) => {
+        e.stopPropagation(); // หยุดการทำงานของ event click
+        closeCustomKeypad(); // เรียกฟังก์ชันปิด keypad ที่เราสร้างไว้
+      });
+      keypad.appendChild(closeBtn);
+      
+      const keys = ['1', '2', '3', '+', '4', '5', '6', '.', '7', '8', '9', '⌫', 'empty', '0', 'empty', 'C'];
+      keys.forEach(k => {
+          let element;
+          if (k === 'empty') {
+              // ถ้าเป็นค่า 'empty' ให้สร้าง div แทน button
+              element = document.createElement('div');
+              element.className = 'empty-cell'; // เพิ่ม class สำหรับจัดสไตล์
+          } else {
+              // ถ้าไม่ใช่ค่า 'empty' ให้สร้าง button ตามปกติ
+              element = document.createElement('button');
+              element.innerHTML = k;
+              
+              // เพิ่ม event listener ให้กับปุ่มที่ใช้งานได้เท่านั้น
+              element.addEventListener('click', () => handleKey(input, k));
+          }
+          keypad.appendChild(element);
+      });
+    
+      // แสดง keypad ด้วย animation
+      keypad.classList.add('show');
+    }
+    
+    // ปิด keypad
+    function closeCustomKeypad() {
+      const keypad = document.getElementById('customKeypad');
+      if (keypad) keypad.classList.remove('show');
+      if (activeInput) activeInput.classList.remove('highlight'); // เอา highlight ออก
+      activeInput = null;
+    }
+    
+    // กดปุ่ม keypad
+    function handleKey(input, key) {
+      if (!input) return;
+    
+      if (key === '⌫') {
+        input.value = input.value.slice(0, -1);
+      } else if (key === 'C') {
+        input.value = '';
+      } else {
+        input.value += key;
+      }
+    
+      // sanitize
+      input.value = input.value.replace(/[^0-9.+]/g,'');
+      calc();
+    }
+    
+    // ซ่อน keypad ถ้า click นอก
+    document.addEventListener('click', e => {
+      if (!e.target.classList.contains('menu-qty') &&
+          (!e.target.closest('#customKeypad'))) {
+        closeCustomKeypad();
+      }
+    });
+
 
     // ปุ่มกลับหน้าหลัก
     document.getElementById("btnHome").addEventListener("click", () => window.location.href = "index.html");
