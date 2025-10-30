@@ -47,34 +47,62 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
     `).join("");
 
-    // ฟังก์ชันคำนวณยอดรวมและเงินทอน
+    function evaluateExpression(expr) {
+        // ถ้าไม่มีค่าเข้ามา หรือไม่ใช่ string ให้คืนค่า 0
+        if (!expr || typeof expr !== 'string') {
+            return 0;
+        }
+
+        try {
+            // ใช้ Function constructor ซึ่งปลอดภัยกว่า eval() เล็กน้อย
+            // เพื่อแปลงสตริงให้เป็นโค้ดที่รันได้และคืนค่าผลลัพธ์
+            const result = new Function('return ' + expr)();
+            // ตรวจสอบว่าผลลัพธ์เป็นตัวเลขที่ถูกต้องหรือไม่
+            return isNaN(result) ? 0 : result;
+        } catch (e) {
+            // หากเกิดข้อผิดพลาดในการคำนวณ (เช่น "1++2") ให้คืนค่า 0
+            console.error("Invalid expression:", expr);
+            return 0;
+        }
+    }
+    
     function calc() {
         let total = 0;
         qtys = {};
 
         menu.forEach((m, i) => {
-            const q = parseFloat(document.getElementById("qty" + i).value || 0);
-            qtys[i] = q;
-            total += q * m.price;
+            const rawValue = document.getElementById("qty" + i).value || '0';
+            const q = evaluateExpression(rawValue); // <-- ใช้ฟังก์ชันใหม่
+
+            qtys[i] = q; // เก็บค่าที่คำนวณแล้ว
+            if (!isNaN(q)) { // ตรวจสอบว่าเป็นตัวเลขที่ถูกต้อง
+                 total += q * m.price;
+            }
         });
 
-        grand.textContent = "฿" + total.toLocaleString('th-TH', { maximumFractionDigits: 0 });
+        grand.textContent = "฿" + total.toLocaleString('th-TH', { maximumFractionDigits: 2 }); // ปรับให้แสดงทศนิยมได้
         localStorage.setItem("takehomeQtys", JSON.stringify(qtys));
 
-        const cashValue = parseFloat(cash.value.replace(/,/g, '') || 0);
+        // --- ส่วนที่แก้ไข (2) ---
+        // ของเดิม: const cashValue = parseFloat(cash.value.replace(/,/g, '') || 0);
+        const rawCashValue = cash.value.replace(/,/g, '') || '0';
+        const cashValue = evaluateExpression(rawCashValue); // <-- ใช้ฟังก์ชันใหม่กับช่องรับเงินด้วย
+
         const changeValue = cashValue - total;
 
         if (!isNaN(changeValue)) {
-            change.value = changeValue >= 0 ? changeValue.toLocaleString('th-TH') : "ไม่พอ!";
+            change.value = changeValue >= 0 ? changeValue.toLocaleString('th-TH', { maximumFractionDigits: 2 }) : "ไม่พอ!";
         } else {
             change.value = '';
         }
 
+        // ส่วนนี้ไม่ต้องแก้ไข
         if (cash.value !== '') {
-            cash.value = cashValue.toLocaleString('th-TH', { maximumFractionDigits: 0 });
+            // จัดรูปแบบการแสดงผลช่องรับเงิน แต่ไม่เปลี่ยนค่าจริง
+            const displayCash = parseFloat(cash.value.replace(/,/g, '')) || 0;
+            cash.value = displayCash.toLocaleString('th-TH', { maximumFractionDigits: 0 });
         }
     }
-
     // ผูก Event Listeners
     menu.forEach((m, i) => {
         const qtyInput = document.getElementById("qty" + i);
