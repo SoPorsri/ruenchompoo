@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="menu-item">
             <div class="item-name">${m.name}</div>
             <div class="item-price text-right">${m.price ? m.price.toLocaleString('th-TH') : "-"}</div>
-            <input type="number" readonly min="0" step="1" id="qty${i}" value="${qtys[i] || ""}"> 
+            <input type="number" readonly min="0" step="1" id="qty${i}" class="menu-qty" value="${qtys[i] || ""}"> 
         </div>
     `).join("");
 
@@ -210,17 +210,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     // ซ่อน keypad ถ้า click นอก
-    document.addEventListener('click', e => {
-      if (!e.target.classList.contains('menu-qty') &&
-          (!e.target.closest('#customKeypad'))) {
-        closeCustomKeypad();
-      }
+   document.addEventListener('click', e => {
+        // เพิ่มการตรวจสอบ ID ของช่อง cash เข้าไป
+        if (!e.target.classList.contains('menu-qty') && 
+            e.target.id !== 'cash' && // <--- เพิ่มเงื่อนไขนี้
+            !e.target.closest('#customKeypad')) {
+          closeCustomKeypad();
+        }
     });
-
-
     // ปุ่มกลับหน้าหลัก
     document.getElementById("btnHome").addEventListener("click", () => window.location.href = "index.html");
-
     // ✅ ป้องกัน modal เด้งตอนโหลด
     previewModal.style.display = "none"; // เริ่มต้น modal ปิด
 });
