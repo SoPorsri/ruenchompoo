@@ -73,7 +73,7 @@ async function loadBillFromHistory(billId) {
     document.body.innerHTML = html;
     // 2. (แนะนำ) ตั้งค่าให้ปิดหน้าต่าง *หลังจาก* พิมพ์เสร็จ
     window.onafterprint = () => {
-        //window.close();
+        window.close();
     };
     // 3. ค้นหาโลโก้ใน HTML ที่เพิ่งใส่เข้าไป
     const logoImg = document.querySelector('.header img');
