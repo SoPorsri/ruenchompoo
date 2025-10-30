@@ -1,87 +1,63 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8">
-  <title>พิมพ์บิล - ซื้อกลับบ้าน</title>
-  <style>
-    @page { size: 58mm auto; margin: 0mm 1mm; }
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: "Tahoma", "Noto Sans Thai", sans-serif;
-      font-size: 13px;
-      color: #111;
-    }
-    h1, h2, h3, p { margin: 0; padding: 0; }
-    .header { text-align: center; margin-bottom: 6px; }
-    .header img {
-      width: 100px;
-      height: auto;
-      margin-bottom: 4px;
-    }
-    .header h1 { font-size: 18px; font-weight: 700; }
-    .header p { font-size: 11px; margin: 2px 0; }
-
-    table { width: 100%; border-collapse: collapse; margin-top: 4px; }
-    th {
-      font-size: 11px;
-      font-weight: 700;
-      text-align: left;
-      border-bottom: 1px dashed #000;
-      padding-bottom: 2px;
-    }
-    td { padding: 2px 0; font-size: 12px; }
-    td.right, th.right { text-align: right; }
-    td.center, th.center { text-align: center; }
-
-    .summary { margin-top: 6px; width: 100%; }
-    .summary div {
-      display: flex;
-      justify-content: space-between;
-      padding: 2px 0;
-      font-size: 12px;
-    }
-    .line-double { border-top: 1px dashed #000; margin: 4px 0 2px 0; position: relative; }
-    .line-double::after { content: ""; display: block; border-top: 1px dashed #000; margin-top: 2px; }
-    .big { font-weight: 700; font-size: 18px; }
-    .fm { font-weight: 700; font-size: 15px; }
-
-    .footer { text-align: center; margin-top: 8px; font-size: 11px; }
-  </style>
+<meta charset="utf-8">
+<title>พิมพ์บิล - ซื้อกลับบ้าน</title>
+<style>
+  @page { size: 58mm auto; margin: 0mm 1mm; }
+  body { margin:0; padding:0; font-family:"Tahoma","Noto Sans Thai",sans-serif; font-size:13px; color:#111; }
+  h1,h2,h3,p{margin:0;padding:0;}
+  .header{text-align:center;margin-bottom:6px;}
+  .header img{width:100px;height:auto;margin-bottom:4px;}
+  .header h1{font-size:18px;font-weight:700;}
+  .header p{font-size:11px;margin:2px 0;}
+  table{width:100%;border-collapse:collapse;margin-top:4px;}
+  th{font-size:11px;font-weight:700;text-align:left;border-bottom:1px dashed #000;padding-bottom:2px;}
+  td{padding:2px 0;font-size:12px;}
+  td.right, th.right{text-align:right;}
+  td.center, th.center{text-align:center;}
+  .summary{margin-top:6px;width:100%;}
+  .summary div{display:flex;justify-content:space-between;padding:2px 0;font-size:12px;}
+  .line-double{border-top:1px dashed #000;margin:4px 0 2px 0;position:relative;}
+  .line-double::after{content:"";display:block;border-top:1px dashed #000;margin-top:2px;}
+  .big{font-weight:700;font-size:18px;}
+  .fm{font-weight:700;font-size:15px;}
+  .footer{text-align:center;margin-top:8px;font-size:11px;}
+</style>
 </head>
-
 <body>
-  <div class="header">
-    <img src="https://raw.githubusercontent.com/SoPorsri/ruenchompoo/main/images/logo_bill.png" alt="Logo">
-    <h1>ร้านเรือนชมพูเนื้อย่างเกาหลี</h1>
-    <p>สาขานาเชือก</p>
-    <p>โทร: 0885305228, 0621392902</p>
-    <p><strong>ซื้อกลับบ้าน</strong></p>
-    <p id="printTime"></p>
-  </div>
 
-  <table id="billTable">
-    <thead>
-      <tr>
-        <th>สินค้า</th>
-        <th class="right">ราคา</th>
-        <th class="center">จำนวน</th>
-        <th class="right">รวม</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<div class="header">
+  <img src="https://raw.githubusercontent.com/SoPorsri/ruenchompoo/main/images/logo_bill.png" alt="Logo">
+  <h1>ร้านเรือนชมพูเนื้อย่างเกาหลี</h1>
+  <p>สาขานาเชือก</p>
+  <p>โทร: 0885305228, 0621392902</p>
+  <p><strong>ซื้อกลับบ้าน</strong></p>
+  <p id="printTime"></p>
+</div>
 
-  <div class="summary">
-    <div class="line-double"></div>
-    <div><span class="fm">ยอดรวม</span><span class="big" id="sumTotal">0</span></div>
-    <div><span class="fm">เงินสด</span><span class="fm" id="cashValue">0</span></div>
-    <div><span class="fm">เงินทอน</span><span class="fm" id="changeValue">0</span></div>
-  </div>
+<table id="billTable">
+  <thead>
+    <tr>
+      <th>สินค้า</th>
+      <th class="right">ราคา</th>
+      <th class="center">จำนวน</th>
+      <th class="right">รวม</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-  <div class="footer">
-    *** ขอบคุณที่อุดหนุน ***
-  </div>
+<div class="summary">
+  <div class="line-double"></div>
+  <div><span class="fm">ยอดรวม</span><span class="big" id="sumTotal">0</span></div>
+  <div><span class="fm">เงินสด</span><span class="fm" id="cashValue">0</span></div>
+  <div><span class="fm">เงินทอน</span><span class="fm" id="changeValue">0</span></div>
+</div>
+
+<div class="footer">
+  *** ขอบคุณที่อุดหนุน ***
+</div>
 
 <script>
 function formatNumber(num) {
@@ -89,11 +65,14 @@ function formatNumber(num) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  // โหลด qty จาก localStorage
   const qtys = JSON.parse(localStorage.getItem("takehomeQtys") || "{}");
+
+  // ราคาตรงกับหน้า main page
   const menu = [
     { name: "กิโล (กลับบ้าน)", price: 220 },
     { name: "ขีด (กลับบ้าน)", price: 22 },
-    { name: "น้ำจิ้ม", price: 0 },
+    { name: "น้ำจิ้ม", price: 40 },
     { name: "วุ้นเส้น (ร้าน)", price: 20 },
     { name: "วุ้นเส้นถุง (ใหญ่)", price: 20 },
     { name: "วุ้นเส้นถุง (เล็ก)", price: 10 },
@@ -101,17 +80,17 @@ document.addEventListener("DOMContentLoaded", () => {
     { name: "ข้าวโพด", price: 10 }
   ];
 
-  // โหลดข้อมูลเงินสดและเงินทอน
-  const cash = parseFloat(localStorage.getItem("takehomeCash") || 0);
-  const change = parseFloat(localStorage.getItem("takehomeChange") || 0);
+  // โหลดเงินสดและเงินทอน ลบ comma ก่อน parseFloat
+  const cash = parseFloat((localStorage.getItem("takehomeCash") || '0').replace(/,/g,''));
+  const change = parseFloat((localStorage.getItem("takehomeChange") || '0').replace(/,/g,''));
 
   const tbody = document.querySelector("#billTable tbody");
   let total = 0;
 
-  menu.forEach((m, i) => {
-    const q = qtys[i] || 0;
-    if (q > 0) {
-      const sum = q * m.price;
+  menu.forEach((m,i)=>{
+    const q = parseFloat(qtys[i] || 0);
+    if(q>0){
+      const sum = q*m.price;
       total += sum;
       const tr = document.createElement("tr");
       tr.innerHTML = `
@@ -127,22 +106,18 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("sumTotal").textContent = formatNumber(total) + " บาท";
   document.getElementById("cashValue").textContent = formatNumber(cash) + " บาท";
   document.getElementById("changeValue").textContent = formatNumber(change) + " บาท";
-  document.getElementById("printTime").textContent = new Date().toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+  document.getElementById("printTime").textContent = new Date().toLocaleString('th-TH',{ dateStyle:'short', timeStyle:'short' });
 
-  // รอให้โลโก้โหลดก่อนพิมพ์
+  // รอโลโก้โหลดก่อนพิมพ์
   const logoImg = document.querySelector('.header img');
   const triggerPrint = () => window.print();
-
-  if (logoImg.complete) {
-    triggerPrint();
-  } else {
-    logoImg.onload = triggerPrint;
-    logoImg.onerror = triggerPrint;
-  }
+  if(logoImg.complete){ triggerPrint(); }
+  else { logoImg.onload=triggerPrint; logoImg.onerror=triggerPrint; }
 
   // ปิดหน้าหลังพิมพ์
-  window.onafterprint = () => window.close();
+  window.onafterprint = ()=>window.close();
 });
 </script>
+
 </body>
 </html>
