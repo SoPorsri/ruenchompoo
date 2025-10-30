@@ -218,8 +218,16 @@ document.addEventListener("DOMContentLoaded", () => {
           closeCustomKeypad();
         }
     });
-    // ปุ่มกลับหน้าหลัก
+
+    document.getElementById("btnClear").addEventListener("click", () => {
+      if (confirm("ต้องการล้างข้อมูลบิลทั้งหมดหรือไม่?")) {
+        localStorage.removeItem("takehomeQtys");
+        localStorage.removeItem("takehomeCash");
+        localStorage.removeItem("takehomeChange");
+        alert("ล้างข้อมูลเรียบร้อยแล้ว");
+        location.reload();
+      }
+    });
     document.getElementById("btnHome").addEventListener("click", () => window.location.href = "index.html");
-    // ✅ ป้องกัน modal เด้งตอนโหลด
     previewModal.style.display = "none"; // เริ่มต้น modal ปิด
 });
