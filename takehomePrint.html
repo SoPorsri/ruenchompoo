@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if(logoImg.complete){ triggerPrint(); }
   else { logoImg.onload=triggerPrint; logoImg.onerror=triggerPrint; }
 
-  window.onafterprint = ()=>window.close();
+  //window.onafterprint = ()=>window.close();
 });
 </script>
 
