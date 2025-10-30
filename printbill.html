@@ -41,7 +41,6 @@ async function loadBillFromHistory(billId) {
         return
     }
 
-    // ✅ ดึง bill_items (เหมือนเดิม)
     const { data: items, error: itemsError } = await client
         .from('bill_items')
         .select('id, qty, price, total, menu_id')
@@ -50,7 +49,7 @@ async function loadBillFromHistory(billId) {
     if (itemsError) {
         console.error("itemsError:", itemsError)
     }
-    // ✅ ดึงชื่อเมนู (เหมือนเดิม)
+
     let menuNames = {}
     if (items && items.length > 0) {
         const menuIds = items.map(i => i.menu_id).filter(Boolean)
@@ -62,12 +61,10 @@ async function loadBillFromHistory(billId) {
             menus?.forEach(m => { menuNames[m.id] = m.name })
         }
     }
-    // ✅ ใส่ชื่อเมนูใน items (เหมือนเดิม)
     bill.items = (items || []).map(i => ({
         ...i,
         menu_name: menuNames[i.menu_id] || "-"
     }))
-    // ✅ สร้าง HTML สำหรับพิมพ์ (เหมือนเดิม)
     const html = buildPrintView(bill)
     // 1. เขียน HTML ลงในหน้าปัจจุบัน
     document.body.innerHTML = html;
@@ -97,7 +94,6 @@ async function loadBillFromHistory(billId) {
         }
     } else {
         // 8. ถ้าหาแท็ก <img> ไม่เจอ (เผื่อโค้ด HTML ผิด)
-        // ก็สั่งพิมพ์ไปเลย
         triggerPrint();
     }
 }
@@ -117,7 +113,7 @@ function buildPrintView(bill) {
       .header { text-align:center; margin-bottom:8px; }
       /* --- 💡 1. เพิ่ม CSS สำหรับโลโก้ --- */
       .header img {
-        width: 100px; /* <-- ปรับขนาดความกว้างได้ตามต้องการ */
+        width: 90px; /* <-- ปรับขนาดความกว้างได้ตามต้องการ */
         height: auto;
         margin-bottom: 4px;
       }
