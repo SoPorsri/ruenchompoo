@@ -208,25 +208,21 @@ document.addEventListener("DOMContentLoaded", () => {
       input.value = input.value.replace(/[^0-9.+]/g,'');
       calc();
     }
-    
     // ซ่อน keypad ถ้า click นอก
    document.addEventListener('click', e => {
-        // เพิ่มการตรวจสอบ ID ของช่อง cash เข้าไป
         if (!e.target.classList.contains('menu-qty') && 
-            e.target.id !== 'cash' && // <--- เพิ่มเงื่อนไขนี้
+            e.target.id !== 'cash' && // 
             !e.target.closest('#customKeypad')) {
           closeCustomKeypad();
         }
     });
 
     document.getElementById("btnClear").addEventListener("click", () => {
-      if (confirm("ต้องการล้างข้อมูลบิลทั้งหมดหรือไม่?")) {
         localStorage.removeItem("takehomeQtys");
         localStorage.removeItem("takehomeCash");
         localStorage.removeItem("takehomeChange");
         alert("ล้างข้อมูลเรียบร้อยแล้ว");
         location.reload();
-      }
     });
     
     document.getElementById("btnHome").addEventListener("click", () => window.location.href = "index.html");
