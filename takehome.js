@@ -1,4 +1,10 @@
 // script.js
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
+const client = createClient(SUPABASE_URL, SUPABASE_KEY);
+
 document.addEventListener("DOMContentLoaded", () => {
     const ua = navigator.userAgent || navigator.vendor || window.opera;
     const usbRadio = document.querySelector('input[name="printType"][value="USB"]');
@@ -126,6 +132,35 @@ document.addEventListener("DOMContentLoaded", () => {
         previewModal.style.display = "none";
         localStorage.setItem("takehomeCash", cash.value || 0);
         localStorage.setItem("takehomeChange", change.value.replace(/,/g,'') || 0);
+
+        const totalAmount = parseFloat(grand.textContent.replace(/[฿,]/g, '')) || 0;
+        const cashValue = parseFloat((cash.value || '0').replace(/,/g, '')) || 0;
+        const changeValue = parseFloat((change.value || '0').replace(/,/g, '')) || 0;
+        
+        const itemsData = menu.map((m, i) => {
+        const q = qtys[i] || 0;
+        return q > 0 ? { name: m.name, qty: q, price: m.price, subtotal: q * m.price } : null;
+        }).filter(Boolean);
+        
+        try {
+        const { error } = await supabase
+        .from("takehome_sales")
+        .insert([
+        {
+          print_type: type,
+          total_amount: totalAmount,
+          cash: cashValue,
+          change: changeValue,
+          items: itemsData
+        }
+        ]);
+        
+        if (error) throw error;
+        console.log("✅ บันทึกยอดขายลง Supabase สำเร็จ");
+        } catch (err) {
+        console.error("❌ Insert error:", err);
+        }
+        
         if (type === "USB") {
             window.open('takehomePrint.html', '_blank');
         } else if (type === "WIFI") {
