@@ -17,7 +17,6 @@
           el[attr] = el[attr] + (el[attr].includes("?") ? "&" : "?") + "v=" + version;
         }
       });
-  
       // --- ตรวจสอบอุปกรณ์และเลือก radio button ---
       const ua = navigator.userAgent || navigator.vendor || window.opera;
       const usbRadio = document.querySelector('input[name="printType"][value="USB"]');
