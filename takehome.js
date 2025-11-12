@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btnCancelPreview").addEventListener("click", () => {
         previewModal.style.display = "none";
     });
-    document.getElementById("btnConfirmPrint").addEventListener("click", () => {
+    document.getElementById("btnConfirmPrint").addEventListener("click", async () => {
         const type = document.querySelector('input[name="printType"]:checked').value;
         previewModal.style.display = "none";
         localStorage.setItem("takehomeCash", cash.value || 0);
