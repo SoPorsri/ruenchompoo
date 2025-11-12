@@ -340,6 +340,10 @@
             <h3 style="margin:0; color:#3b82f6;">ปีนี้</h3>
             <p id="yearlySales" style="font-size:20px; font-weight:bold; margin:4px 0;">0</p>
           </div>
+          <div style="flex:1; background:#fffbe6; padding:16px; border-radius:12px; text-align:center;">
+            <h3 style="margin:0; color:#f59e0b;">กลับบ้าน (วันนี้)</h3>
+            <p id="dailyTakehomeSales" style="font-size:20px; font-weight:bold; margin:4px 0;">0</p>
+          </div>
       </div>
   
       <!-- Chart -->
@@ -375,8 +379,6 @@
       <!-- History Table -->
       <div id="historySection" style="display:none; margin-top:16px;">
         <h3><i class="fas fa-receipt"></i> ประวัติการขายล่าสุด</h3>
-      
-        <!-- 🔍 ฟอร์มค้นหา -->
         <div class="filter-box">
           <div class="field">
             <label><i class="fa-solid fa-calendar-day"></i> จากวันที่</label>
@@ -406,6 +408,18 @@
             </tr>
           </thead>
           <tbody id="salesHistory"></tbody>
+        </table>
+        <h3 style="margin-top:24px; color:#f59e0b;"><i class="fa-solid fa-bag-shopping"></i> ประวัติซื้อกลับบ้าน</h3>
+        <table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr style="background:#fefce8;">
+              <th>เวลา</th>
+              <th>ยอดรวม (฿)</th>
+              <th>ประเภทพิมพ์</th>
+              <th>รายการ (JSON)</th>
+            </tr>
+          </thead>
+          <tbody id="takehomeHistory"></tbody>         
         </table>
       </div>
 
@@ -476,18 +490,15 @@
         });
       }
     
-      // โหลดจาก cache ก่อน
       const cache = JSON.parse(localStorage.getItem('tablesStatus') || '{}');
       renderTables(cache);
     
-      // ดึงข้อมูลจาก Supabase แบบ background
       const { data, error } = await client.from('tables').select('id,status');
       if (error) {
         console.error(error);
         return;
       }
-    
-      // สร้าง map ของ id → status
+
       const statusMap = {};
       data.forEach(d => { statusMap[d.id] = d.status; });
     
@@ -498,10 +509,17 @@
     let salesChart;
 
     function openReport() {
-      document.getElementById('reportModal').style.display = 'flex';
-      loadSalesSummary();
-      loadSalesChart('daily'); // ค่าเริ่มต้น
-    }
+      // ⬇️ ตั้งรหัสผ่านของคุณตรงนี้
+      const CORRECT_PASSWORD = "abc123"; // ‼️*** เปลี่ยนเป็นรหัสผ่านที่คุณต้องการ ***‼️
+      const password = prompt("กรุณาใส่รหัสผ่านเพื่อดูรายงาน:");
+      if (password === CORRECT_PASSWORD) {
+        document.getElementById('reportModal').style.display = 'flex';
+        loadSalesSummary();
+        loadSalesChart('daily');
+      } else if (password !== null) {
+        alert("รหัสผ่านไม่ถูกต้อง!");
+      }
+    }
     function closeReport() {
       document.getElementById('reportModal').style.display = 'none';
     }
@@ -545,6 +563,22 @@
         (monthly?.[0]?.total_sales || 0).toLocaleString("th-TH");
       document.getElementById('yearlySales').textContent = 
         (yearly?.[0]?.total_sales || 0).toLocaleString("th-TH");
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const { data: takehome, error } = await client
+        .from('takehome_sales')
+        .select('total_amount')
+        .gte('created_at', today.toISOString()) // มากกว่าหรือเท่ากับ เที่ยงคืนวันนี้
+        .lt('created_at', tomorrow.toISOString()); // น้อยกว่า เที่ยงคืนพรุ่งนี้
+      
+      if (error) {
+        console.error("Error fetching takehome sales:", error);
+      }
+      const totalTakehome = takehome ? takehome.reduce((sum, sale) => sum + sale.total_amount, 0) : 0;
+      document.getElementById('dailyTakehomeSales').textContent = totalTakehome.toLocaleString("th-TH");
     }
   
     async function loadSalesChart(mode = 'daily') {
@@ -621,60 +655,88 @@
     }
 
      async function loadSalesHistory() {
-      const fromDate = document.getElementById('fromDate')?.value;
-      const toDate = document.getElementById('toDate')?.value;
-      const searchText = document.getElementById('searchText')?.value.trim();
-    
-      let query = client.from('bills')
-        .select('*')
-        .eq('status','closed')
-        .order('closed_at', { ascending: false })
-        .limit(100);
-    
-      // ถ้าไม่มีตัวกรอง แสดง 10 รายการล่าสุด
-      if (!fromDate && !toDate && !searchText) {
-        query = query.limit(10);
-      } else {
-        // 🔎 กรองตามวันที่
-        if (fromDate) query = query.gte('closed_at', fromDate + " 00:00:00");
-        if (toDate) query = query.lte('closed_at', toDate + " 23:59:59");
-    
-        // 🔎 ค้นหาตามเลขบิลหรือชื่อลูกค้า/โต๊ะ
-        if (searchText) {
-          query = query.or(`billno.ilike.%${searchText}%,customer.ilike.%${searchText}%`);
-        }
-      }
-    
-      const { data, error } = await query;
-    
-      const tbody = document.getElementById('salesHistory');
-      tbody.innerHTML = '';
-      if (!error && data) {
-        data.forEach(bill => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${bill.billno}</td>
-            <td>${bill.customer || '-'}</td>
-            <td>${Number(bill.total).toLocaleString("th-TH")}</td>
-            <td>${bill.created_at ? new Date(bill.created_at).toLocaleString('th-TH') : '-'}</td>
-            <td>${bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH') : '-'}</td>
-            <td>
-              <button onclick="reprintBill(${bill.id})" 
-                style="background:#ec4899; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">
-                <i class="fa-solid fa-print"></i> พิมพ์บิล
-              </button>
-            </td>
-            <td>
-              <button onclick="openPOS(${bill.id})" 
-                style="background:#10b981; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">
-                <i class="fa-solid fa-cash-register"></i> POS
-              </button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-      }
-    }
+      const fromDate = document.getElementById('fromDate')?.value;
+      const toDate = document.getElementById('toDate')?.value;
+      const searchText = document.getElementById('searchText')?.value.trim();
+    
+      // === 1. Query บิลในร้าน (โค้ดเดิม) ===
+      let queryBills = client.from('bills')
+        .select('*')
+        .eq('status','closed')
+        .order('closed_at', { ascending: false })
+        .limit(100);
+    
+      if (!fromDate && !toDate && !searchText) {
+        queryBills = queryBills.limit(10);
+      } else {
+        if (fromDate) queryBills = queryBills.gte('closed_at', fromDate + " 00:00:00");
+        if (toDate) queryBills = queryBills.lte('closed_at', toDate + " 23:59:59");
+        if (searchText) {
+          queryBills = queryBills.or(`billno.ilike.%${searchText}%,customer.ilike.%${searchText}%`);
+        }
+      }
+      const { data: billsData, error: billsError } = await queryBills;
+
+      // === 2. Query ซื้อกลับบ้าน (โค้ดใหม่) ===
+      let queryTakehome = client.from('takehome_sales')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      // ใช้ตัวกรองวันที่ (แต่ไม่ใช้ searchText เพราะไม่มีช่องให้ค้น)
+      if (!fromDate && !toDate && !searchText) {
+        queryTakehome = queryTakehome.limit(10);
+      } else {
+        if (fromDate) queryTakehome = queryTakehome.gte('created_at', fromDate + " 00:00:00");
+        if (toDate) queryTakehome = queryTakehome.lte('created_at', toDate + " 23:59:59");
+      }
+      const { data: takehomeData, error: takehomeError } = await queryTakehome;
+
+      // === 3. Render ตารางบิลในร้าน (โค้ดเดิม) ===
+      const tbody = document.getElementById('salesHistory');
+      tbody.innerHTML = '';
+      if (!billsError && billsData) {
+        data.forEach(bill => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${bill.billno}</td>
+            <td>${bill.customer || '-'}</td>
+            <td>${Number(bill.total).toLocaleString("th-TH")}</td>
+            <td>${bill.created_at ? new Date(bill.created_at).toLocaleString('th-TH') : '-'}</td>
+            <td>${bill.closed_at ? new Date(bill.closed_at).toLocaleString('th-TH') : '-'}</td>
+            <td>
+              <button onclick="reprintBill(${bill.id})" style="background:#ec4899; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">
+                <i class="fa-solid fa-print"></i> พิมพ์บิล
+              </button>
+            </td>
+            <td>
+              <button onclick="openPOS(${bill.id})" style="background:#10b981; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">
+                <i class="fa-solid fa-cash-register"></i> POS
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // === 4. Render ตารางซื้อกลับบ้าน (โค้ดใหม่) ===
+      const tbodyTakehome = document.getElementById('takehomeHistory');
+      tbodyTakehome.innerHTML = '';
+      if (!takehomeError && takehomeData) {
+        takehomeData.forEach(sale => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${new Date(sale.created_at).toLocaleString('th-TH')}</td>
+            <td>${Number(sale.total_amount).toLocaleString("th-TH")}</td>
+            <td>${sale.print_type || '-'}</td>
+            <td style="font-size:12px; max-width:150px; overflow-wrap:break-word;">
+              ${JSON.stringify(sale.items)}
+            </td>
+          `;
+          tbodyTakehome.appendChild(tr);
+        });
+      }
+    }
 
     // 🔹 ทำให้ค้นหาอัตโนมัติเมื่อแก้ไข input
     const filterInputs = document.querySelectorAll('#fromDate, #toDate, #searchText');
