@@ -677,26 +677,37 @@
       }
       const { data: billsData, error: billsError } = await queryBills;
 
-      // === 2. Query ซื้อกลับบ้าน (โค้ดใหม่) ===
+      // === 2. Query ซื้อกลับบ้าน (โค้ดที่แก้ไข) ===
       let queryTakehome = client.from('takehome_sales')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(100);
 
-      // ใช้ตัวกรองวันที่ (แต่ไม่ใช้ searchText เพราะไม่มีช่องให้ค้น)
       if (!fromDate && !toDate && !searchText) {
-        queryTakehome = queryTakehome.limit(10);
+        // ⬇️⬇️ NEW LOGIC: Default to Today's data ⬇️⬇️
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); 
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        queryTakehome = queryTakehome
+          .gte('created_at', today.toISOString())
+          .lt('created_at', tomorrow.toISOString());
+        // ⬆️⬆️ END NEW LOGIC ⬆️⬆️
       } else {
+        // ใช้ตัวกรองวันที่ (แต่ไม่ใช้ searchText เพราะไม่มีช่องให้ค้น)
         if (fromDate) queryTakehome = queryTakehome.gte('created_at', fromDate + " 00:00:00");
         if (toDate) queryTakehome = queryTakehome.lte('created_at', toDate + " 23:59:59");
       }
       const { data: takehomeData, error: takehomeError } = await queryTakehome;
 
       // === 3. Render ตารางบิลในร้าน (โค้ดเดิม) ===
+      // ... (โค้ด Render ตาราง salesHistory เดิม) ...
       const tbody = document.getElementById('salesHistory');
       tbody.innerHTML = '';
       if (!billsError && billsData) {
-        data.forEach(bill => {
+        billsData.forEach(bill => {
+          // ... (โค้ดสร้างแถวสำหรับ billsData) ...
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>${bill.billno}</td>
@@ -719,7 +730,7 @@
         });
       }
 
-      // === 4. Render ตารางซื้อกลับบ้าน (โค้ดใหม่) ===
+      // === 4. Render ตารางซื้อกลับบ้าน (โค้ดเดิม) ===
       const tbodyTakehome = document.getElementById('takehomeHistory');
       tbodyTakehome.innerHTML = '';
       if (!takehomeError && takehomeData) {
