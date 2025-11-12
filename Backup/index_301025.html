@@ -1,10 +1,11 @@
-//index.html fix โต๊ะ 16/09/2025 16:45
 <!doctype html>
 <html lang="th">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ร้านเรือนชมพูเนื้อย่างเกาหลี - หน้าหลัก</title>
+  <title>เรือนชมพูเนื้อย่างเกาหลี - สาขานาเชือก</title>
+  <link rel="icon" type="image/png" href="https://SoPorsri.github.io/ruenchompoo/images/LOGO.png">
+  <link rel="shortcut icon" href="https://SoPorsri.github.io/ruenchompoo/images/LOGO.png">
   <!-- โหลด Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -165,6 +166,91 @@
       position: relative;
       z-index: 1; /* โต๊ะอยู่ข้างหน้า */
     }
+
+    .filter-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+      align-items: flex-end;
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+    }
+    .filter-box .field {
+      display: flex;
+      flex-direction: column;
+    }
+    .filter-box label {
+      font-size: 13px;
+      color: #374151;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .filter-box input[type="date"],
+    .filter-box input[type="text"] {
+      padding: 8px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .filter-box input:focus {
+      border-color: #3b82f6;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+    }
+    .btn-clear {
+      background-color: #fca5a5; /* สีแดงจาง */
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-clear:hover {
+      background-color: #f87171; /* สีแดงเข้มขึ้นเมื่อ hover */
+      transform: scale(1.05);
+    }
+    
+    .btn-clear:active {
+      transform: scale(0.95);
+    }
+
+    .floating-btn {
+      position: fixed;
+      bottom: 20px;
+      padding: 10px 20px;
+      font-family: Tahoma, sans-serif;
+      font-size: 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 999;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: all 0.2s ease-in-out;
+      display: flex;
+      align-items: center;
+      gap: 8px; /* ระยะห่างระหว่าง icon กับข้อความ */
+    }
+    .floating-btn.left {
+      left: 20px;
+      background-color: #ffb347;
+      color: #000;
+    }
+    .floating-btn.left:hover {
+      background-color: #ffa31a;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    }
   </style>
 </head>
 <body>
@@ -181,7 +267,10 @@
       <small id="ipLabel">192.168.1.100</small>
     </div>
   </button>
-  
+
+  <button id="btnTakeHome" class="floating-btn left">
+    <i class="fa-solid fa-cart-shopping"></i> ซื้อกลับบ้าน
+  </button>
   <!-- ปุ่ม Floating Action Button -->
   <button id="reportButton" onclick="openReport()">
     <i class="fa-solid fa-chart-line"></i> ดูรายงาน
@@ -254,7 +343,7 @@
       </div>
   
       <!-- Chart -->
-      <h3 style="margin-top:0;">📈 กราฟยอดขาย</h3>
+      <h3 style="margin-top:0;"><i class="fas fa-chart-line"></i> กราฟยอดขาย</h3>
       <div style="margin-bottom:12px;">
         <button onclick="loadSalesChart('daily')" 
           style="background:#24d67a; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">
@@ -285,7 +374,25 @@
   
       <!-- History Table -->
       <div id="historySection" style="display:none; margin-top:16px;">
-        <h3>🧾 ประวัติการขายล่าสุด</h3>
+        <h3><i class="fas fa-receipt"></i> ประวัติการขายล่าสุด</h3>
+      
+        <!-- 🔍 ฟอร์มค้นหา -->
+        <div class="filter-box">
+          <div class="field">
+            <label><i class="fa-solid fa-calendar-day"></i> จากวันที่</label>
+            <input type="date" id="fromDate">
+          </div>
+          <div class="field">
+            <label><i class="fa-solid fa-calendar-check"></i> ถึงวันที่</label>
+            <input type="date" id="toDate">
+          </div>
+          <div class="field">
+            <label><i class="fa-solid fa-magnifying-glass"></i> ค้นหาซุ้ม/เลขบิล</label>
+            <input type="text" id="searchText" placeholder="ใส่ชื่อซุ้ม หรือ เลขบิล...">
+          </div>
+          <button id="clearBtn" class="btn-clear"><i class="fa-solid fa-eraser"></i> ล้างค่า</button>
+        </div>
+      
         <table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse:collapse; font-size:14px;">
           <thead>
             <tr style="background:#f9fafb;">
@@ -301,16 +408,16 @@
           <tbody id="salesHistory"></tbody>
         </table>
       </div>
+
     </div>
   </div>
-
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrbHZzY2ZmcGJhcG9nZXpveHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NTIxNTYsImV4cCI6MjA2NTEyODE1Nn0.O0cXyJAo0qdbNZsLqK1zpo1lS1H1mrudaGz2VaEQQaM';
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+    
     const tables = [
       { id: 1, name: "ซุ้ม1" }, { id: 2, name: "ซุ้ม2" }, { id: 3, name: "ซุ้ม3" }, { id: 4, name: "ซุ้ม4" },
       { id: 5, name: "ซุ้ม5" }, { id: 6, name: "ซุ้ม6" }, { id: 7, name: "ซุ้ม7" }, { id: 8, name: "ซุ้ม8" },
@@ -341,46 +448,53 @@
     }
 
     async function loadTables() {
-      const { data, error } = await client.from('tables').select('id,status');
-      if (error) { console.error(error); return; }
-
-      tables.forEach(t => {
-        const div = document.getElementById("table-" + t.name);
-        if (!div) return;
-
-        const record = data.find(d => d.id === t.id);
-        const status = record ? record.status : "ว่าง";
-
-        div.className = 'table-card ' + (status === 'ว่าง' ? 'free' : 'busy');
-        div.innerHTML = '';
-
-        const icon = document.createElement('i');
-        icon.className = status === 'ว่าง'
-          ? 'fa-solid fa-circle-check status-icon free'
-          : 'fa-solid fa-circle-xmark status-icon busy';
-
-        const label = document.createElement('span');
-        label.textContent = `${t.name} (${status})`;
-
-        div.appendChild(icon);
-        div.appendChild(label);
-
-        div.onclick = async () => {
-          if (status === 'ว่าง') {
-            const { error: updateError } = await client.from('tables')
-              .update({ status: 'ไม่ว่าง' })
-              .eq('id', t.id);
-            if (updateError) {
-              console.error(updateError);
-              alert('อัปเดตสถานะโต๊ะผิดพลาด');
-              return;
+      // ฟังก์ชัน render ตาราง
+      function renderTables(statusMap) {
+        tables.forEach(t => {
+          const div = document.getElementById("table-" + t.name);
+          if (!div) return;
+          const status = statusMap[t.id] || "ว่าง";
+    
+          div.className = 'table-card ' + (status === 'ว่าง' ? 'free' : 'busy');
+          div.innerHTML = `
+            <i class="fa-solid ${status === 'ว่าง' ? 'fa-circle-check free' : 'fa-circle-xmark busy'} status-icon"></i>
+            <span>${t.name} (${status})</span>
+          `;
+          div.onclick = async () => {
+            if (status === 'ว่าง') {
+              const { error: updateError } = await client.from('tables')
+                .update({ status: 'ไม่ว่าง' })
+                .eq('id', t.id);
+              if (updateError) {
+                console.error(updateError);
+                alert('อัปเดตสถานะโต๊ะผิดพลาด');
+                return;
+              }
             }
-          }
-          window.location.href = `bill.html?table_id=${t.id}`;
-        };
-      });
+            window.location.href = `bill.html?table_id=${t.id}`;
+          };
+        });
+      }
+    
+      // โหลดจาก cache ก่อน
+      const cache = JSON.parse(localStorage.getItem('tablesStatus') || '{}');
+      renderTables(cache);
+    
+      // ดึงข้อมูลจาก Supabase แบบ background
+      const { data, error } = await client.from('tables').select('id,status');
+      if (error) {
+        console.error(error);
+        return;
+      }
+    
+      // สร้าง map ของ id → status
+      const statusMap = {};
+      data.forEach(d => { statusMap[d.id] = d.status; });
+    
+      // อัปเดต DOM และเก็บ cache
+      renderTables(statusMap);
+      localStorage.setItem('tablesStatus', JSON.stringify(statusMap));
     }
-
     let salesChart;
 
     function openReport() {
@@ -391,7 +505,15 @@
     function closeReport() {
       document.getElementById('reportModal').style.display = 'none';
     }
-  
+
+    // 🔹 ปุ่ม Clear รีเซ็ตค่าและโหลดข้อมูล
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      document.getElementById('fromDate').value = '';
+      document.getElementById('toDate').value = '';
+      document.getElementById('searchText').value = '';
+      loadSalesHistory(); // โหลดค่าเริ่มต้น (วันนี้)
+    });
+      
     function toggleHistory() {
       const section = document.getElementById('historySection');
       if (section.style.display === 'none') {
@@ -498,13 +620,32 @@
       });
     }
 
-    async function loadSalesHistory() {
-      const { data, error } = await client
-        .from('bills')
+     async function loadSalesHistory() {
+      const fromDate = document.getElementById('fromDate')?.value;
+      const toDate = document.getElementById('toDate')?.value;
+      const searchText = document.getElementById('searchText')?.value.trim();
+    
+      let query = client.from('bills')
         .select('*')
         .eq('status','closed')
         .order('closed_at', { ascending: false })
-        .limit(20);
+        .limit(100);
+    
+      // ถ้าไม่มีตัวกรอง แสดง 10 รายการล่าสุด
+      if (!fromDate && !toDate && !searchText) {
+        query = query.limit(10);
+      } else {
+        // 🔎 กรองตามวันที่
+        if (fromDate) query = query.gte('closed_at', fromDate + " 00:00:00");
+        if (toDate) query = query.lte('closed_at', toDate + " 23:59:59");
+    
+        // 🔎 ค้นหาตามเลขบิลหรือชื่อลูกค้า/โต๊ะ
+        if (searchText) {
+          query = query.or(`billno.ilike.%${searchText}%,customer.ilike.%${searchText}%`);
+        }
+      }
+    
+      const { data, error } = await query;
     
       const tbody = document.getElementById('salesHistory');
       tbody.innerHTML = '';
@@ -525,8 +666,8 @@
             </td>
             <td>
               <button onclick="openPOS(${bill.id})" 
-                style="background:#f59e0b; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">
-                <i class="fa-solid fa-receipt"></i> ESC/POS
+                style="background:#10b981; color:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;">
+                <i class="fa-solid fa-cash-register"></i> POS
               </button>
             </td>
           `;
@@ -535,6 +676,13 @@
       }
     }
 
+    // 🔹 ทำให้ค้นหาอัตโนมัติเมื่อแก้ไข input
+    const filterInputs = document.querySelectorAll('#fromDate, #toDate, #searchText');
+    filterInputs.forEach(input => {
+      input.addEventListener('input', () => {
+        loadSalesHistory();
+      });
+    });
 
     async function exportToExcel() {
       const { data, error } = await client
@@ -620,10 +768,20 @@
     // realtime update
     client.channel('tables-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, payload => {
-        console.log('change detected', payload);
-        loadTables();
+        const div = document.getElementById("table-" + payload.new.id);
+        if (!div) return;
+        const status = payload.new.status || "ว่าง";
+        div.className = 'table-card ' + (status === 'ว่าง' ? 'free' : 'busy');
+        div.innerHTML = `
+          <i class="fa-solid ${status === 'ว่าง' ? 'fa-circle-check free' : 'fa-circle-xmark busy'} status-icon"></i>
+          <span>${payload.new.id} (${status})</span>
+        `;
       })
       .subscribe();
+
+    document.getElementById('btnTakeHome').addEventListener('click', () => {
+      window.open('takehome.html', '_blank');
+    });
   </script>
 </body>
 </html>
