@@ -45,7 +45,6 @@ async function loadTableName() {
     if (updateError) console.log('อัปเดตโต๊ะไม่ว่างผิดพลาด', updateError);
   }
 }
-
 function renderMenu(dataToRender, existingValues = {}) {
     window.menuData = dataToRender || []; // อัปเดต menuData ที่เป็น global
     const container = el('menuItems');
