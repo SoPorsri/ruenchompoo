@@ -139,26 +139,26 @@ document.addEventListener("DOMContentLoaded", () => {
         
         const itemsData = menu.map((m, i) => {
         const q = qtys[i] || 0;
-        return q > 0 ? { name: m.name, qty: q, price: m.price, subtotal: q * m.price } : null;
+            return q > 0 ? { name: m.name, qty: q, price: m.price, subtotal: q * m.price } : null;
         }).filter(Boolean);
         
         try {
-        const { error } = await supabase
-        .from("takehome_sales")
-        .insert([
-        {
-          print_type: type,
-          total_amount: totalAmount,
-          cash: cashValue,
-          change: changeValue,
-          items: itemsData
-        }
-        ]);
+            const { error } = await client
+            .from("takehome_sales")
+            .insert([
+                {
+                  print_type: type,
+                  total_amount: totalAmount,
+                  cash: cashValue,
+                  change: changeValue,
+                  items: itemsData
+                }
+            ]);
         
         if (error) throw error;
-        console.log("✅ บันทึกยอดขายลง Supabase สำเร็จ");
+            console.log("✅ บันทึกยอดขายลง Supabase สำเร็จ");
         } catch (err) {
-        console.error("❌ Insert error:", err);
+            console.error("❌ Insert error:", err);
         }
         
         if (type === "USB") {
