@@ -46,98 +46,131 @@ async function loadTableName() {
   }
 }
 
+function renderMenu(dataToRender, existingValues = {}) {
+    window.menuData = dataToRender || []; // อัปเดต menuData ที่เป็น global
+    const container = el('menuItems');
+    container.innerHTML = '';
+
+    dataToRender.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'row draggable';
+        row.dataset.id = item.id;
+        row.innerHTML = `
+            <div class="row-content" tabindex="0">
+                <div class="drag-handle">☰</div>
+                <div class="menu-name">${escapeHtml(item.name)}</div>
+                <div class="menu-price right">฿${Number(item.price).toFixed(2)}</div>
+                <div>
+                    <input class="num menu-qty" 
+                        type="text" 
+                        data-id="${item.id}" 
+                        value="${existingValues[item.id] || ''}"
+                        placeholder="เช่น 1+2"
+                        readonly>
+                </div>
+            </div>
+            <div class="action-btns" aria-hidden="true">
+                <div class="edit-btn" role="button" tabindex="0">แก้ไข</div>
+                <div class="delete-btn" role="button" tabindex="0">ลบ</div>
+            </div>
+        `;
+        container.appendChild(row);
+
+        enableSwipe(row, item); // ตรวจสอบว่ามีฟังก์ชันนี้อยู่
+
+        row.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            if (currentlyOpenRow) closeRow(currentlyOpenRow);
+            activeMenuItem = item;
+            const x = e.pageX;
+            const y = e.pageY;
+            contextMenu.style.left = `${x}px`;
+            contextMenu.style.top = `${y}px`;
+            contextMenu.style.display = 'block';
+        });
+
+        const input = row.querySelector('.menu-qty');
+        input.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            if (activeInput && activeInput !== input) {
+                activeInput.classList.remove('highlight');
+            }
+            activeInput = input;
+            input.classList.add('highlight');
+            openCustomKeypad(input); // ตรวจสอบว่ามีฟังก์ชันนี้
+        });
+    });
+
+    // init or re-init Sortable
+    if (window.sortableInstance) { try { sortableInstance.destroy(); } catch(e){} window.sortableInstance = null; }
+    if (window.Sortable) {
+        window.sortableInstance = new Sortable(container, {
+            handle: '.drag-handle',
+            animation: 150,
+            ghostClass: 'dragging-ghost',
+            onEnd: saveNewOrder // ตรวจสอบว่ามีฟังก์ชันนี้
+        });
+    }
+
+    // closeOpenRow(); // อาจต้องตรวจสอบว่ามีฟังก์ชันนี้
+    return true;
+}
 /* ---------------------------
    Load menu: build DOM rows
    --------------------------- */
 async function loadMenu() {
-  const existingValues = {};
-  document.querySelectorAll('#menuItems input.menu-qty').forEach(inp => {
-    existingValues[inp.dataset.id] = inp.value;
-  });
-
-  const { data, error } = await client.from('menu').select('*').order('sort_order', { ascending: true });
-  if (error) { alert('โหลดเมนูผิดพลาด'); console.log(error); return; }
-
-  menuData = data || [];
-  const container = el('menuItems');
-  container.innerHTML = '';
-
-  menuData.forEach(item => {
-    const row = document.createElement('div');
-    row.className = 'row draggable';
-    row.dataset.id = item.id;
-    row.innerHTML = `
-      <div class="row-content" tabindex="0">
-        <div class="drag-handle">☰</div>
-        <div class="menu-name">${escapeHtml(item.name)}</div>
-        <div class="menu-price right">฿${Number(item.price).toFixed(2)}</div>
-        <div>
-          <input class="num menu-qty" 
-            type="text" 
-            data-id="${item.id}" 
-            value="${existingValues[item.id] || ''}"
-            placeholder="เช่น 1+2"
-            readonly>
-        </div>
-      </div>
-      <div class="action-btns" aria-hidden="true">
-        <div class="edit-btn" role="button" tabindex="0">แก้ไข</div>
-        <div class="delete-btn" role="button" tabindex="0">ลบ</div>
-      </div>
-    `;
-    container.appendChild(row);
-
-    enableSwipe(row, item);
-
-    // เพิ่ม Event Listener นี้เข้าไปใน row
-    row.addEventListener('contextmenu', (e) => {
-      e.preventDefault(); // ปิดเมนูคลิกขวาปกติ
-    
-      if (currentlyOpenRow) closeRow(currentlyOpenRow);
-      activeMenuItem = item;
-    
-      // ใช้ pageX/pageY หรือ clientX + scroll
-      const x = e.pageX;  // หรือ e.clientX + window.scrollX
-      const y = e.pageY;  // หรือ e.clientY + window.scrollY
-    
-      contextMenu.style.left = `${x}px`;
-      contextMenu.style.top = `${y}px`;
-      contextMenu.style.display = 'block';
+    const existingValues = {};
+    document.querySelectorAll('#menuItems input.menu-qty').forEach(inp => {
+        existingValues[inp.dataset.id] = inp.value;
     });
 
-    // attach custom keypad
-    const input = row.querySelector('.menu-qty');
-    input.addEventListener('mousedown', (e) => {
-      e.preventDefault();          // ป้องกัน keyboard ขึ้นบนมือถือ
-    
-      // ถ้ามี input ก่อนหน้า active อยู่ → ลบ highlight
-      if (activeInput && activeInput !== input) {
-        activeInput.classList.remove('highlight');
-      }
-    
-      // ทำ input ปัจจุบันเป็น active และเพิ่ม highlight
-      activeInput = input;
-      input.classList.add('highlight');
-    
-      // เปิด custom keypad
-      openCustomKeypad(input);
-    });
+    // --- 1. โหลดจาก Cache ทันที ---
+    const menuCacheKey = 'ruenchompoo-menuCache'; // ตั้งชื่อ Cache
+    const menuCache = localStorage.getItem(menuCacheKey);
+    let isCacheRendered = false;
 
-  });
+    if (menuCache) {
+        try {
+            console.log('Loading menu from cache...');
+            renderMenu(JSON.parse(menuCache), existingValues);
+            isCacheRendered = true;
+        } catch (e) {
+            console.error('Failed to parse menu cache', e);
+            localStorage.removeItem(menuCacheKey); // ลบ Cache ที่เสีย
+        }
+    }
 
-  // init or re-init Sortable
-  if (sortableInstance) { try { sortableInstance.destroy(); } catch(e){} sortableInstance = null; }
-  if (window.Sortable) {
-    sortableInstance = new Sortable(container, {
-      handle: '.drag-handle',
-      animation: 150,
-      ghostClass: 'dragging-ghost',
-      onEnd: saveNewOrder
-    });
-  }
+    // --- 2. ดึงข้อมูลใหม่จาก Database (เสมอ) ---
+    console.log('Fetching fresh menu from database...');
+    const { data, error } = await client.from('menu')
+                                      .select('*')
+                                      .order('sort_order', { ascending: true });
 
-  closeOpenRow();
-  return true;
+    if (error) {
+        // ถ้าดึงข้อมูลใหม่ไม่สำเร็จ แต่อย่างน้อยก็แสดงผลจาก Cache ไปแล้ว (ถ้ามี)
+        if (!isCacheRendered) { 
+            alert('โหลดเมนูผิดพลาด (และไม่มี Cache)');
+        }
+        console.log(error);
+        return; 
+    }
+
+    // --- 3. ได้ข้อมูลใหม่มาแล้ว ---
+    if (data) {
+        const newDataString = JSON.stringify(data);
+        
+        // บันทึก Cache ใหม่
+        localStorage.setItem(menuCacheKey, newDataString);
+
+        // ถ้าข้อมูลใหม่ไม่ตรงกับ Cache ที่แสดงไป (หรือยังไม่ได้แสดง)
+        // ให้วาดใหม่
+        if (newDataString !== menuCache) {
+            console.log('New menu data found, re-rendering...');
+            renderMenu(data, existingValues);
+        } else {
+            console.log('Menu is already up-to-date.');
+        }
+    }
 }
 /* ==========================
    ปุ่ม ลบ แก้ไข สำหรับ PC
