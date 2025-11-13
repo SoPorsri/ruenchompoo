@@ -176,7 +176,7 @@
       padding: 12px;
       border-radius: 12px;
       border: 1px solid #e5e7eb;
-  _ }
+    }
     .filter-box .field {
       display: flex;
       flex-direction: column;
@@ -317,7 +317,7 @@
                 box-shadow:0 6px 16px rgba(0,0,0,0.25);">
       
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <h2 style="margin:0; color:#d946ef">📊 รายงานยอดขาย (รวมกลับบ้าน)</h2>
+                <h2 style="margin:0; color:#d946ef">📊 รายงานยอดขาย (รวมกลับบ้าน)</h2>
         <button onclick="closeReport()" style="border:none; background:none; font-size:22px; cursor:pointer; color:#666;">✖</button>
       </div>
   
@@ -365,7 +365,7 @@
       </div>
   
             <div id="historySection" style="display:none; margin-top:16px;">
-        <h3><i class="fas fa-receipt"></i> ประวัติการขายล่าสุด (รวมกลับบ้าน)</h3>
+                <h3><i class="fas fa-receipt"></i> ประวัติการขายล่าสุด (รวมกลับบ้าน)</h3>
       
                 <div class="filter-box">
           <div class="field">
@@ -375,14 +375,14 @@
           <div class="field">
             <label><i class="fa-solid fa-calendar-check"></i> ถึงวันที่</label>
             <input type="date" id="toDate">
-          </div>
+      _ </div>
           <div class="field">
             <label><i class="fa-solid fa-magnifying-glass"></i> ค้นหาซุ้ม/เลขบิล</label>
             <input type="text" id="searchText" placeholder="ใส่ชื่อซุ้ม หรือ เลขบิล...">
           </div>
           <button id="clearBtn" class="btn-clear"><i class="fa-solid fa-eraser"></i> ล้างค่า</button>
         </div>
-        <small style="display:block; margin-bottom:10px; color:#555;">*การค้นหาด้วยข้อความ จะแสดงเฉพาะบิลในร้าน (ไม่รวมกลับบ้าน)</small>
+                <small style="display:block; margin-bottom:10px; color:#555;">*การค้นหาด้วยข้อความ จะแสดงเฉพาะบิลในร้าน (ไม่รวมกลับบ้าน)</small>
       
         <table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse:collapse; font-size:14px;">
           <thead>
@@ -526,7 +526,7 @@
     }
     
     // ================================================
-    // == START: แก้ไขฟังก์ชันรายงานให้รวม takehome_sales ==
+    // == ⚠️ START: โค้ดที่แก้ไข/อัปเดตทั้งหมด (4 ฟังก์ชัน) ==
     // ================================================
 
     // ฟังก์ชัน helper สำหรับคำนวณยอดรวม
@@ -568,6 +568,7 @@
       }
     }
   
+    // ⚠️ นี่คือฟังก์ชันกราฟแท่งแบบซ้อน (Stacked Bar Chart)
     async function loadSalesChart(mode = 'daily') {
       let fromDate;
       if (mode === 'daily') {
@@ -579,7 +580,16 @@
       }
       const fromISO = fromDate.toISOString();
     
-      // 1. ดึงข้อมูล Bills
+      // --- 1. สร้างฟังก์ชัน helper สำหรับจัดกลุ่ม ---
+      function getKey(date, mode) {
+        const d = new Date(date);
+        if (mode === 'daily') return d.toLocaleDateString('th-TH');
+        if (mode === 'monthly') return d.toLocaleString('th-TH', { year:'numeric', month:'short' });
+        if (mode === 'yearly') return d.getFullYear();
+        return d.toISOString(); // Fallback
+      }
+
+      // --- 2. ดึงข้อมูล (เหมือนเดิม) ---
       const { data: billsData, error: billsError } = await client
         .from('bills')
         .select('closed_at, total')
@@ -587,7 +597,6 @@
         .gte('closed_at', fromISO)
         .order('closed_at',{ascending:true});
 
-      // 2. ดึงข้อมูล Takehome
       const { data: takehomeData, error: takehomeError } = await client
         .from('takehome_sales')
         .select('created_at, total_amount')
@@ -596,28 +605,44 @@
     
       if (billsError) console.error("Bills Chart Error:", billsError);
       if (takehomeError) console.error("Takehome Chart Error:", takehomeError);
-    
-      // 3. รวมข้อมูล
+
+      // --- 3. จัดกลุ่มข้อมูลใหม่ (แยก 'bills' และ 'takehome') ---
+      const groupedBills = {};
+      const groupedTakehome = {};
+      const allLabelsOrdered = []; // ใช้อาร์เรย์เพื่อรักษาลำดับ
+      const labelSet = new Set(); // ใช้ Set เพื่อเช็คความซ้ำซ้อนเร็วๆ
+
+      // รวมข้อมูลทั้งสองแหล่ง
       const combinedData = [
-        ...(billsData || []).map(b => ({ time: b.closed_at, amount: b.total })),
-        ...(takehomeData || []).map(t => ({ time: t.created_at, amount: t.total_amount }))
+        ...(billsData || []).map(b => ({ time: b.closed_at, amount: b.total, type: 'bill' })),
+        ...(takehomeData || []).map(t => ({ time: t.created_at, amount: t.total_amount, type: 'takehome' }))
       ];
-    
-      // 4. จัดกลุ่มข้อมูล (Group)
-      const grouped = {};
+      // (เนื่องจากเรา .order จาก query แล้ว จึงไม่จำเป็นต้อง sort ซ้ำ)
+
       combinedData.forEach(sale => {
-        if (!sale.time) return; // ข้ามรายการที่ไม่มีเวลา
-        const d = new Date(sale.time);
-        let key;
-        if (mode === 'daily') key = d.toLocaleDateString('th-TH');
-        if (mode === 'monthly') key = d.toLocaleString('th-TH', { year:'numeric', month:'short' });
-        if (mode === 'yearly') key = d.getFullYear();
-        grouped[key] = (grouped[key] || 0) + Number(sale.amount);
+        if (!sale.time) return;
+        const key = getKey(sale.time, mode);
+
+        // เพิ่ม Label (แกน X) ถ้ายังไม่มี
+        if (!labelSet.has(key)) {
+          labelSet.add(key);
+          allLabelsOrdered.push(key);
+        }
+
+        // เพิ่มข้อมูลลงในกลุ่มที่ถูกต้อง
+        if (sale.type === 'bill') {
+          groupedBills[key] = (groupedBills[key] || 0) + Number(sale.amount);
+        } else {
+          groupedTakehome[key] = (groupedTakehome[key] || 0) + Number(sale.amount);
+        }
       });
+
+      // --- 4. เตรียมข้อมูลสำหรับ 2 datasets ---
+      const labels = allLabelsOrdered;
+      const billsDatasetData = labels.map(key => groupedBills[key] || 0);
+      const takehomeDatasetData = labels.map(key => groupedTakehome[key] || 0);
     
-      const labels = Object.keys(grouped);
-      const totals = Object.values(grouped);
-    
+      // --- 5. สร้าง Chart ใหม่ (นี่คือส่วนที่เปลี่ยน) ---
       const ctx = document.getElementById('salesChart').getContext('2d');
       if (salesChart) salesChart.destroy();
     
@@ -625,28 +650,39 @@
         type: 'bar',
         data: {
           labels: labels,
-          datasets: [{
-            label: 'ยอดขาย (บาท)',
-            data: totals,
-            backgroundColor: 
-              mode === 'daily' ? '#24d67a' :
-              mode === 'monthly' ? '#19d3d3' : '#3b82f6'
-          }]
+          datasets: [
+            {
+              label: 'ยอดขาย (ในร้าน)',
+              data: billsDatasetData,
+              backgroundColor: '#19d3d3', // สีเขียว/ฟ้า
+            },
+            {
+              label: 'ยอดขาย (กลับบ้าน)',
+              data: takehomeDatasetData,
+              backgroundColor: '#f59e0b', // สีส้ม
+            }
+          ]
         },
         options: {
           responsive: true,
           plugins: {
-            legend: { display: false },
+            legend: { display: true }, // เปิดคำอธิบาย (Legend)
             tooltip: {
               callbacks: {
                 label: function(context) {
-                  return context.raw.toLocaleString("th-TH") + " บาท";
+                  // แสดงชื่อ dataset (เช่น 'ยอดขาย (ในร้าน)')
+                  return `${context.dataset.label}: ${context.raw.toLocaleString("th-TH")} บาท`;
                 }
               }
             }
           },
+          // 🌟 เพิ่มส่วนนี้เพื่อให้กราฟซ้อนกัน
           scales: {
+            x: {
+              stacked: true, // ซ้อนกันบนแกน X
+            },
             y: {
+              stacked: true, // ซ้อนกันบนแกน Y
               beginAtZero: true,
               ticks: {
                 callback: function(value) {
@@ -659,6 +695,7 @@
       });
     }
 
+    // ⚠️ นี่คือฟังก์ชันประวัติการขาย (รวม 2 ตาราง)
     async function loadSalesHistory() {
       const fromDate = document.getElementById('fromDate')?.value;
       const toDate = document.getElementById('toDate')?.value;
@@ -770,6 +807,7 @@
       });
     });
 
+    // ⚠️ นี่คือฟังก์ชัน Export Excel (รวม 2 ตาราง)
     async function exportToExcel() {
       // 1. ดึงข้อมูล Bills ทั้งหมด
       const { data: billsData, error: billsError } = await client
@@ -825,7 +863,7 @@
     }
 
     // ================================================
-    // == END: แก้ไขฟังก์ชันรายงาน
+    // == ⚠️ END: โค้ดที่แก้ไข/อัปเดต
     // ================================================
 
 
@@ -901,7 +939,7 @@
     });
 
     // ================================================
-    // == START: เพิ่มโค้ดสำหรับ Modal รหัสผ่าน ==
+    // == ⚠️ START: เพิ่มโค้ดสำหรับ Modal รหัสผ่าน ==
     // ================================================
     document.addEventListener("DOMContentLoaded", function() {
       
@@ -913,21 +951,21 @@
 
           // 2. ตั้งรหัสผ่านที่ถูกต้อง
           // *** เปลี่ยน "1234" เป็นรหัสผ่านจริงของคุณ ***
-          const CORRECT_PASSWORD = "abc123";
+          const CORRECT_PASSWORD = "1234";
 
           // 3. ตรวจสอบรหัสผ่าน
           if (password === CORRECT_PASSWORD) {
-            // ถ้ารหัสผ่านถูก ให้เรียกฟังก์ชัน openReport()
+    _         // ถ้ารหัสผ่านถูก ให้เรียกฟังก์ชัน openReport()
             openReport();
           } else if (password !== null) { 
             // (password === null หมายถึงผู้ใช้กด "Cancel")
             // ถ้ารหัสผ่านผิด
-            alert("รหัสผ่านไม่ถูกต้อง!");
+        _   alert("รหัสผ่านไม่ถูกต้อง!");
           }
       });
     });
     // ================================================
-    // == END: โค้ดสำหรับ Modal รหัสผ่าน
+    // == ⚠️ END: โค้ดสำหรับ Modal รหัสผ่าน
     // ================================================
   </script>
 </body>
