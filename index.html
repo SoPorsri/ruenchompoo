@@ -412,21 +412,6 @@
     </div>
   </div>
 
-  <!-- Password Modal -->
-  <div id="passwordModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
-       background: rgba(0,0,0,0.5); justify-content:center; align-items:center;">
-    <div style="background:#fff; padding:20px; border-radius:8px; width:300px; text-align:center;">
-      <h3>กรุณาใส่รหัสผ่าน</h3>
-      <input type="password" id="reportPassword" style="width:90%; padding:5px; margin-top:10px;" />
-      <div style="margin-top:15px;">
-        <button onclick="checkPassword()">Submit</button>
-        <button onclick="closePasswordModal()">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
@@ -491,41 +476,34 @@
         });
       }
     
+      // โหลดจาก cache ก่อน
       const cache = JSON.parse(localStorage.getItem('tablesStatus') || '{}');
       renderTables(cache);
     
+      // ดึงข้อมูลจาก Supabase แบบ background
       const { data, error } = await client.from('tables').select('id,status');
       if (error) {
         console.error(error);
         return;
       }
     
+      // สร้าง map ของ id → status
       const statusMap = {};
       data.forEach(d => { statusMap[d.id] = d.status; });
-
+    
+      // อัปเดต DOM และเก็บ cache
       renderTables(statusMap);
       localStorage.setItem('tablesStatus', JSON.stringify(statusMap));
     }
     let salesChart;
 
     function openReport() {
-    // แสดง modal รหัสผ่าน
-      document.getElementById('passwordModal').style.display = 'flex';
-    }
-    
-    function closePasswordModal() {
-      document.getElementById('passwordModal').style.display = 'none';
-      document.getElementById('reportPassword').value = '';
-    }
-    
-    function checkPassword() {
-      const pwd = document.getElementById('reportPassword').value;
-      if (pwd === "abc123") { // ใส่รหัสผ่านจริงตรงนี้
-        closePasswordModal();
+      const pwd = prompt("กรุณาใส่รหัสผ่านเพื่อดูรายงาน:");
+      if (pwd === "abc123") {
         document.getElementById('reportModal').style.display = 'flex';
         loadSalesSummary();
         loadSalesChart('daily');
-      } else {
+      } else if (pwd !== null) {
         alert("รหัสผ่านไม่ถูกต้อง");
       }
     }
@@ -533,12 +511,14 @@
       document.getElementById('reportModal').style.display = 'none';
     }
 
+    // 🔹 ปุ่ม Clear รีเซ็ตค่าและโหลดข้อมูล
     document.getElementById('clearBtn').addEventListener('click', () => {
       document.getElementById('fromDate').value = '';
       document.getElementById('toDate').value = '';
       document.getElementById('searchText').value = '';
-      loadSalesHistory();
+      loadSalesHistory(); // โหลดค่าเริ่มต้น (วันนี้)
     });
+      
     function toggleHistory() {
       const section = document.getElementById('historySection');
       if (section.style.display === 'none') {
@@ -548,9 +528,13 @@
         section.style.display = 'none';
       }
     }
+
     function reprintBill(billId) {
+      // เปิดหน้าพิมพ์บิลใหม่ พร้อมส่ง bill_id
       window.open(`printbill.html?bill_id=${billId}`, '_blank');
     }
+
+    // --- ฟังก์ชันเปิดหน้าพิมพ์ ESC/POS ---
     function openPOS(billId) {
       window.open(`printPOS.html?bill_id=${billId}`, '_blank');
     }
@@ -652,11 +636,15 @@
         .order('closed_at', { ascending: false })
         .limit(100);
     
+      // ถ้าไม่มีตัวกรอง แสดง 10 รายการล่าสุด
       if (!fromDate && !toDate && !searchText) {
         query = query.limit(10);
       } else {
+        // 🔎 กรองตามวันที่
         if (fromDate) query = query.gte('closed_at', fromDate + " 00:00:00");
         if (toDate) query = query.lte('closed_at', toDate + " 23:59:59");
+    
+        // 🔎 ค้นหาตามเลขบิลหรือชื่อลูกค้า/โต๊ะ
         if (searchText) {
           query = query.or(`billno.ilike.%${searchText}%,customer.ilike.%${searchText}%`);
         }
@@ -693,6 +681,7 @@
       }
     }
 
+    // 🔹 ทำให้ค้นหาอัตโนมัติเมื่อแก้ไข input
     const filterInputs = document.querySelectorAll('#fromDate, #toDate, #searchText');
     filterInputs.forEach(input => {
       input.addEventListener('input', () => {
@@ -769,13 +758,19 @@
       if (label) label.textContent = ip;
     }
 
+    // เรียกเมื่อโหลดหน้า
     window.addEventListener('DOMContentLoaded', updateIpLabel);
+    // เรียกซ้ำอีกเผื่อสคริปต์รันหลัง DOM เหตุการณ์
     updateIpLabel();
+    /* ================================================ */
+
+    // เรียงลำดับการทำงาน
     (async () => {
       await ensureTablesExist();
       await loadTables();
     })();
 
+    // realtime update
     client.channel('tables-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, payload => {
         const div = document.getElementById("table-" + payload.new.id);
