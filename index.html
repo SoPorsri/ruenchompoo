@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://unpkg.com/micromodal/dist/micromodal.min.js"></script>
   <style>
     body { font-family: system-ui, "Noto Sans Thai", sans-serif; margin: 0; background-color: #e6fff7; }
     header {
@@ -389,6 +390,25 @@
     </div>
   </div>
 
+  <div id="modal-password" aria-hidden="true">
+    <div tabindex="-1" data-micromodal-close>
+      <div role="dialog" aria-modal="true" aria-labelledby="modal‑password-title">
+        <header>
+          <h2 id="modal‑password-title">🔒 ใส่รหัสผ่าน</h2>
+          <button aria-label="Close modal" data-micromodal-close>✖</button>
+        </header>
+        <div>
+          <input type="password" id="pwInput" placeholder="รหัสผ่าน">
+        </div>
+        <footer>
+          <button id="pwCancel" data-micromodal-close>ยกเลิก</button>
+          <button id="pwOk">ตกลง</button>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = 'https://pklvscffpbapogezoxyn.supabase.co';
@@ -474,16 +494,26 @@
     }
     let salesChart;
 
-    function openReport() {
-      const pwd = prompt("กรุณาใส่รหัสผ่านเพื่อดูรายงาน:");
-      if (pwd === "abc123") {
+    MicroModal.init({
+      disableScroll: true
+    });
+    
+    document.getElementById('pwOk').addEventListener('click', function(){
+      const val = document.getElementById('pwInput').value;
+      if (val === 'abc123') {
+        MicroModal.close('modal-password');
         document.getElementById('reportModal').style.display = 'flex';
         loadSalesSummary();
         loadSalesChart('daily');
-      } else if (pwd !== null) {
-        alert("รหัสผ่านไม่ถูกต้อง");
+      } else {
+        alert('รหัสผ่านไม่ถูกต้อง');
       }
+    });
+    
+    function openReport(){
+      MicroModal.show('modal-password');
     }
+
     function closeReport() {
       document.getElementById('reportModal').style.display = 'none';
     }
