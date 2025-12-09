@@ -46,7 +46,7 @@ async function loadTableName() {
   }
 }
 function renderMenu(dataToRender, existingValues = {}) {
-    window.menuData = dataToRender || []; // อัปเดต menuData ที่เป็น global
+    menuData = dataToRender || []; // อัปเดต menuData ที่เป็น global
     const container = el('menuItems');
     container.innerHTML = '';
 
