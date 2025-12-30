@@ -448,70 +448,63 @@
     }
 
     async function loadTables() {
-      // ฟังก์ชัน render ตาราง
-      function renderTables(statusMap) {
+
+      async function renderTables(statusMap, openBillsMap = {}) {
         tables.forEach(t => {
           const div = document.getElementById("table-" + t.name);
           if (!div) return;
+    
           const status = statusMap[t.id] || "ว่าง";
+          const bill = openBillsMap[t.id]; // ✅ ได้ bill ต่อโต๊ะ
     
           div.className = 'table-card ' + (status === 'ว่าง' ? 'free' : 'busy');
           div.innerHTML = `
             <i class="fa-solid ${status === 'ว่าง' ? 'fa-circle-check free' : 'fa-circle-xmark busy'} status-icon"></i>
             <span>${t.name} (${status})</span>
           `;
-
-           if (bill) {
-              const start = new Date(bill.created_at);
-              const now = new Date();
-              const diffMin = Math.floor((now - start) / 60000);
-              const hours = Math.floor(diffMin / 60);
-              const mins = diffMin % 60;
-      
-              div.title =
-                `🕒 เปิดบิล: ${start.toLocaleString('th-TH')}\n` +
-                `⏱ ใช้ไป: ${hours} ชม. ${mins} นาที\n` +
-                `💰 ยอดรวม: ${Number(bill.total).toLocaleString('th-TH')} บาท`;
-            } else {
-              div.title = 'โต๊ะว่าง';
-            }
-
-          
+    
+          // ===== title tooltip =====
+          if (bill) {
+            const start = new Date(bill.created_at);
+            const now = new Date();
+            const diffMin = Math.floor((now - start) / 60000);
+            const hours = Math.floor(diffMin / 60);
+            const mins = diffMin % 60;
+    
+            div.title =
+              `🕒 เปิดบิล: ${start.toLocaleString('th-TH')}\n` +
+              `⏱ ใช้ไป: ${hours} ชม. ${mins} นาที\n` +
+              `💰 ยอดรวม: ${Number(bill.total).toLocaleString('th-TH')} บาท`;
+          } else {
+            div.title = 'โต๊ะว่าง';
+          }
+    
           div.onclick = async () => {
             if (status === 'ว่าง') {
-              const { error: updateError } = await client.from('tables')
+              await client.from('tables')
                 .update({ status: 'ไม่ว่าง' })
                 .eq('id', t.id);
-              if (updateError) {
-                console.error(updateError);
-                alert('อัปเดตสถานะโต๊ะผิดพลาด');
-                return;
-              }
             }
             window.location.href = `bill.html?table_id=${t.id}`;
           };
         });
       }
     
-      // โหลดจาก cache ก่อน
+      // cache
       const cache = JSON.parse(localStorage.getItem('tablesStatus') || '{}');
       renderTables(cache);
     
-      // ดึงข้อมูลจาก Supabase แบบ background
-      const { data, error } = await client.from('tables').select('id,status');
-      if (error) {
-        console.error(error);
-        return;
-      }
+      // โหลดข้อมูลจริง
+      const { data } = await client.from('tables').select('id,status');
+      const openBillsMap = await loadOpenBillsMap(); // ✅ เพิ่มบรรทัดนี้
     
-      // สร้าง map ของ id → status
       const statusMap = {};
-      data.forEach(d => { statusMap[d.id] = d.status; });
+      data.forEach(d => statusMap[d.id] = d.status);
     
-      // อัปเดต DOM และเก็บ cache
-      renderTables(statusMap);
+      renderTables(statusMap, openBillsMap); // ✅ ส่ง bill map
       localStorage.setItem('tablesStatus', JSON.stringify(statusMap));
     }
+
     let salesChart;
 
     function openReport() {
