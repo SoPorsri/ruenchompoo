@@ -460,6 +460,23 @@
             <i class="fa-solid ${status === 'ว่าง' ? 'fa-circle-check free' : 'fa-circle-xmark busy'} status-icon"></i>
             <span>${t.name} (${status})</span>
           `;
+
+           if (bill) {
+              const start = new Date(bill.created_at);
+              const now = new Date();
+              const diffMin = Math.floor((now - start) / 60000);
+              const hours = Math.floor(diffMin / 60);
+              const mins = diffMin % 60;
+      
+              div.title =
+                `🕒 เปิดบิล: ${start.toLocaleString('th-TH')}\n` +
+                `⏱ ใช้ไป: ${hours} ชม. ${mins} นาที\n` +
+                `💰 ยอดรวม: ${Number(bill.total).toLocaleString('th-TH')} บาท`;
+            } else {
+              div.title = 'โต๊ะว่าง';
+            }
+
+          
           div.onclick = async () => {
             if (status === 'ว่าง') {
               const { error: updateError } = await client.from('tables')
@@ -715,6 +732,24 @@
       XLSX.utils.book_append_sheet(wb, ws, "SalesHistory");
     
       XLSX.writeFile(wb, "sales_history.xlsx");
+    }
+
+    async function loadOpenBillsMap() {
+      const { data, error } = await client
+        .from('bills')
+        .select('table_id, created_at, total')
+        .eq('status', 'open');
+    
+      if (error) {
+        console.error(error);
+        return {};
+      }
+    
+      const map = {};
+      data.forEach(b => {
+        map[b.table_id] = b;
+      });
+      return map;
     }
 
     /* ======= ฟังก์ชัน Set IP (localStorage) ======= */
